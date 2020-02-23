@@ -1,10 +1,35 @@
 version: '3'
 
 services:
+  duckdns:
+    container_name: duckdns
+    image: linuxserver/duckdns:latest
+    restart: always
+    network_mode: host
+    env_file:
+      - ./duckdns/.env
+  nginx_certbot:
+    container_name: nginx_certbot
+    image: mr-dxdy/nginx-certbot:0.1.0
+    restart: always
+    network_mode: host
+    volumes:
+      - ./certbot/letsencrypt:/etc/letsencrypt
+      - ./nginx/conf.d:/etc/nginx/conf.d
+  homeassistant:
+    container_name: homeassistant
+    image: homeassistant/home-assistant:0.105.5
+    restart: always
+    volumes:
+      - ./homeassistant/config:/config
+    network_mode: host
+    environment:
+      - TZ=Europe/Moscow
   mqtt:
     container_name: mqtt
     image: eclipse-mosquitto:1.6.8
     network_mode: host
+    restart: always
   zigbee2mqtt:
     container_name: zigbee2mqtt
     image: koenkk/zigbee2mqtt:1.10.0

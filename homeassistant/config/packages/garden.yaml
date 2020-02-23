@@ -1,0 +1,32 @@
+switch:
+  - platform: xiaomi_miio
+    name: Цветы в детской
+    host: !secret xiaomi_socket_host_1
+    token: !secret xiaomi_socket_token_1
+    model: chuangmi.plug.hmi206
+
+automation:
+  - id: '1575133776894'
+    alias: Включить свет у цветов в детской
+    description: ''
+    trigger:
+    - at: 07:00:00
+      platform: time
+    condition: []
+    action:
+    - alias: ''
+      data:
+        entity_id: switch.tsvety_v_detskoi
+      service: switch.turn_on
+  - id: '1575133850822'
+    alias: Выключить свет у цветов в детской
+    description: ''
+    trigger:
+    - at: '22:00:00'
+      platform: time
+    condition: []
+    action:
+    - alias: ''
+      data:
+        entity_id: switch.tsvety_v_detskoi
+      service: switch.turn_off

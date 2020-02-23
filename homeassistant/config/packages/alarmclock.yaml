@@ -1,0 +1,140 @@
+input_boolean:
+  working_alarm_enabled:
+    name: Состояние
+    initial: 'on'
+    icon: mdi:alarm
+  weekend_alarm_enabled:
+    name: Состояние
+    initial: 'on'
+    icon: mdi:alarm  
+
+input_number:
+  working_alarm_hour:
+    name: Часы
+    icon: mdi:timer
+    initial: 8
+    min: 0
+    max: 23
+    step: 1
+  working_alarm_minute:
+    name: Минуты
+    icon: mdi:timer
+    initial: 0
+    min: 0
+    max: 59
+    step: 1
+  weekend_alarm_hour:
+    name: Часы
+    icon: mdi:timer
+    initial: 9
+    min: 0
+    max: 23
+    step: 1
+  weekend_alarm_minute:
+    name: Минуты
+    icon: mdi:timer
+    initial: 0
+    min: 0
+    max: 59
+    step: 1
+
+sensor:
+  - platform: template
+    sensors:
+      working_alarm_time:
+        friendly_name: 'Working alarm'
+        value_template: '{{ "%0.02d:%0.02d" | format(states("input_number.working_alarm_hour") | int, states("input_number.working_alarm_minute") | int) }}'
+      weekend_alarm_time:
+        friendly_name: 'Weekend alarm'
+        value_template: '{{ "%0.02d:%0.02d" | format(states("input_number.weekend_alarm_hour") | int, states("input_number.weekend_alarm_minute") | int) }}'
+
+automation:
+  - alias: Проверка, что пора на работу
+    trigger:
+        platform: time_pattern
+        minutes: '/1'
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: '{{ now().time().strftime("%H:%M") == states.sensor.working_alarm_time.state }}'
+
+        - condition: state
+          entity_id: input_boolean.working_alarm_enabled
+          state: 'on'
+       
+        - condition: state
+          entity_id: binary_sensor.rabochii_den
+          state: 'on'   
+    action:
+      - service: script.alarm_clock
+
+  - alias: Проверка, что хватит спать в выходные
+    trigger:
+        platform: time_pattern
+        minutes: '/1'
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: '{{ now().time().strftime("%H:%M") == states.sensor.weekend_alarm_time.state }}'
+
+        - condition: state
+          entity_id: input_boolean.weekend_alarm_enabled
+          state: 'on'
+       
+        - condition: state
+          entity_id: binary_sensor.rabochii_den
+          state: 'off'   
+    action:
+      - service: script.alarm_clock
+
+script:
+  start_alarm_music:
+    sequence:
+      - service: media_player.volume_set
+        entity_id:
+          - media_player.kolonki_na_kukhne
+        data_template:
+          volume_level: 0.7
+
+      - service: media_player.turn_on
+        entity_id:
+          - media_player.kolonki_na_kukhne
+
+      - delay: 00:02:00
+
+      - service: media_player.volume_set
+        entity_id:
+          - media_player.kolonki_na_kukhne
+        data_template:
+          volume_level: 0.8
+
+      - delay: 00:03:00
+
+      - service: media_player.volume_set
+        entity_id:
+          - media_player.kolonki_na_kukhne
+        data_template:
+          volume_level: 0.85
+
+      - delay: 00:02:00
+
+      - service: media_player.volume_set
+        entity_id:
+          - media_player.kolonki_na_kukhne
+        data_template:
+          volume_level: 0.7
+
+  stop_alarm_music:
+    sequence:
+      - service: media_player.turn_off
+        entity_id:
+          - media_player.kolonki_na_kukhne   
+
+  alarm_clock:
+    alias: Ring Alarm
+    sequence:
+      - service: script.start_alarm_music
+      - delay: 1:00:00
+      - service: script.stop_alarm_music

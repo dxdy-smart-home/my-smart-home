@@ -1,0 +1,22 @@
+media_player:
+  - platform: samsungtv_custom
+    host: !secret samsungtv_host
+    port: 8001
+    name: Телевизор в гостиной
+    mac: !secret samsungtv_mac
+ 
+  - platform: mpd
+    host: 127.0.0.1
+    name: Колонки на кухне
+
+transmission:
+  host: !secret torrent_host
+  port: !secret torrent_port
+  username: !secret torrent_username
+  password: !secret torrent_password
+
+panel_iframe:
+  torrent:
+    title: Torrent
+    url: !secret torrent_host
+    icon: mdi:briefcase-download

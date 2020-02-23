@@ -1,0 +1,28 @@
+sensor:
+  - platform: mitemp_bt
+    mac: 58:2D:34:36:AB:19
+    name: Переносной датчик температуры и влажности
+
+weather:
+  - platform: gismeteo
+    name: weather
+
+automation:
+  - alias: Проветрить спальню перед сном
+    description: ''
+    trigger:
+    - at: '22:20:00'
+      platform: time
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: "{{ state_attr('sensor.0x00158d000418d85c_temperature', 'temperature') - state_attr('weather.weather', 'temperature') >= 5 }}"
+        - condition: template
+          value_template: "{{ state_attr('sensor.0x00158d000418d85c_temperature', 'temperature') > 21 }}"
+    action:
+    - alias: ''
+      data:
+        title: ''
+        message: "В спальне {{ state_attr('sensor.0x00158d000418d85c_temperature', 'temperature') }} градусов. Рекомендую проветрить комнату перед сном."
+      service: notify.html5_notification

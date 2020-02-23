@@ -1,0 +1,55 @@
+automation:
+  - id: '1576001180625'
+    alias: Протечка в ванной
+    description: ''
+    trigger:
+    - platform: state
+      entity_id: binary_sensor.0x00158d000400f5c7_water_leak
+      to: 'on'
+    condition: []
+    action:
+    - data:
+        message: В ванной протечка
+      service: notify.html5_notification
+
+  - alias: Протечка в душевой
+    description: ''
+    trigger:
+    - platform: state
+      entity_id: binary_sensor.0x00158d0004235519_water_leak
+      to: 'on'
+    condition: []
+    action:
+    - data:
+        message: В душевой комнате протечка
+      service: notify.html5_notification
+
+  - alias: Нужно снять показания со счетчиков и отдать в УК
+    description: ''
+    trigger:
+    - at: '20:00:00'
+      platform: time
+    condition:
+      condition: template
+      value_template: '{{ now().day == 19 }}'
+    action:
+    - alias: ''
+      data:
+        title: ''
+        message: Нужно снять показания со счетчиков и завтра отдать в УК
+      service: notify.html5_notification
+
+  - alias: Завтра последний день чтобы отдать в УК показания счетчиков
+    description: ''
+    trigger:
+    - at: '20:00:00'
+      platform: time
+    condition:
+      condition: template
+      value_template: '{{ now().day == 21 }}'
+    action:
+    - alias: ''
+      data:
+        title: ''
+        message: Завтра последний день чтобы отдать в УК показания счетчиков
+      service: notify.html5_notification

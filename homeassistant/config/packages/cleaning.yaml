@@ -1,0 +1,10 @@
+vacuum:
+  - platform: xiaomi_miio
+    host: !secret vacuum_host
+    token: !secret vacuum_token
+    name: Пылесос Максимка
+
+smartthinq:
+  token: !secret smartthinq_token
+  region: RU
+  language: ru-RU

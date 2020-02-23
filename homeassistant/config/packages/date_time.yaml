@@ -1,0 +1,5 @@
+binary_sensor:
+  - platform: workday
+    name: Рабочий день
+    country: RU
+    excludes: [sat, sun]
