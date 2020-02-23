@@ -10,7 +10,7 @@ services:
       - ./duckdns/.env
   nginx_certbot:
     container_name: nginx_certbot
-    image: mr-dxdy/nginx-certbot:0.1.0
+    image: mrdxdy/nginx-certbot:0.1.0
     restart: always
     network_mode: host
     volumes:
