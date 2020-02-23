@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  mqtt:
+    container_name: mqtt
+    image: eclipse-mosquitto:1.6.8
+    network_mode: host
+  zigbee2mqtt:
+    container_name: zigbee2mqtt
+    image: koenkk/zigbee2mqtt:1.10.0
+    volumes:
+      - ./zigbee2mqtt/data:/app/data
+    devices:
+      - /dev/ttyACM0:/dev/ttyACM0
+    restart: always
+    privileged: true
+    network_mode: host
+    environment:
+      - TZ=Europe/Moscow
