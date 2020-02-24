@@ -24,3 +24,9 @@ test_headphones:
 
 set_default_playlist:
 	docker-compose exec mpd /bin/bash -c "mpc clear | ls /mpd/playlists/*.m3u | xargs cat | xargs mpc insert"
+
+check_hass:
+	docker-compose exec homeassistant /bin/bash -c "hass -c /config --script check_config"
+
+restart_hass:
+	docker-compose restart homeassistant

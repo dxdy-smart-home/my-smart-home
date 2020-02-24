@@ -9,14 +9,14 @@ media_player:
     host: 127.0.0.1
     name: Колонки на кухне
 
-transmission:
-  host: !secret torrent_host
-  port: !secret torrent_port
-  username: !secret torrent_username
-  password: !secret torrent_password
-
-panel_iframe:
-  torrent:
-    title: Torrent
-    url: !secret torrent_host
-    icon: mdi:briefcase-download
+    #transmission:
+    #  host: !secret torrent_host
+    #  port: !secret torrent_port
+    #  username: !secret torrent_username
+    #  password: !secret torrent_password
+    #
+    #panel_iframe:
+    #  torrent:
+    #    title: Torrent
+    #    url: !secret torrent_host
+    #    icon: mdi:briefcase-download
