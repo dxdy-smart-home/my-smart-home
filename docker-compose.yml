@@ -1,6 +1,20 @@
 version: '3'
 
 services:
+  mpd:
+    container_name: mpd
+    build:
+      context: ./mpd/docker
+    restart: always
+    network_mode: host
+    privileged: true
+    volumes:
+      - ./mpd/mpd.conf:/mpd/conf/mpd.conf
+      - ./mpd/music:/mpd/music
+      - ./mpd/playlists:/mpd/playlists
+      - ./mpd/data:/mpd/data
+    devices:
+      - /dev/snd:/dev/snd
   duckdns:
     container_name: duckdns
     image: linuxserver/duckdns:latest

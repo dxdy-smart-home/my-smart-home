@@ -2,37 +2,37 @@ sensor:
   - platform: uptime
     name: Home assistant uptime
 
-  - platform: command_line
-    name: Home assistant CPU temperature
-    command: "cat /sys/class/thermal/thermal_zone0/temp"
-    unit_of_measurement: "C"
-    value_template: '{{ value | multiply(0.001) | round(1) }}'
-
-  - platform: command_line
-    name: Home assistant GPU Temperature
-    command: "/opt/vc/bin/vcgencmd measure_temp"
-    unit_of_measurement: "C"
-    value_template: '{{ value | replace("temp=", "") | replace("''C", "") }}'
-
+    #  - platform: command_line
+    #    name: Home assistant CPU temperature
+    #    command: "cat /sys/class/thermal/thermal_zone0/temp"
+    #    unit_of_measurement: "C"
+    #    value_template: '{{ value | multiply(0.001) | round(1) }}'
+    #
+    #  - platform: command_line
+    #    name: Home assistant GPU Temperature
+    #    command: "/opt/vc/bin/vcgencmd measure_temp"
+    #    unit_of_measurement: "C"
+    #    value_template: '{{ value | replace("temp=", "") | replace("''C", "") }}'
+    #
   - platform: time_date
     display_options:
       - 'time'
       - 'date'
       - 'date_time'
 
-  - platform: mqtt
-    name: Plex uptime
-    state_topic: /plex/uptime
-    unit_of_measurement: "days"
-
-  - platform: mqtt
-    name: Plex GPU temperature
-    state_topic: /plex/gpu_temperature
-    unit_of_measurement: "C"
-    device_class: temperature
-
-  - platform: mqtt
-    name: Plex CPU temperature
-    state_topic: /plex/cpu_temperature
-    unit_of_measurement: "C"
-    device_class: temperature 
+        #  - platform: mqtt
+        #    name: Plex uptime
+        #    state_topic: /plex/uptime
+        #    unit_of_measurement: "days"
+        #
+        #  - platform: mqtt
+        #    name: Plex GPU temperature
+        #    state_topic: /plex/gpu_temperature
+        #    unit_of_measurement: "C"
+        #    device_class: temperature
+        #
+        #  - platform: mqtt
+        #    name: Plex CPU temperature
+        #    state_topic: /plex/cpu_temperature
+        #    unit_of_measurement: "C"
+        #    device_class: temperature 

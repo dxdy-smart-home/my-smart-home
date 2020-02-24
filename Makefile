@@ -16,4 +16,11 @@ create_certificate:
 test_renewal_certificates:
 	docker-compose exec nginx_certbot certbot renew --dry-run
 
+set_headphones:
+	docker-compose exec mpd amixer cset numid=3 1
 
+test_headphones:
+	docker-compose exec mpd aplay /usr/share/sounds/alsa/Front_Center.wav
+
+set_default_playlist:
+	docker-compose exec mpd /bin/bash -c "mpc clear | ls /mpd/playlists/*.m3u | xargs cat | xargs mpc insert"
