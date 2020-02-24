@@ -49,6 +49,7 @@ services:
     image: koenkk/zigbee2mqtt:1.10.0
     volumes:
       - ./zigbee2mqtt/data:/app/data
+      - /run/udev:/run/udev:ro
     devices:
       - /dev/ttyACM0:/dev/ttyACM0
     restart: always
