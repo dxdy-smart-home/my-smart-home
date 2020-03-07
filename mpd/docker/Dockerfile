@@ -5,3 +5,7 @@ RUN apt-get update && \
     usermod -a -G audio mpd && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* ~/.cache
+
+ADD entrypoint.sh /mpd/
+
+ENTRYPOINT ["/mpd/entrypoint.sh"]
