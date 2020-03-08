@@ -30,3 +30,9 @@ check_hass:
 
 restart_hass:
 	docker-compose restart homeassistant
+
+backup:
+	./script/backup.sh
+
+restore:
+	./script/restore.sh
