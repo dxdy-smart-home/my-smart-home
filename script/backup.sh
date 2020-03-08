@@ -19,6 +19,7 @@ sudo cp homeassistant/config/known_devices.yaml $BACKUP_NAME/homeassistant/confi
 sudo cp -r homeassistant/config/.storage/ $BACKUP_NAME/homeassistant/config/.storage/
 
 sudo cp zigbee2mqtt/data/configuration.yaml $BACKUP_NAME/zigbee2mqtt/data/configuration.yaml
+sudo cp zigbee2mqtt/data/state.json $BACKUP_NAME/zigbee2mqtt/data/state.json
 
 sudo cp -r certbot/letsencrypt/ $BACKUP_NAME/certbot/letsencrypt/
 
