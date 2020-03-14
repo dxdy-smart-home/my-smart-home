@@ -13,6 +13,7 @@
 /homeassistant/config/.HA_VERSION
 /homeassistant/config/.uuid
 /homeassistant/config/core
+/homeassistant/config/tts/*
 
 /zigbee2mqtt/data/*
 !/zigbee2mqtt/data/configuration.yaml.sample

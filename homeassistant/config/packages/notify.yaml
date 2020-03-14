@@ -4,3 +4,8 @@ notify:
     vapid_pub_key: !secret notify_vapid_pub_key
     vapid_prv_key: !secret notify_vapid_prv_key
     vapid_email: !secret notify_vapid_email
+
+tts:
+  - platform: google_translate
+    language: ru
+    cache: false
