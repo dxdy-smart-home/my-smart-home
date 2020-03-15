@@ -1,7 +1,7 @@
 sensor:
   - platform: mitemp_bt
     mac: 58:2D:34:36:AB:19
-    name: Переносной датчик температуры и влажности
+    name: Душевая
 
 weather:
   - platform: gismeteo
