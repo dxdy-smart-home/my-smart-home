@@ -1,5 +1,12 @@
-Docker
+Raspberry pi 4
 =========
+
+## Disable bluetooth
+
+``` bash
+sudo echo "dtoverlay=disable-bt" >> /boot/config.txt
+sudo reboot
+```
 
 ## Install docker on raspberry pi
 
