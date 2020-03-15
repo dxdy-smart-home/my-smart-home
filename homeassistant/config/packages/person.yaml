@@ -1,2 +1,8 @@
+group:
+  family:
+    entities:
+      - person.dxdy
+      - person.aleksandra
+
 device_tracker:
   - platform: bluetooth_tracker
