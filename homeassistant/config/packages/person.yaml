@@ -6,3 +6,19 @@ group:
 
 device_tracker:
   - platform: bluetooth_tracker
+    new_device_defaults:
+      track_new_devices: false
+
+automation:
+  - alias: 'Stop alarm music when away'
+    trigger:
+      - platform: state
+        entity_id: group.family
+        to: 'not_home'
+    condition:
+      - condition: state
+        entity_id: input_boolean.guest_mode
+        state: 'off'
+    action:
+      - service: script.stop_alarm_music
+    

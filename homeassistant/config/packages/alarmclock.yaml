@@ -138,5 +138,3 @@ script:
     alias: Ring Alarm
     sequence:
       - service: script.start_alarm_music
-      - delay: 1:00:00
-      - service: script.stop_alarm_music
