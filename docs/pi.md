@@ -1,6 +1,15 @@
 Raspberry pi 4
 =========
 
+## Enable Wi-fi 5G
+
+``` bash
+sudo raspi-config
+# Go to Localization Options and change WiFi County on US
+
+sudo iwlist wlan0 scan | grep Freq
+```
+
 ## Disable bluetooth
 
 ``` bash
