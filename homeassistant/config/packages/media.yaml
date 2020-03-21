@@ -9,14 +9,15 @@ media_player:
     host: 127.0.0.1
     name: Колонки на кухне
 
-    #transmission:
-    #  host: !secret torrent_host
-    #  port: !secret torrent_port
-    #  username: !secret torrent_username
-    #  password: !secret torrent_password
-    #
-    #panel_iframe:
-    #  torrent:
-    #    title: Torrent
-    #    url: !secret torrent_host
-    #    icon: mdi:briefcase-download
+# Samsung tv is evil
+automation:
+  - alias: 'Turn off kitchen speakers if samsung tv in living room turns on'
+    initial_state: 'off'
+    trigger:
+      - platform: state
+        entity_id: media_player.televizor_v_gostinoi
+        from: 'off'
+        to: 'on'
+    action:
+      - service: media_player.turn_off
+        entity_id: media_player.kolonki_na_kukhne
