@@ -8,45 +8,19 @@ input_boolean:
     initial: 'on'
     icon: mdi:alarm  
 
-input_number:
-  working_alarm_hour:
-    name: Часы
+input_datetime:
+  working_alarm_time:
+    name: Время
     icon: mdi:timer
-    initial: 8
-    min: 0
-    max: 23
-    step: 1
-  working_alarm_minute:
-    name: Минуты
+    has_date: false
+    has_time: true
+    initial: '08:00'
+  weekend_alarm_time:
+    name: Время
     icon: mdi:timer
-    initial: 0
-    min: 0
-    max: 59
-    step: 1
-  weekend_alarm_hour:
-    name: Часы
-    icon: mdi:timer
-    initial: 9
-    min: 0
-    max: 23
-    step: 1
-  weekend_alarm_minute:
-    name: Минуты
-    icon: mdi:timer
-    initial: 0
-    min: 0
-    max: 59
-    step: 1
-
-sensor:
-  - platform: template
-    sensors:
-      working_alarm_time:
-        friendly_name: 'Working alarm'
-        value_template: '{{ "%0.02d:%0.02d" | format(states("input_number.working_alarm_hour") | int, states("input_number.working_alarm_minute") | int) }}'
-      weekend_alarm_time:
-        friendly_name: 'Weekend alarm'
-        value_template: '{{ "%0.02d:%0.02d" | format(states("input_number.weekend_alarm_hour") | int, states("input_number.weekend_alarm_minute") | int) }}'
+    has_date: false
+    has_time: true
+    initial: '09:00'
 
 automation:
   - alias: Проверка, что пора на работу
@@ -57,7 +31,7 @@ automation:
       condition: and
       conditions:
         - condition: template
-          value_template: '{{ now().time().strftime("%H:%M") == states.sensor.working_alarm_time.state }}'
+          value_template: '{{ now().time().strftime("%H:%M:00") == states.input_datetime.working_alarm_time.state }}'
 
         - condition: state
           entity_id: input_boolean.working_alarm_enabled
@@ -77,7 +51,7 @@ automation:
       condition: and
       conditions:
         - condition: template
-          value_template: '{{ now().time().strftime("%H:%M") == states.sensor.weekend_alarm_time.state }}'
+          value_template: '{{ now().time().strftime("%H:%M:00") == states.input_datetime.weekend_alarm_time.state }}'
 
         - condition: state
           entity_id: input_boolean.weekend_alarm_enabled
