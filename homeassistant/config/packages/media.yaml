@@ -12,7 +12,6 @@ media_player:
 # Samsung tv is evil
 automation:
   - alias: 'Turn off kitchen speakers if samsung tv in living room turns on'
-    initial_state: 'off'
     trigger:
       - platform: state
         entity_id: media_player.televizor_v_gostinoi
