@@ -13,6 +13,7 @@ sun:
 system_health:
 updater:
 zeroconf:
+python_script:
 
 recorder:
    include:
