@@ -21,11 +21,11 @@ recorder:
        - sensor.0x00158d00044afc42_temperature
        - sensor.0x00158d00039e4a23_temperature
        - sensor.0x00158d000418d85c_temperature
-       - sensor.perenosnoi_datchik_temperatury_i_vlazhnosti_temperature
+       - sensor.dushevaia_temperature
        - sensor.0x00158d000418d85c_humidity
        - sensor.0x00158d00039e4a23_humidity
        - sensor.0x00158d00044afc42_humidity
-       - sensor.perenosnoi_datchik_temperatury_i_vlazhnosti_humidity
+       - sensor.dushevaia_humidity
 
 history:
    include:
@@ -33,9 +33,11 @@ history:
        - sensor.0x00158d00044afc42_temperature
        - sensor.0x00158d00039e4a23_temperature
        - sensor.0x00158d000418d85c_temperature
+       - sensor.dushevaia_temperature
        - sensor.0x00158d000418d85c_humidity
        - sensor.0x00158d00039e4a23_humidity
        - sensor.0x00158d00044afc42_humidity
+       - sensor.dushevaia_humidity
 
 homeassistant:
   packages: !include_dir_named packages
