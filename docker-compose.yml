@@ -32,7 +32,7 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d
   homeassistant:
     container_name: homeassistant
-    image: homeassistant/raspberrypi4-homeassistant:0.107.7
+    image: homeassistant/raspberrypi4-homeassistant:0.108.6
     restart: always
     volumes:
       - ./homeassistant/config:/config
