@@ -30,6 +30,7 @@ services:
     volumes:
       - ./certbot/letsencrypt:/etc/letsencrypt
       - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./homeassistant/config:/homeassistant
   homeassistant:
     container_name: homeassistant
     image: homeassistant/raspberrypi4-homeassistant:0.108.6
