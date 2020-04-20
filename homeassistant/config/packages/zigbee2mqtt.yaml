@@ -8,7 +8,6 @@ panel_iframe:
 
 automation:
   alias: 'Zigbee Map update'
-  hide_entity: true
   trigger:
     platform: time_pattern
     minutes: '/10'
