@@ -6,6 +6,7 @@ sensor:
 weather:
   - platform: gismeteo
     name: weather
+    mode: daily
 
 automation:
   - alias: Проветрить спальню перед сном
