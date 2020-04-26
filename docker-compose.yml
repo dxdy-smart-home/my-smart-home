@@ -33,7 +33,7 @@ services:
       - ./homeassistant/config:/homeassistant
   homeassistant:
     container_name: homeassistant
-    image: homeassistant/raspberrypi4-homeassistant:0.108.6
+    image: homeassistant/raspberrypi4-homeassistant:0.108.9
     restart: always
     volumes:
       - ./homeassistant/config:/config
