@@ -47,6 +47,9 @@ duckdns:
   domain: !secret duckdns_domain
   access_token: !secret duckdns_access_token 
 
+http:
+  base_url: !secret homeassistant_url
+
 mqtt:
   discovery: true
   broker: 'localhost'
