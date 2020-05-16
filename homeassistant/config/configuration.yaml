@@ -4,7 +4,10 @@
 
 automation:
 config:
+
 frontend:
+  themes: !include_dir_merge_named themes
+
 mobile_app:
 person:
 script:
