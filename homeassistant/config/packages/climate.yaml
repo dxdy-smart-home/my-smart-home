@@ -2,6 +2,7 @@ sensor:
   - platform: mitemp_bt
     mac: 58:2D:34:36:AB:19
     name: Душевая
+    adapter: !secret ha_bluetooth
 
 weather:
   - platform: gismeteo

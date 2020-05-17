@@ -6,6 +6,7 @@ group:
 
 device_tracker:
   - platform: bluetooth_tracker
+    device_id: !secret ha_bluetooth_id
     new_device_defaults:
       track_new_devices: false
 
