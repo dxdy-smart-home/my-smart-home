@@ -43,6 +43,13 @@ history:
        - sensor.0x00158d00044afc42_humidity
        - sensor.dushevaia_humidity
 
+influxdb:
+  username: !secret influxdb_username
+  password: !secret influxdb_password
+  default_measurement: state
+  include:
+    entities: []
+
 homeassistant:
   packages: !include_dir_named packages
 
