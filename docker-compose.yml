@@ -31,6 +31,15 @@ services:
       - ./certbot/letsencrypt:/etc/letsencrypt
       - ./nginx/conf.d:/etc/nginx/conf.d
       - ./homeassistant/config:/homeassistant
+  influxdb:
+    container_name: influxdb
+    image: influxdb:1.8
+    restart: always
+    network_mode: host
+    volumes:
+      - ./influxdb:/var/lib/influxdb
+    environment:
+      - INFLUXDB_REPORTING_DISABLED=true
   homeassistant:
     container_name: homeassistant
     image: homeassistant/raspberrypi4-homeassistant:0.110.0
