@@ -69,3 +69,11 @@ mqtt:
   will_message:
     topic: 'hass/status'
     payload: 'offline'
+
+sonoff:
+  username: !secret sonoff_username
+  password: !secret sonoff_password
+  devices:
+    1000a8d068:
+      device_class: [light, light]
+      name: Светильник 

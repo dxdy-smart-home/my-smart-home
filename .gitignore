@@ -20,3 +20,5 @@
 !/zigbee2mqtt/data/configuration.yaml.sample
 
 /influxdb/
+
+/homeassistant/config/.sonoff.json
