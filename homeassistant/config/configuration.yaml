@@ -52,13 +52,11 @@ influxdb:
 
 homeassistant:
   packages: !include_dir_named packages
+  external_url: !secret homeassistant_url
 
 duckdns:
   domain: !secret duckdns_domain
   access_token: !secret duckdns_access_token 
-
-http:
-  base_url: !secret homeassistant_url
 
 mqtt:
   discovery: true
