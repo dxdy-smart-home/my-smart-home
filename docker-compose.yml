@@ -44,6 +44,7 @@ services:
     container_name: homeassistant
     image: homeassistant/raspberrypi4-homeassistant:0.111.4
     restart: always
+    privileged: true
     volumes:
       - ./homeassistant/config:/config
     network_mode: host
