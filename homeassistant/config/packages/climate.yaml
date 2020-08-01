@@ -1,8 +1,10 @@
 sensor:
   - platform: mitemp_bt
-    mac: 58:2D:34:36:AB:19
-    name: Душевая
-    adapter: !secret ha_bluetooth
+    whitelist:
+      - '58:2D:34:36:AB:19'
+    encryptors:
+      'A4:C1:38:FB:31:3D': '75b58807305a3254ea925a841b978a70'
+    hci_interface: !secret ha_bluetooth_id 
 
 weather:
   - platform: gismeteo

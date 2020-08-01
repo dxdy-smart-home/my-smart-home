@@ -22,3 +22,5 @@
 /influxdb/
 
 /homeassistant/config/.sonoff.json
+
+my_smart_home_*tar.gz
