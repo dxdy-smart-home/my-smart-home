@@ -2,7 +2,7 @@ input_boolean:
   working_alarm_enabled:
     name: Состояние
     initial: 'on'
-    icon: mdi:alarm
+    icon: mdi:timer-outline
   weekend_alarm_enabled:
     name: Состояние
     initial: 'on'
@@ -17,7 +17,7 @@ input_datetime:
     initial: '08:00'
   weekend_alarm_time:
     name: Время
-    icon: mdi:timer
+    icon: mdi:timer-outline
     has_date: false
     has_time: true
     initial: '09:00'

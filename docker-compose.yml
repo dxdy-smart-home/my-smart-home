@@ -42,7 +42,7 @@ services:
       - INFLUXDB_REPORTING_DISABLED=true
   homeassistant:
     container_name: homeassistant
-    image: homeassistant/raspberrypi4-homeassistant:0.112.0
+    image: homeassistant/raspberrypi4-homeassistant:0.114.4
     restart: always
     privileged: true
     volumes:
