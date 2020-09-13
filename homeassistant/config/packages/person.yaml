@@ -4,11 +4,23 @@ group:
       - person.dxdy
       - person.aleksandra
 
+homeassistant:
+  customize:
+    person.dxdy:
+      entity_picture: https://avatars2.githubusercontent.com/u/2061165?s=88&v=4
+    person.aleksandra:
+      entity_picture: https://sun9-68.userapi.com/c850236/v850236988/271ee/iRzpFmY1DI8.jpg?ava=1  
+
 device_tracker:
   - platform: bluetooth_tracker
     device_id: !secret ha_bluetooth_id
     new_device_defaults:
       track_new_devices: false
+  - platform: nmap_tracker
+    hosts:
+      - 192.168.1.11
+      - 192.168.1.248
+    home_interval: 1
 
 automation:
   - alias: 'Stop alarm music when away'
