@@ -1,9 +1,3 @@
-panel_iframe:
-  router:
-    title: OTT player
-    url: https://ottplayer.es/account?lang=ru
-    icon: mdi:television-classic
-
 media_player:
   - platform: samsungtv_custom
     host: !secret samsungtv_host
