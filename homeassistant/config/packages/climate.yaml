@@ -1,4 +1,9 @@
 sensor:
+  - platform: mqtt
+    name: "rpi_co2"
+    state_topic: "/rpi/co2"
+    unit_of_measurement: "%"
+
   - platform: mitemp_bt
     whitelist:
       - '58:2D:34:36:AB:19'
