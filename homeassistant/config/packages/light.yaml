@@ -2,10 +2,65 @@ binary_sensor:
   - platform: template
     sensors:
       hall_switch:
-        friendly_name: Выключатель
+        friendly_name: "Выключатель в прихожей"
         value_template: "{{ is_state('binary_sensor.0x00158d0004280ab6_contact', 'on') }}"
+      bed_switch:
+        friendly_name: "Выключатель в спальне"
+        value_template: "{{ is_state('binary_sensor.0x00158d00044d5691_contact', 'on') }}"
+
+yeelight:
+  devices:
+    192.168.1.6:
+      name: Свет в спальне
 
 automation:
+  - alias: 'Включить ночник'
+    trigger:
+      - platform: state
+        entity_id: 
+          - sensor.0x00158d000424fa2c_click
+          - sensor.0x00158d000424fadf_click
+        to: 'single'
+    action:
+      - service: yeelight.set_mode
+        data:
+          entity_id: light.svet_v_spalne
+          mode: moonlight
+      - service: light.turn_on
+        entity_id: light.svet_v_spalne
+
+  - alias: 'Включить свет в спальне'
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.bed_switch
+        to: 'on'
+      - platform: state
+        entity_id:
+          - sensor.0x00158d000424fa2c_click
+          - sensor.0x00158d000424fadf_click
+        to: 'double'
+    action:
+      - service: yeelight.set_mode
+        data:
+          entity_id: light.svet_v_spalne
+          mode: normal
+      - service: light.turn_on
+        entity_id: light.svet_v_spalne
+
+  - alias: 'Выключить свет в спальне'
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.bed_switch
+        to: 'off'
+      - platform: state
+        entity_id:
+          - sensor.0x00158d000424fa2c_click
+          - sensor.0x00158d000424fadf_click
+        to: 'long'
+    action:
+      - service: light.turn_off
+        entity_id: light.svet_v_spalne
+
   - alias: 'Включить свет в большой прихожей через датчик движения'
     trigger:
       - platform: state
