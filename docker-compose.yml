@@ -57,7 +57,7 @@ services:
     restart: always
   zigbee2mqtt:
     container_name: zigbee2mqtt
-    image: koenkk/zigbee2mqtt:1.10.0
+    image: koenkk/zigbee2mqtt:1.15.0
     volumes:
       - ./zigbee2mqtt/data:/app/data
       - /run/udev:/run/udev:ro
