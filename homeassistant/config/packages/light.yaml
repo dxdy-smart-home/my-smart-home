@@ -12,6 +12,17 @@ yeelight:
   devices:
     192.168.1.6:
       name: Свет в спальне
+  custom_effects:
+    - name: 'Wake up'
+      flow_params:
+        count: 1
+        action: stay
+        transitions:
+          - TemperatureTransition: [1700, 180000, 10]
+          - TemperatureTransition: [2700, 180000, 11]
+          - TemperatureTransition: [3700, 180000, 12]
+          - TemperatureTransition: [4700, 180000, 13]
+          - TemperatureTransition: [6500, 180000, 100]
 
 automation:
   - alias: 'Включить ночник'
