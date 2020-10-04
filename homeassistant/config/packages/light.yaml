@@ -42,33 +42,39 @@ automation:
       - service: light.turn_on
         entity_id: light.svet_v_spalne
 
-  - alias: 'Включить свет в спальне'
+  - alias: 'Включить или выключить свет в спальне через выключатель'
     mode: queued
     max: 5
     trigger:
       - platform: state
         entity_id: binary_sensor.bed_switch
-        to: 'on'
+    action:
+      - service: light.toggle
+        data:
+          entity_id: light.svet_v_spalne
+          color_temp: 1
+          brightness: 255
+
+  - alias: 'Включить свет в спальне'
+    mode: queued
+    max: 5
+    trigger:
       - platform: state
         entity_id:
           - sensor.0x00158d000424fa2c_click
           - sensor.0x00158d000424fadf_click
         to: 'double'
     action:
-      - service: yeelight.set_mode
+      - service: light.turn_on
         data:
           entity_id: light.svet_v_spalne
-          mode: normal
-      - service: light.turn_on
-        entity_id: light.svet_v_spalne
+          color_temp: 1
+          brightness: 255
 
   - alias: 'Выключить свет в спальне'
     mode: queued
     max: 5
     trigger:
-      - platform: state
-        entity_id: binary_sensor.bed_switch
-        to: 'off'
       - platform: state
         entity_id:
           - sensor.0x00158d000424fa2c_click
