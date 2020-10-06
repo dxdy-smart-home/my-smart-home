@@ -4,6 +4,7 @@
 
 /certbot/letsencrypt/*
 
+/homeassistant/config/.shopping_list.json
 /homeassistant/config/secrets.yaml
 /homeassistant/config/html5_push_registrations.conf
 /homeassistant/config/known_devices.yaml
