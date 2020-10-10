@@ -14,25 +14,22 @@ input_datetime:
     icon: mdi:timer
     has_date: false
     has_time: true
-    initial: '08:00'
+    initial: '07:45'
   weekend_alarm_time:
     name: Время
     icon: mdi:timer-outline
     has_date: false
     has_time: true
-    initial: '09:00'
+    initial: '08:45'
 
 automation:
   - alias: Проверка, что пора на работу
     trigger:
-        platform: time_pattern
-        minutes: '/1'
+        platform: time
+        at: input_datetime.working_alarm_time
     condition:
       condition: and
       conditions:
-        - condition: template
-          value_template: '{{ now().time().strftime("%H:%M:00") == states.input_datetime.working_alarm_time.state }}'
-
         - condition: state
           entity_id: input_boolean.working_alarm_enabled
           state: 'on'
@@ -45,14 +42,11 @@ automation:
 
   - alias: Проверка, что хватит спать в выходные
     trigger:
-        platform: time_pattern
-        minutes: '/1'
+        platform: time
+        at: input_datetime.weekend_alarm_time
     condition:
       condition: and
       conditions:
-        - condition: template
-          value_template: '{{ now().time().strftime("%H:%M:00") == states.input_datetime.weekend_alarm_time.state }}'
-
         - condition: state
           entity_id: input_boolean.weekend_alarm_enabled
           state: 'on'
@@ -111,4 +105,5 @@ script:
   alarm_clock:
     alias: Ring Alarm
     sequence:
+      - service: script.start_sunrise
       - service: script.start_alarm_music

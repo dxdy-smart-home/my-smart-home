@@ -1,3 +1,9 @@
+group:
+  all_lights:
+    - light.svet_v_spalne
+    - light.sonoff_1000a8d068_1
+    - light.sonoff_1000a8d068_2
+
 binary_sensor:
   - platform: template
     sensors:
@@ -12,17 +18,47 @@ yeelight:
   devices:
     192.168.1.6:
       name: Свет в спальне
-  custom_effects:
-    - name: 'Wake up'
-      flow_params:
-        count: 1
-        action: stay
-        transitions:
-          - TemperatureTransition: [1700, 180000, 10]
-          - TemperatureTransition: [2700, 180000, 11]
-          - TemperatureTransition: [3700, 180000, 12]
-          - TemperatureTransition: [4700, 180000, 13]
-          - TemperatureTransition: [6500, 180000, 100]
+
+script:
+  turn_on_moonlight:
+    sequence:
+      - service: yeelight.set_mode
+        data:
+          entity_id: light.svet_v_spalne
+          mode: moonlight
+      - service: light.turn_on
+        data:
+          entity_id: light.svet_v_spalne
+          brightness: 1
+  start_sunrise:
+    sequence:
+      - service: script.turn_on_moonlight
+      - delay: 00:03:00
+      - service: light.turn_on
+        data:
+          entity_id: light.svet_v_spalne
+          brightness_pct: 25
+      - delay: 00:03:00
+      - service: light.turn_on
+        data:
+          entity_id: light.svet_v_spalne
+          brightness_pct: 50
+      - delay: 00:03:00
+      - service: light.turn_on
+        data:
+          entity_id: light.svet_v_spalne
+          brightness_pct: 75
+      - delay: 00:03:00
+      - service: light.turn_on
+        data:
+          entity_id: light.svet_v_spalne
+          brightness_pct: 100
+      - delay: 00:03:00
+      - service: light.turn_on
+        data:
+          entity_id: light.svet_v_spalne
+          kelvin: 3000
+          brightness_pct: 1
 
 automation:
   - alias: 'Включить ночник'
@@ -35,12 +71,7 @@ automation:
           - sensor.0x00158d000424fadf_click
         to: 'single'
     action:
-      - service: yeelight.set_mode
-        data:
-          entity_id: light.svet_v_spalne
-          mode: moonlight
-      - service: light.turn_on
-        entity_id: light.svet_v_spalne
+      - service: script.turn_on_moonlight
 
   - alias: 'Включить или выключить свет в спальне через выключатель'
     mode: queued
