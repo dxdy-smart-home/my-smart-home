@@ -10,9 +10,7 @@ services:
     privileged: true
     volumes:
       - ./mpd/mpd.conf:/mpd/conf/mpd.conf
-      - ./mpd/music:/mpd/music
-      - ./mpd/playlists:/mpd/playlists
-      - ./mpd/data:/mpd/data
+      - ./mpd/playlists:/var/lib/mpd/playlists
     devices:
       - /dev/snd:/dev/snd
   duckdns:
