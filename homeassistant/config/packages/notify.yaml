@@ -5,7 +5,28 @@ notify:
     vapid_prv_key: !secret notify_vapid_prv_key
     vapid_email: !secret notify_vapid_email
 
+  - platform: telegram
+    name: telegram_dxdy
+    chat_id: !secret telegram_bot_dxdy_chat_id
+
+  - platform: telegram
+    name: telegram_oav
+    chat_id: !secret telegram_bot_oav_chat_id
+
+  - platform: group
+    name: telegram_family
+    services:
+      - service: telegram_dxdy
+      - service: telegram_oav
+
 tts:
   - platform: google_translate
     language: ru
     cache: false
+
+telegram_bot:
+  - platform: polling
+    api_key: !secret telegram_bot_api_key
+    allowed_chat_ids:
+      - !secret telegram_bot_dxdy_chat_id
+      - !secret telegram_bot_oav_chat_id
