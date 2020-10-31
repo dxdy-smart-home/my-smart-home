@@ -53,12 +53,12 @@ script:
         data:
           entity_id: light.svet_v_spalne
           brightness_pct: 100
-      - delay: 00:03:00
-      - service: light.turn_on
-        data:
-          entity_id: light.svet_v_spalne
-          kelvin: 3000
-          brightness_pct: 1
+      #- delay: 00:03:00
+      #- service: light.turn_on
+      #  data:
+      #    entity_id: light.svet_v_spalne
+      #    kelvin: 3000
+      #    brightness_pct: 1
 
 automation:
   - alias: 'Включить ночник'
