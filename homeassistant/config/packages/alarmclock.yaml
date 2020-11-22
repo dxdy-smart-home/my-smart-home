@@ -107,6 +107,6 @@ script:
     mode: parallel
     sequence:
       - service: script.turn_on 
-        entity_id: script.start_sunrise
+        entity_id: script.turn_on_moonlight
       - service: script.turn_on
         entity_id: script.start_alarm_music
