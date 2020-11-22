@@ -2,7 +2,7 @@ sensor:
   - platform: mqtt
     name: "rpi_co2"
     state_topic: "/rpi/co2"
-    unit_of_measurement: "%"
+    unit_of_measurement: "ppm"
 
   - platform: mitemp_bt
     whitelist:
