@@ -1,4 +1,14 @@
 automation:
+  - alias: Протечка на кухне
+    trigger: 
+    - platform: state
+      entity_id: binary_sensor.0x00158d00049fc6ec_water_leak
+      to: 'on'
+    action:
+    - data:
+        message: На кухне протечка
+      service: notify.telegram_family
+
   - id: '1576001180625'
     alias: Протечка в ванной
     description: ''
