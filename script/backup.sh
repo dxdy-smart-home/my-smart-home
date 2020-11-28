@@ -10,7 +10,7 @@ BACKUP_NAME=my_smart_home_$(date +"%Y%m%d_%H%M%S")
 
 echo "Waiting..."
 
-mkdir -p $BACKUP_NAME/{duckdns,homeassistant/config,zigbee2mqtt/data,certbot}
+mkdir -p $BACKUP_NAME/{duckdns,homeassistant/config,zigbee2mqtt/data,certbot,mqtt}
 
 sudo cp duckdns/.env $BACKUP_NAME/duckdns/.env
 
@@ -27,10 +27,12 @@ sudo cp -r certbot/letsencrypt/ $BACKUP_NAME/certbot/letsencrypt/
 
 sudo cp -r influxdb/ $BACKUP_NAME/influxdb
 
+sudo cp -r mqtt/ssl/ $BACKUP_NAME/mqtt/ssl/
+
 sudo tar czf $BACKUP_NAME.tar.gz $BACKUP_NAME
 
 sudo rm -rf ./$BACKUP_NAME
-curl -T $BACKUP_NAME.tar.gz --user $LOGIN:$PASSWORD $ENDPOINT/$BACKUP_NAME.tar.gz
+curl --progress-bar -o /dev/stdout --verbose -T $BACKUP_NAME.tar.gz --user $LOGIN:$PASSWORD $ENDPOINT/$BACKUP_NAME.tar.gz
 sudo rm ./$BACKUP_NAME.tar.gz
 
 echo "Done"

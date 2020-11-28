@@ -1,6 +1,7 @@
 **/__pycache__/*
 
 /mqtt/ssl/*
+!/mqtt/ssl/.keep
 
 /duckdns/.env
 
