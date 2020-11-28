@@ -53,6 +53,10 @@ services:
     image: eclipse-mosquitto:1.6.8
     network_mode: host
     restart: always
+    volumes:
+      - ./mqtt/config:/mosquitto/config
+      - ./mqtt/conf.d:/mosquitto/conf.d
+      - ./mqtt/ssl:/mosquitto/ssl
   zigbee2mqtt:
     container_name: zigbee2mqtt
     image: koenkk/zigbee2mqtt:1.15.0

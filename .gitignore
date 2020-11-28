@@ -1,5 +1,7 @@
 **/__pycache__/*
 
+/mqtt/ssl/*
+
 /duckdns/.env
 
 /certbot/letsencrypt/*
