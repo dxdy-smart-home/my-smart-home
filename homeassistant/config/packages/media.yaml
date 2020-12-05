@@ -35,10 +35,10 @@ media_player:
     port: 8001
     name: Телевизор в гостиной
     mac: !secret samsungtv_mac
- 
-  - platform: mpd
-    host: 127.0.0.1
-    name: Колонки на кухне
+
+yandex_station:
+  username: !secret yandex_username
+  password: !secret yandex_password
 
 # Samsung tv is evil
 automation:
@@ -50,4 +50,4 @@ automation:
         to: 'on'
     action:
       - service: media_player.turn_off
-        entity_id: media_player.kolonki_na_kukhne
+        entity_id: media_player.yandex_station_ff98f02970565b8d4d33fe93

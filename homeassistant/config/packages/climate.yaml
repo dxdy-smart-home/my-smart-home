@@ -32,6 +32,6 @@ automation:
     action:
     - alias: ''
       data_template:
-        media_id: 'media_player.kolonki_na_kukhne'
+        media_id: 'media_player.yandex_station_ff98f02970565b8d4d33fe93'
         message: "В спальне {{ state_attr('sensor.0x00158d000418d85c_temperature', 'temperature') }} градусов. Рекомендую проветрить комнату перед сном."
       service: python_script.say_text

@@ -19,11 +19,6 @@ notify:
       - service: telegram_dxdy
       - service: telegram_oav
 
-tts:
-  - platform: google_translate
-    language: ru
-    cache: false
-
 telegram_bot:
   - platform: polling
     api_key: !secret telegram_bot_api_key
