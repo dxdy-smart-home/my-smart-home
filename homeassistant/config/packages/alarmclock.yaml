@@ -23,7 +23,7 @@ input_datetime:
     initial: '09:00'
 
 automation:
-  - alias: Проверка, что пора на работу
+  - alias: Будильник на работу
     trigger:
         platform: time
         at: input_datetime.working_alarm_time
@@ -40,7 +40,7 @@ automation:
     action:
       - service: script.alarm_clock
 
-  - alias: Проверка, что хватит спать в выходные
+  - alias: Будильник, что хватит спать в выходные
     trigger:
         platform: time
         at: input_datetime.weekend_alarm_time
