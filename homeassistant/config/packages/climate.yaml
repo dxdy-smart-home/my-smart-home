@@ -31,7 +31,8 @@ automation:
           value_template: "{{ state_attr('sensor.0x00158d000418d85c_temperature', 'temperature') > 21 }}"
     action:
     - alias: ''
-      data_template:
-        media_id: 'media_player.yandex_station_ff98f02970565b8d4d33fe93'
-        message: "В спальне {{ state_attr('sensor.0x00158d000418d85c_temperature', 'temperature') }} градусов. Рекомендую проветрить комнату перед сном."
-      service: python_script.say_text
+      service: media_player.play_media
+      entity_id: 'media_player.yandex_station_ff98f02970565b8d4d33fe93'
+      data:
+        media_content_id: "В спальне {{ state_attr('sensor.0x00158d000418d85c_temperature', 'temperature') }} градусов. Рекомендую проветрить комнату перед сном."
+        media_content_type: text
