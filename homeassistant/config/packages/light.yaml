@@ -120,6 +120,10 @@ automation:
       - platform: state
         entity_id: binary_sensor.0x00158d00041faacf_occupancy
         to: 'on'
+    condition:
+      - condition: time
+        after: '07:30:00'
+        before: '23:00:00'
     action:
       - service: light.turn_on
         entity_id: light.sonoff_1000a8d068_2
