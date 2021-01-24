@@ -5,7 +5,7 @@ from typing import Optional
 from homeassistant.core import HomeAssistant, Event
 from homeassistant.helpers.intent import IntentHandler, Intent, IntentResponse
 
-from . import DOMAIN
+from . import DOMAIN, DATA_SPEAKERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,8 +16,9 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
 
     handlers = []
 
-    for device in hass.data[DOMAIN]['devices']:
-        if 'host' in device or device['platform'].startswith('yandex'):
+    for device in hass.data[DOMAIN][DATA_SPEAKERS].values():
+        platform = device['quasar_info']['platform']
+        if 'host' in device or platform.startswith('yandex'):
             handler = YandexIntentHandler(device['entity'].entity_id)
             hass.helpers.intent.async_register(handler)
             handlers.append(handler)
