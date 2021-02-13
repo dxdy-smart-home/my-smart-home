@@ -33,6 +33,7 @@ recorder:
        - sensor.mi_h_a4c138fb313d
        - sensor.mi_h_582d3436ab19
        - sensor.rpi_co2
+       - binary_sensor.0x00158d0005443bfb_contact
 
 history:
    include:
@@ -48,6 +49,7 @@ history:
        - sensor.mi_h_a4c138fb313d
        - sensor.mi_h_582d3436ab19
        - sensor.rpi_co2
+       - binary_sensor.0x00158d0005443bfb_contact
 
 #influxdb:
 #  username: !secret influxdb_username
