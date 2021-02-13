@@ -22,7 +22,7 @@ automation:
         - condition: template
           value_template: "{{ state_attr('sensor.0x00158d000418d85c_temperature', 'temperature') - state_attr('weather.weather', 'temperature') >= 5 }}"
         - condition: template
-          value_template: "{{ state_attr('sensor.0x00158d000418d85c_temperature', 'temperature') > 21 }}"
+          value_template: "{{ state_attr('sensor.0x00158d000418d85c_temperature', 'temperature') > 22 }}"
     action:
       - service: media_player.volume_set
         entity_id: media_player.yandex_station_ff98f02970565b8d4d33fe93
