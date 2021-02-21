@@ -7,7 +7,7 @@ switch:
 
 automation:
   - id: '1575133776894'
-    alias: Включить свет у цветов в детской
+    alias: Включить свет у цветов
     description: ''
     trigger:
     - at: 07:00:00
@@ -18,8 +18,12 @@ automation:
       data:
         entity_id: switch.tsvety_v_detskoi
       service: switch.turn_on
+    - alias: ''
+      data:
+        entity_id: light.0x00158d00025d5546
+      service: light.turn_on
   - id: '1575133850822'
-    alias: Выключить свет у цветов в детской
+    alias: Выключить свет у цветов
     description: ''
     trigger:
     - at: '22:00:00'
@@ -30,3 +34,7 @@ automation:
       data:
         entity_id: switch.tsvety_v_detskoi
       service: switch.turn_off
+    - alias: ''
+      data:
+        entity_id: light.0x00158d00025d5546
+      service: light.turn_off
