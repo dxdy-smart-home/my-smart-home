@@ -19,7 +19,7 @@ services:
       - ./homeassistant/config:/homeassistant
   homeassistant:
     container_name: homeassistant
-    image: homeassistant/raspberrypi4-homeassistant:2021.1.5
+    image: homeassistant/raspberrypi4-homeassistant:2021.3.3
     restart: always
     privileged: true
     volumes:
@@ -38,7 +38,7 @@ services:
       - ./mqtt/ssl:/mosquitto/ssl
   zigbee2mqtt:
     container_name: zigbee2mqtt
-    image: koenkk/zigbee2mqtt:1.16.2
+    image: koenkk/zigbee2mqtt:1.18.1
     volumes:
       - ./zigbee2mqtt/data:/app/data
       - /run/udev:/run/udev:ro
