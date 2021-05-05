@@ -5,7 +5,8 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import DEVICE_CLASSES
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_DEVICES, \
     CONF_NAME, CONF_DEVICE_CLASS, EVENT_HOMEASSISTANT_STOP, CONF_MODE, \
-    CONF_SCAN_INTERVAL, CONF_FORCE_UPDATE, CONF_EXCLUDE, CONF_SENSORS
+    CONF_SCAN_INTERVAL, CONF_FORCE_UPDATE, CONF_EXCLUDE, CONF_SENSORS, \
+    CONF_TIMEOUT, CONF_PAYLOAD_OFF
 from homeassistant.core import ServiceCall
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -13,8 +14,8 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from . import utils
 from .sonoff_camera import EWeLinkCameras
-from .sonoff_cloud import ConsumptionHelper
-from .sonoff_main import EWeLinkRegistry, get_attrs
+from .sonoff_cloud import fix_attrs, CloudPowHelper
+from .sonoff_main import EWeLinkRegistry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +28,10 @@ CONF_DEBUG = 'debug'
 CONF_DEFAULT_CLASS = 'default_class'
 CONF_DEVICEKEY = 'devicekey'
 CONF_RELOAD = 'reload'
+CONF_RFBRIDGE = 'rfbridge'
+
+CONF_MODES = ['auto', 'cloud', 'local']
+CONF_RELOADS = ['once', 'always']
 
 # copy all binary device_class without light
 BINARY_DEVICE = [p for p in DEVICE_CLASSES if p != 'light']
@@ -35,13 +40,21 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_MODE, default='auto'): cv.string,
-        vol.Optional(CONF_RELOAD, default='once'): cv.string,
+        vol.Optional(CONF_MODE, default='auto'): vol.In(CONF_MODES),
+        vol.Optional(CONF_RELOAD, default='once'): vol.In(CONF_RELOADS),
         vol.Optional(CONF_DEFAULT_CLASS, default='switch'): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
         vol.Optional(CONF_FORCE_UPDATE): cv.ensure_list,
         vol.Optional(CONF_SENSORS): cv.ensure_list,
         vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+        vol.Optional(CONF_RFBRIDGE): {
+            cv.string: vol.Schema({
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Optional(CONF_DEVICE_CLASS): cv.string,
+                vol.Optional(CONF_TIMEOUT, default=120): cv.positive_int,
+                vol.Optional(CONF_PAYLOAD_OFF): cv.string
+            }, extra=vol.ALLOW_EXTRA),
+        },
         vol.Optional(CONF_DEVICES): {
             cv.string: vol.Schema({
                 vol.Optional(CONF_NAME): cv.string,
@@ -114,10 +127,10 @@ async def async_setup(hass: HomeAssistantType, hass_config: dict):
         force_update = None
 
     if CONF_SENSORS in config:
-        sensors = config[CONF_SENSORS]
-        _LOGGER.debug(f"Init auto sensors for: {sensors}")
+        auto_sensors = config[CONF_SENSORS]
+        _LOGGER.debug(f"Init auto sensors for: {auto_sensors}")
     else:
-        sensors = []
+        auto_sensors = []
 
     def add_device(deviceid: str, state: dict, *args):
         device = registry.devices[deviceid]
@@ -147,7 +160,7 @@ async def async_setup(hass: HomeAssistantType, hass_config: dict):
         _LOGGER.debug(f"{deviceid} == Init   | {info}")
 
         # fix cloud attrs like currentTemperature and currentHumidity
-        get_attrs(state)
+        fix_attrs(deviceid, state)
 
         # set device force_update if needed
         if force_update and force_update & state.keys():
@@ -178,7 +191,7 @@ async def async_setup(hass: HomeAssistantType, hass_config: dict):
                 hass.async_create_task(discovery.async_load_platform(
                     hass, info.pop('component'), DOMAIN, info, hass_config))
 
-        for attribute in sensors:
+        for attribute in auto_sensors:
             if attribute in state:
                 info = {'deviceid': deviceid, 'attribute': attribute}
                 hass.async_create_task(discovery.async_load_platform(
@@ -203,15 +216,6 @@ async def async_setup(hass: HomeAssistantType, hass_config: dict):
 
     hass.services.async_register(DOMAIN, 'send_command', send_command)
 
-    async def update_consumption(call: ServiceCall):
-        if not hasattr(registry, 'consumption'):
-            _LOGGER.debug("Create ConsumptionHelper")
-            registry.consumption = ConsumptionHelper(registry.cloud)
-        await registry.consumption.update()
-
-    hass.services.async_register(DOMAIN, 'update_consumption',
-                                 update_consumption)
-
     if CONF_SCAN_INTERVAL in config:
         global SCAN_INTERVAL
         SCAN_INTERVAL = config[CONF_SCAN_INTERVAL]
@@ -229,12 +233,32 @@ async def async_setup(hass: HomeAssistantType, hass_config: dict):
 
         await registry.cloud_start()
 
+        pow_helper = CloudPowHelper(registry.cloud)
+        if pow_helper.devices:
+            # backward compatibility for manual update consumption
+            async def update_consumption(call: ServiceCall):
+                await pow_helper.update_consumption()
+
+            hass.services.async_register(DOMAIN, 'update_consumption',
+                                         update_consumption)
+
     if mode in ('auto', 'local'):
         # add devices only on first discovery
-        await registry.local_start([add_device])
+        zeroconf = await utils.get_zeroconf_singleton(hass)
+        await registry.local_start([add_device], zeroconf)
+
+    if mode == 'auto':
+        registry.local.sync_temperature = True
 
     # cameras starts only on first command to it
     cameras = EWeLinkCameras()
+
+    # create binary sensors for RF Bridge
+    if CONF_RFBRIDGE in config:
+        for k, v in config[CONF_RFBRIDGE].items():
+            v['trigger'] = k
+            hass.async_create_task(discovery.async_load_platform(
+                hass, 'binary_sensor', DOMAIN, v, hass_config))
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, registry.stop)
 
