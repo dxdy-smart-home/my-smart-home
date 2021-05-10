@@ -16,11 +16,13 @@ device_tracker:
     device_id: !secret ha_bluetooth_id
     new_device_defaults:
       track_new_devices: false
-  - platform: nmap_tracker
-    hosts:
-      - 192.168.1.11
-      - 192.168.1.248
-    home_interval: 1
+
+# Microtic is used
+#  - platform: nmap_tracker
+#    hosts:
+#      - 192.168.1.11
+#      - 192.168.1.248
+#    home_interval: 1
 
 automation:
   - alias: 'Stop alarm music when away'
