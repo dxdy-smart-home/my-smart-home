@@ -25,6 +25,7 @@ CONF_TTS_NAME = 'tts_service_name'
 CONF_INTENTS = 'intents'
 CONF_DEBUG = 'debug'
 CONF_RECOGNITION_LANG = 'recognition_lang'
+CONF_PROXY = 'proxy'
 
 DATA_CONFIG = 'config'
 DATA_SPEAKERS = 'speakers'
@@ -44,6 +45,7 @@ CONFIG_SCHEMA = vol.Schema({
             }, extra=vol.ALLOW_EXTRA),
         },
         vol.Optional(CONF_RECOGNITION_LANG): cv.string,
+        vol.Optional(CONF_PROXY): cv.string,
         vol.Optional(CONF_DEBUG, default=False): cv.boolean,
     }, extra=vol.ALLOW_EXTRA),
 }, extra=vol.ALLOW_EXTRA)
@@ -70,6 +72,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     session = async_create_clientsession(hass)
     yandex = YandexSession(session, **entry.data)
     yandex.add_update_listener(update_cookie_and_token)
+
+    config = hass.data[DOMAIN][DATA_CONFIG]
+    yandex.proxy = config.get(CONF_PROXY)
 
     if not await yandex.refresh_cookies():
         hass.components.persistent_notification.async_create(
@@ -170,6 +175,9 @@ async def _init_services(hass: HomeAssistant):
             ATTR_ENTITY_ID: entity_ids,
         }
 
+        if 'options' in call.data:
+            data['extra'] = call.data['options']
+
         await hass.services.async_call(DOMAIN_MP, SERVICE_PLAY_MEDIA, data,
                                        blocking=True)
 
@@ -245,7 +253,7 @@ async def _setup_include(hass: HomeAssistant, entry: ConfigEntry):
     if CONF_INCLUDE not in config:
         return
 
-    for domain in ('climate', 'light', 'remote', 'switch'):
+    for domain in ('climate', 'light', 'remote', 'switch', 'vacuum'):
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             entry, domain
         ))

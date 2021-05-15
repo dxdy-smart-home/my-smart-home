@@ -1,4 +1,5 @@
 import logging
+import time
 
 from .yandex_session import YandexSession
 
@@ -16,6 +17,7 @@ IOT_TYPES = {
     'input_source': 'devices.capabilities.mode',
     'brightness': 'devices.capabilities.range',
     'color': 'devices.capabilities.color_setting',
+    'work_speed': 'devices.capabilities.mode',
     # don't work
     'hsv': 'devices.capabilities.color_setting',
     'rgb': 'devices.capabilities.color_setting',
@@ -41,6 +43,7 @@ def decode(uid: str) -> str:
 class YandexQuasar:
     # all devices
     devices = None
+    online_update_ts = 0
 
     def __init__(self, session: YandexSession):
         self.session = session
@@ -117,10 +120,14 @@ class YandexQuasar:
 
     async def add_scenario(self, device_id: str):
         """Добавляет сценарий-пустышку."""
+        name = encode(device_id)
         payload = {
-            'name': encode(device_id),
+            'name': name,
             'icon': 'home',
-            'trigger_type': 'scenario.trigger.voice',
+            'triggers': [{
+                'type': 'scenario.trigger.voice',
+                'value': name[3:]
+            }],
             'requested_speaker_capabilities': [],
             'devices': [{
                 'id': device_id,
@@ -155,7 +162,10 @@ class YandexQuasar:
         payload = {
             'name': name,
             'icon': 'home',
-            'trigger_type': 'scenario.trigger.voice',
+            'triggers': [{
+                'type': 'scenario.trigger.voice',
+                'value': name
+            }],
             'requested_speaker_capabilities': speaker,
             'devices': [{
                 'id': self.hass_id,
@@ -180,10 +190,14 @@ class YandexQuasar:
         _LOGGER.debug(f"{device['name']} => cloud | {text}")
 
         action = 'phrase_action' if is_tts else 'text_action'
+        name = encode(device_id)
         payload = {
-            'name': encode(device_id),
+            'name': name,
             'icon': 'home',
-            'trigger_type': 'scenario.trigger.voice',
+            'triggers': [{
+                'type': 'scenario.trigger.voice',
+                'value': name[3:]
+            }],
             'requested_speaker_capabilities': [],
             'devices': [{
                 'id': device_id,
@@ -272,3 +286,24 @@ class YandexQuasar:
         )
         resp = await r.json()
         assert resp['status'] == 'ok', resp
+
+    async def update_online_stats(self):
+        if time.time() < self.online_update_ts:
+            return
+
+        _LOGGER.debug(f"Update speakers online status")
+
+        self.online_update_ts = time.time() + 30
+
+        r = await self.session.get(
+            'https://quasar.yandex.ru/devices_online_stats')
+        resp = await r.json()
+        assert resp['status'] == 'ok', resp
+
+        for speaker in resp['items']:
+            device = next(
+                p for p in self.devices
+                if 'quasar_info' in p and
+                p['quasar_info']['device_id'] == speaker['id']
+            )
+            device['online'] = speaker['online']

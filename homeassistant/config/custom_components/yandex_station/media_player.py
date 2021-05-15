@@ -1,16 +1,21 @@
+import asyncio
 import base64
 import json
 import logging
 import re
+import time
 import uuid
 from typing import Optional
 
+from homeassistant.components import shopping_list
 from homeassistant.components.media_player import SUPPORT_PAUSE, \
     SUPPORT_VOLUME_SET, SUPPORT_PREVIOUS_TRACK, \
     SUPPORT_NEXT_TRACK, SUPPORT_PLAY, SUPPORT_TURN_OFF, \
     SUPPORT_VOLUME_STEP, SUPPORT_VOLUME_MUTE, SUPPORT_PLAY_MEDIA, \
     SUPPORT_SEEK, SUPPORT_SELECT_SOUND_MODE, SUPPORT_TURN_ON, \
     DEVICE_CLASS_TV, SUPPORT_SELECT_SOURCE
+from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, \
+    CONN_CLASS_LOCAL_POLL, CONN_CLASS_ASSUMED
 from homeassistant.const import STATE_PLAYING, STATE_PAUSED, STATE_IDLE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt
@@ -30,6 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 
 RE_EXTRA = re.compile(br'{.+[\d"]}')
 RE_MUSIC_ID = re.compile(r'^\d+(:\d+)?$')
+RE_SHOPPING = re.compile(r'^\d+\) (.+)\.$', re.MULTILINE)
 
 BASE_FEATURES = (SUPPORT_TURN_OFF | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP |
                  SUPPORT_VOLUME_MUTE | SUPPORT_PLAY_MEDIA |
@@ -73,9 +79,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             else YandexStation(quasar, speaker)
         )
         entities.append(entity)
-    async_add_entities(entities)
-
-    async_add_entities([YandexIntents(entry.unique_id)])
+    async_add_entities(entities, True)
 
     # add TVs
     if CONF_INCLUDE not in hass.data[DOMAIN][DATA_CONFIG]:
@@ -113,6 +117,8 @@ class YandexStation(MediaPlayerEntity):
     local_updated_at = None
     # прошлая громкость для правильного mute, есть в обоих режимах
     prev_volume = None
+    # для управления громкостью Алисы
+    alice_volume = None
 
     # облачное состояние, должно быть null, когда появляется локальное
     cloud_state = STATE_IDLE
@@ -125,6 +131,9 @@ class YandexStation(MediaPlayerEntity):
         self.quasar = quasar
         self.device = device
         self.requests = {}
+
+    def debug(self, text: str):
+        _LOGGER.debug(f"{self.name} | {text}")
 
     async def async_added_to_hass(self):
         # TODO: проверить смену имени!!!
@@ -145,7 +154,7 @@ class YandexStation(MediaPlayerEntity):
     async def init_local_mode(self):
         if not self.glagol:
             self.glagol = YandexGlagol(self.quasar.session, self.device)
-            self.glagol.update_handler = self.update
+            self.glagol.update_handler = self.internal_update
 
         await self.glagol.start_or_restart()
 
@@ -155,7 +164,7 @@ class YandexStation(MediaPlayerEntity):
 
     @property
     def should_poll(self):
-        return False
+        return self.local_state is None
 
     @property
     def unique_id(self):
@@ -179,6 +188,10 @@ class YandexStation(MediaPlayerEntity):
         }
 
     @property
+    def available(self):
+        return self.local_state or self.device.get('online')
+
+    @property
     def state(self):
         if self.local_state:
             if 'playerState' in self.local_state:
@@ -200,7 +213,8 @@ class YandexStation(MediaPlayerEntity):
     @property
     def volume_level(self):
         # в прошивке Яндекс.Станции Мини есть косяк - звук всегда (int) 0
-        if self.local_state and isinstance(self.local_state['volume'], float):
+        if (self.local_state and isinstance(self.local_state['volume'], float)
+                and 0 <= self.local_state['volume'] <= 1):
             return self.local_state['volume']
         else:
             return self.cloud_volume
@@ -301,8 +315,17 @@ class YandexStation(MediaPlayerEntity):
     @property
     def state_attributes(self):
         attrs = super().state_attributes
-        if attrs and self.local_state:
+        if not attrs:
+            return None
+
+        if self.local_state:
             attrs['alice_state'] = self.local_state['aliceState']
+            attrs['connection_class'] = CONN_CLASS_LOCAL_PUSH \
+                if self.local_state['local_push'] \
+                else CONN_CLASS_LOCAL_POLL
+        else:
+            attrs['connection_class'] = CONN_CLASS_ASSUMED
+
         return attrs
 
     async def async_select_sound_mode(self, sound_mode):
@@ -391,10 +414,13 @@ class YandexStation(MediaPlayerEntity):
         else:
             await self.async_media_pause()
 
-    async def update(self, data: dict = None):
+    async def async_update(self):
+        await self.quasar.update_online_stats()
+
+    async def internal_update(self, data: dict = None):
         """Обновления только в локальном режиме."""
         if data is None:
-            # возвращаем в облачный режим
+            _LOGGER.debug("Возврат в облачный режим")
             self.local_state = None
             self.async_write_ha_state()
             return
@@ -402,6 +428,7 @@ class YandexStation(MediaPlayerEntity):
         data['state'].pop('timeSinceLastVoiceActivity', None)
 
         # _LOGGER.debug(data['state']['aliceState'])
+        data['state']['local_push'] = 'requestId' not in data
 
         # skip same state
         if self.local_state == data['state']:
@@ -412,6 +439,9 @@ class YandexStation(MediaPlayerEntity):
         # возвращаем из состояния mute, если нужно
         if self.prev_volume and self.local_state['volume']:
             self.prev_volume = None
+
+        if self.alice_volume:
+            self._process_alice_volume(self.local_state['aliceState'])
 
         # noinspection PyBroadException
         try:
@@ -478,6 +508,113 @@ class YandexStation(MediaPlayerEntity):
 
         await self.quasar.set_device_config(self.device, device_config)
 
+    async def _set_beta(self, value: str):
+        device_config = await self.quasar.get_device_config(self.device)
+
+        if value == 'True':
+            value = True
+        elif value == 'False':
+            value = False
+        else:
+            value = None
+
+        if value is not None:
+            device_config['beta'] = value
+            await self.quasar.set_device_config(self.device, device_config)
+
+        self.hass.components.persistent_notification.async_create(
+            f"{self.name} бета-тест: {device_config['beta']}"
+        )
+
+    async def _shopping_list(self):
+        if shopping_list.DOMAIN not in self.hass.data:
+            return
+
+        data: shopping_list.ShoppingData = self.hass.data[shopping_list.DOMAIN]
+
+        card = await self.glagol.send({'command': 'sendText',
+                                       'text': "Список покупок"})
+        alice_list = RE_SHOPPING.findall(card['text'])
+        _LOGGER.debug(f"Список покупок: {alice_list}")
+
+        remove_from = [
+            alice_list.index(item['name'])
+            for item in data.items
+            if item['complete'] and item['name'] in alice_list
+        ]
+        if remove_from:
+            # не может удалить больше 6 штук за раз
+            remove_from = sorted(remove_from, reverse=True)
+            for i in range(0, len(remove_from), 6):
+                items = [str(p + 1) for p in remove_from[i:i + 6]]
+                text = "Удали из списка покупок: " + ', '.join(items)
+                await self.glagol.send({'command': 'sendText', 'text': text})
+
+        add_to = [
+            item['name'] for item in data.items
+            if not item['complete'] and item['name'] not in alice_list and
+               not item['id'].startswith('alice')
+        ]
+        for name in add_to:
+            # плохо работает, если добавлять всё сразу через запятую
+            text = "Добавь в список покупок " + name
+            await self.glagol.send({'command': 'sendText', 'text': text})
+
+        if add_to or remove_from:
+            card = await self.glagol.send({'command': 'sendText',
+                                           'text': "Список покупок"})
+            alice_list = RE_SHOPPING.findall(card['text'])
+            _LOGGER.debug(f"Новый список покупок: {alice_list}")
+
+        data.items = [
+            {'name': name, 'id': 'alice' + uuid.uuid4().hex, 'complete': False}
+            for name in alice_list
+        ]
+        await self.hass.async_add_executor_job(data.save)
+
+    def _check_set_alice_volume(self, extra: dict, dialog: bool):
+        alice_volume = extra.get('volume_level')
+        # если громкости голоса нет, или уже есть активная громкость, или
+        # громкость голоса равна текущей громкости колонки - ничего не делаем
+        if (not alice_volume or self.alice_volume or
+                alice_volume == self.volume_level):
+            return
+
+        self.alice_volume = {
+            'volume_level': alice_volume,
+            'wait_state': 'BUSY',
+            'wait_ts': time.time() + 30
+        }
+
+        # для локального TTS не жём статус BUSY
+        if dialog:
+            self._process_alice_volume('BUSY')
+
+    def _process_alice_volume(self, alice_state: str):
+        volume = None
+
+        # если что-то пошло не так, через 30 секунд возвращаем громкость
+        if time.time() > self.alice_volume['wait_ts']:
+            volume = self.alice_volume['prev_volume']
+            self.alice_volume = None
+
+        elif self.alice_volume['wait_state'] == alice_state:
+            if alice_state == 'BUSY':
+                volume = self.alice_volume['volume_level']
+                self.alice_volume['prev_volume'] = self.volume_level
+                self.alice_volume['wait_state'] = 'SPEAKING'
+
+            elif alice_state == 'SPEAKING':
+                self.alice_volume['wait_state'] = 'IDLE'
+
+            elif alice_state == 'IDLE':
+                volume = self.alice_volume['prev_volume']
+                self.alice_volume = None
+
+        if volume:
+            coro = self.async_set_volume_level(volume)
+            asyncio.create_task(coro)
+
     async def async_play_media(self, media_type: str, media_id: str, **kwargs):
         if '/api/tts_proxy/' in media_id:
             session = async_get_clientsession(self.hass)
@@ -491,6 +628,12 @@ class YandexStation(MediaPlayerEntity):
         if media_type == 'tts':
             media_type = 'text' if self.sound_mode == SOUND_MODE1 \
                 else 'command'
+        elif media_type == 'brightness':
+            await self._set_brightness(media_id)
+            return
+        elif media_type == 'beta':
+            await self._set_beta(media_id)
+            return
 
         if self.local_state:
             if 'https://' in media_id or 'http://' in media_id:
@@ -507,6 +650,8 @@ class YandexStation(MediaPlayerEntity):
                     media_id = utils.fix_cloud_text(media_id)
                     if len(media_id) > 100:
                         raise EXCEPTION_100
+                    if 'extra' in kwargs:
+                        self._check_set_alice_volume(kwargs['extra'], False)
                     await self.quasar.send(self.device, media_id, is_tts=True)
                     return
 
@@ -518,6 +663,8 @@ class YandexStation(MediaPlayerEntity):
                 payload = {'command': 'sendText', 'text': media_id}
 
             elif media_type == 'dialog':
+                if 'extra' in kwargs:
+                    self._check_set_alice_volume(kwargs['extra'], True)
                 payload = utils.update_form(
                     'personal_assistant.scenarios.repeat_after_me',
                     request=media_id)
@@ -529,8 +676,8 @@ class YandexStation(MediaPlayerEntity):
                 payload = {'command': 'playMusic', 'id': media_id,
                            'type': media_type}
 
-            elif media_type == 'brightness':
-                await self._set_brightness(media_id)
+            elif media_type == 'shopping_list':
+                await self._shopping_list()
                 return
 
             elif media_type.startswith('question'):
@@ -542,7 +689,7 @@ class YandexStation(MediaPlayerEntity):
                 return
 
             else:
-                _LOGGER.warning(f"Unsupported media: {media_id}")
+                _LOGGER.warning(f"Unsupported local media: {media_id}")
                 return
 
             await self.glagol.send(payload)
@@ -561,7 +708,7 @@ class YandexStation(MediaPlayerEntity):
                 return
 
             else:
-                _LOGGER.warning(f"Unsupported media: {media_type}")
+                _LOGGER.warning(f"Unsupported cloud media: {media_type}")
                 return
 
 

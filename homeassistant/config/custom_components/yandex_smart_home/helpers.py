@@ -7,6 +7,8 @@ from homeassistant.const import (
     CONF_NAME, STATE_UNAVAILABLE, ATTR_SUPPORTED_FEATURES,
     ATTR_DEVICE_CLASS
 )
+from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import capability, prop
 from .const import (
@@ -20,8 +22,9 @@ from .error import SmartHomeError
 class Config:
     """Hold the configuration for Yandex Smart Home."""
 
-    def __init__(self, should_expose, entity_config=None):
+    def __init__(self, settings, should_expose, entity_config=None):
         """Initialize the configuration."""
+        self.settings = settings
         self.should_expose = should_expose
         self.entity_config = entity_config or {}
 
@@ -102,7 +105,7 @@ class YandexEntity:
 
         return self._properties
 
-    async def devices_serialize(self):
+    async def devices_serialize(self, entity_reg: EntityRegistry, dev_reg: DeviceRegistry):
         """Serialize entity for a devices response.
 
         https://yandex.ru/dev/dialogs/alice/doc/smart-home/reference/get-devices-docpage/
@@ -133,12 +136,29 @@ class YandexEntity:
 
         device_type = get_yandex_type(domain, device_class)
 
+        entry = entity_reg.async_get(state.entity_id)
+        device = dev_reg.async_get(getattr(entry, 'device_id', ""))
+
+        manufacturer = state.entity_id
+        model = ""
+        if device is DeviceRegistry:
+            if device.manufacturer is not None:
+                manufacturer += ' | ' + device.manufacturer
+            if device.model is not None:
+                model = device.model
+
+        device_info = {
+            'manufacturer': manufacturer,
+            'model': model
+        }
+
         device = {
             'id': state.entity_id,
             'name': name,
             'type': device_type,
             'capabilities': [],
             'properties': [],
+            'device_info': device_info,
         }
 
         for cpb in capabilities:

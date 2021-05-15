@@ -20,6 +20,11 @@ from homeassistant.components import (
 )
 DOMAIN = 'yandex_smart_home'
 
+CONFIG = 'yaml_config'
+DATA_CONFIG = 'config'
+
+CONF_SETTINGS = 'settings'
+CONF_PRESSURE_UNIT = 'pressure_unit'
 CONF_ENTITY_CONFIG = 'entity_config'
 CONF_FILTER = 'filter'
 CONF_ROOM = 'room'
@@ -35,6 +40,13 @@ CONF_ENTITY_RANGE_MIN = 'min'
 CONF_ENTITY_RANGE_MAX = 'max'
 CONF_ENTITY_RANGE_PRECISION = 'precision'
 CONF_ENTITY_MODE_MAP = 'modes'
+
+#notifier
+CONF_NOTIFIER = 'notifier'
+CONF_SKILL_OAUTH_TOKEN = 'oauth_token'
+CONF_SKILL_ID = 'skill_id'
+CONF_NOTIFIER_USER_ID = 'user_id'  
+NOTIFIER_ENABLED = 'notifier_enabled'    
 
 # https://yandex.ru/dev/dialogs/alice/doc/smart-home/concepts/device-types.html/
 PREFIX_TYPES = 'devices.types.'
@@ -75,6 +87,43 @@ ERR_NOT_SUPPORTED_IN_CURRENT_MODE = 'NOT_SUPPORTED_IN_CURRENT_MODE'
 EVENT_ACTION_RECEIVED = 'yandex_smart_home_action'
 EVENT_QUERY_RECEIVED = 'yandex_smart_home_query'
 EVENT_DEVICES_RECEIVED = 'yandex_smart_home_devices'
+
+# Pressure units
+PRESSURE_UNIT_PASCAL = 'pa'
+PRESSURE_UNIT_HECTOPASCAL = 'hPa'
+PRESSURE_UNIT_KILOPASCAL = 'kPa'
+PRESSURE_UNIT_MEGAPASCAL = 'MPa'
+PRESSURE_UNIT_MMHG = 'mmHg'
+PRESSURE_UNIT_ATM = 'atm'
+PRESSURE_UNIT_BAR = 'bar'
+PRESSURE_UNIT_MBAR = 'mbar'
+
+PRESSURE_UNITS_TO_YANDEX_UNITS = {
+    PRESSURE_UNIT_PASCAL: 'unit.pressure.pascal',
+    PRESSURE_UNIT_MMHG: 'unit.pressure.mmhg',
+    PRESSURE_UNIT_ATM: 'unit.pressure.atm',
+    PRESSURE_UNIT_BAR: 'unit.pressure.bar'
+}
+
+# Multiplier to convert from given pressure unit to pascal
+PRESSURE_TO_PASCAL = {
+    PRESSURE_UNIT_PASCAL: 1,
+    PRESSURE_UNIT_HECTOPASCAL: 100,
+    PRESSURE_UNIT_KILOPASCAL: 1000,
+    PRESSURE_UNIT_MEGAPASCAL: 1000000,
+    PRESSURE_UNIT_MMHG: 133.322,
+    PRESSURE_UNIT_ATM: 101325,
+    PRESSURE_UNIT_BAR: 100000,
+    PRESSURE_UNIT_MBAR: 0.01
+}
+
+# Multiplier to convert from pascal to given pressure unit
+PRESSURE_FROM_PASCAL = {
+    PRESSURE_UNIT_PASCAL: 1,
+    PRESSURE_UNIT_MMHG: 0.00750061575846,
+    PRESSURE_UNIT_ATM: 0.00000986923266716,
+    PRESSURE_UNIT_BAR: 0.00001,
+}
 
 DOMAIN_TO_YANDEX_TYPES = {
     binary_sensor.DOMAIN: TYPE_SENSOR,

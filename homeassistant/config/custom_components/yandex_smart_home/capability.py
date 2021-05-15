@@ -22,7 +22,6 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_MUTE,
@@ -32,13 +31,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
-    DOMAIN,
-    CoverEntity,
-)
-
 from homeassistant.components.water_heater import (
     STATE_ELECTRIC, SERVICE_SET_OPERATION_MODE
 )
@@ -46,12 +38,13 @@ from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.util import color as color_util
 
 from .const import (
+    DOMAIN,
     ERR_INVALID_VALUE,
     ERR_NOT_SUPPORTED_IN_CURRENT_MODE,
     CONF_CHANNEL_SET_VIA_MEDIA_CONTENT_ID, CONF_RELATIVE_VOLUME_ONLY,
     CONF_ENTITY_RANGE_MAX, CONF_ENTITY_RANGE_MIN, 
     CONF_ENTITY_RANGE_PRECISION, CONF_ENTITY_RANGE,
-    CONF_ENTITY_MODE_MAP)
+    CONF_ENTITY_MODE_MAP, NOTIFIER_ENABLED)
 from .error import SmartHomeError
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,19 +70,22 @@ class _Capability:
 
     type = ''
     instance = ''
-    retrievable = True
+    reportable = False
 
     def __init__(self, hass, state, entity_config):
         """Initialize a trait for a state."""
         self.hass = hass
         self.state = state
         self.entity_config = entity_config
+        self.retrievable = True
+        self.reportable = hass.data[DOMAIN][NOTIFIER_ENABLED]
 
     def description(self):
         """Return description for a devices request."""
         response = {
             'type': self.type,
             'retrievable': self.retrievable,
+            'reportable': self.reportable,
         }
         parameters = self.parameters()
         if parameters is not None:
@@ -686,10 +682,12 @@ class FanSpeedCapability(_ModeCapability):
     instance = 'fan_speed'
 
     modes_map = {
-        'auto': ['auto'],
-        'low': ['low', 'min', 'silent', 'level 2'],
-        'medium': ['medium', 'middle', 'level 3'],
-        'high': ['high', 'max', 'strong', 'favorite', 'level 4'],
+        'auto': [climate.const.FAN_AUTO, climate.const.FAN_ON],
+        'quiet': [fan.SPEED_OFF, climate.const.FAN_OFF, 'silent', 'level 1'],
+        'low': [fan.SPEED_LOW, climate.const.FAN_LOW, 'min', 'level 2'],
+        'medium': [fan.SPEED_LOW, fan.SPEED_MEDIUM, climate.const.FAN_MEDIUM, climate.const.FAN_MIDDLE, 'level 3'],
+        'high': [fan.SPEED_HIGH, climate.const.FAN_HIGH, 'strong', 'favorite', 'level 4'],
+        'turbo': [climate.const.FAN_FOCUS, 'max', 'level 5'],
     }
 
     @staticmethod
@@ -829,11 +827,15 @@ class CoverLevelCapability(_RangeCapability):
         else:
              raise SmartHomeError(ERR_INVALID_VALUE, "Unsupported domain")
              
+        value = state['value']
+        if value < 0:
+            value = min(self.get_value() + value, 0)
+        
         await self.hass.services.async_call(
             self.state.domain,
             service, {
                 ATTR_ENTITY_ID: self.state.entity_id,
-                attr: state['value']
+                attr: value
             }, blocking=True, context=data.context)
 
 @register_capability
@@ -899,11 +901,15 @@ class TemperatureCapability(_RangeCapability):
         else:
             raise SmartHomeError(ERR_INVALID_VALUE, "Unsupported domain")
 
+        new_value = state['value']
+        if 'relative' in state and state['relative'] and self.state.domain == climate.DOMAIN:
+            new_value = self.state.attributes.get(climate.ATTR_TEMPERATURE) + state['value']
+
         await self.hass.services.async_call(
             self.state.domain,
             service, {
                 ATTR_ENTITY_ID: self.state.entity_id,
-                attr: state['value']
+                attr: new_value
             }, blocking=True, context=data.context)
 
 
@@ -998,12 +1004,16 @@ class BrightnessCapability(_RangeCapability):
 
     async def set_state(self, data, state):
         """Set device state."""
+        if 'relative' in state and state['relative']:
+            attr_name = light.ATTR_BRIGHTNESS_STEP_PCT
+        else:
+            attr_name = light.ATTR_BRIGHTNESS_PCT
         await self.hass.services.async_call(
             light.DOMAIN,
             light.SERVICE_TURN_ON, {
                 ATTR_ENTITY_ID: self.state.entity_id,
-                light.ATTR_BRIGHTNESS_PCT: state['value']
-            }, blocking=True, context=data.context)
+                attr_name: state['value']
+        }, blocking=True, context=data.context)
 
 
 @register_capability
@@ -1011,7 +1021,6 @@ class VolumeCapability(_RangeCapability):
     """Set volume functionality."""
 
     instance = 'volume'
-    retrievable = False
 
     def __init__(self, hass, state, config):
         super().__init__(hass, state, config)
@@ -1021,8 +1030,8 @@ class VolumeCapability(_RangeCapability):
     @staticmethod
     def supported(domain, features, entity_config, attributes):
         """Test if state is supported."""
-        return domain == media_player.DOMAIN and features & \
-            media_player.SUPPORT_VOLUME_STEP
+        return domain == media_player.DOMAIN and (
+                    features & media_player.SUPPORT_VOLUME_STEP or features & media_player.SUPPORT_VOLUME_SET)
 
     def parameters(self):
         """Return parameters for a devices request."""
@@ -1064,7 +1073,6 @@ class VolumeCapability(_RangeCapability):
             except KeyError as e:
                 _LOGGER.error("Invalid element of range object: %r" % range_entity)
                 _LOGGER.error('Undefined unit: {}'.format(e.args[0]))
-                # raise ValueError('Undefined unit: {}'.format(e.args[0])) 
                 return 0
 
     def get_value(self):
@@ -1078,24 +1086,30 @@ class VolumeCapability(_RangeCapability):
 
     async def set_state(self, data, state):
         """Set device state."""
+        set_volume_level = None
         if 'relative' in state and state['relative']:
-            if state['value'] > 0:
-                service = media_player.SERVICE_VOLUME_UP
+            features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+            if features & media_player.SUPPORT_VOLUME_STEP:
+                if state['value'] > 0:
+                    service = media_player.SERVICE_VOLUME_UP
+                else:
+                    service = media_player.SERVICE_VOLUME_DOWN
+                for i in range(abs(state['value'])):
+                    await self.hass.services.async_call(
+                        media_player.DOMAIN,
+                        service, {
+                            ATTR_ENTITY_ID: self.state.entity_id
+                        }, blocking=True, context=data.context)
             else:
-                service = media_player.SERVICE_VOLUME_DOWN
-            for i in range(abs(state['value'])):
-                await self.hass.services.async_call(
-                    media_player.DOMAIN,
-                    service, {
-                        ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True, context=data.context)
+                set_volume_level = (self.get_value() + state['value']) / 100
         else:
+            set_volume_level = state['value'] / 100
+        if set_volume_level is not None:
             await self.hass.services.async_call(
                 media_player.DOMAIN,
                 media_player.SERVICE_VOLUME_SET, {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    media_player.const.ATTR_MEDIA_VOLUME_LEVEL:
-                        state['value'] / 100,
+                    media_player.const.ATTR_MEDIA_VOLUME_LEVEL: set_volume_level,
                 }, blocking=True, context=data.context)
 
 
@@ -1141,7 +1155,7 @@ class ChannelCapability(_RangeCapability):
 
     def get_value(self):
         """Return the state value of this capability for this entity."""
-        if self.retrievable or self.state.attributes.get(
+        if not self.retrievable or self.state.attributes.get(
                 media_player.ATTR_MEDIA_CONTENT_TYPE) \
                 != media_player.const.MEDIA_TYPE_CHANNEL:
             return 0
@@ -1256,7 +1270,7 @@ class TemperatureKCapability(_ColorSettingCapability):
         """Return the state value of this capability for this entity."""
         kelvin = self.state.attributes.get(light.ATTR_COLOR_TEMP)
         if kelvin is None:
-            return 0
+            kelvin = self.state.attributes[light.ATTR_MAX_MIREDS]
 
         return color_util.color_temperature_mired_to_kelvin(kelvin)
 
@@ -1278,13 +1292,13 @@ class CleanupModeCapability(_ModeCapability):
 
     # 101-105 xiaomi miio fan speeds
     modes_map = {
-        'auto': {'auto', '102'},
-        'turbo': {'turbo', 'high', '104'},
+        'auto': {'auto', 'automatic', '102'},
+        'turbo': {'turbo', 'high', 'performance', '104'},
         'min': {'min', 'mop'},
         'max': {'max', 'strong'},
         'express': {'express', '105'},
         'normal': {'normal', 'medium', 'middle', '103'},
-        'quiet': {'quiet', 'low', 'min', 'silent', '101'},
+        'quiet': {'quiet', 'low', 'min', 'silent', 'eco', '101'},
     }
 
     @staticmethod

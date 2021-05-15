@@ -8,25 +8,19 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
 
 from .const import (
-    CONF_ENTITY_CONFIG,
-    CONF_FILTER,
+    DOMAIN, DATA_CONFIG,
 )
 from .smart_home import async_handle_message
-from .helpers import Config
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_register_http(hass, cfg):
+def async_register_http(hass):
     """Register HTTP views for Yandex Smart Home."""
-    config = Config(
-        should_expose=cfg.get(CONF_FILTER),
-        entity_config=cfg.get(CONF_ENTITY_CONFIG)
-    )
 
     hass.http.register_view(YandexSmartHomeUnauthorizedView())
-    hass.http.register_view(YandexSmartHomeView(config))
+    hass.http.register_view(YandexSmartHomeView(hass.data[DOMAIN][DATA_CONFIG]))
 
 
 class YandexSmartHomeUnauthorizedView(HomeAssistantView):
