@@ -8,3 +8,16 @@ vacuum:
     #  token: !secret smartthinq_token
     #  region: RU
     #  language: ru-RU
+
+automation:
+  - alias: Стиральная машинка закончила стирку
+    trigger:
+      - platform: state
+        entity_id: device_tracker.washer
+        to: 'not_home'
+        from: 'home'
+    action:
+      - service: notify.telegram_family
+        data:
+          title: ''
+          message: Стиральная машинка закончила стирку
