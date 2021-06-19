@@ -1,9 +1,9 @@
-switch:
-  - platform: xiaomi_miio
-    name: Цветы в детской
-    host: !secret xiaomi_socket_host_1
-    token: !secret xiaomi_socket_token_1
-    model: chuangmi.plug.hmi206
+#switch:
+#  - platform: xiaomi_miio
+#    name: Цветы в детской
+#    host: !secret xiaomi_socket_host_1
+#    token: !secret xiaomi_socket_token_1
+#    model: chuangmi.plug.hmi206
 
 automation:
   - id: '1575133776894'
@@ -16,7 +16,7 @@ automation:
     action:
     - alias: ''
       data:
-        entity_id: switch.tsvety_v_detskoi
+        entity_id: switch.0x000d6f0013369f96
       service: switch.turn_on
     - alias: ''
       data:
@@ -32,7 +32,7 @@ automation:
     action:
     - alias: ''
       data:
-        entity_id: switch.tsvety_v_detskoi
+        entity_id: switch.0x000d6f0013369f96
       service: switch.turn_off
     - alias: ''
       data:
