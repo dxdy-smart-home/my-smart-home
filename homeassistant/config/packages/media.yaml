@@ -1,34 +1,3 @@
-switch:
-  - platform: template
-    switches:
-      hisense_tv:
-        icon_template: >
-          {% if is_state('switch.hisense_tv', 'on') %}
-            {{ 'mdi:television-classic' }}
-          {% else %}
-            {{ 'mdi:television-classic-off' }}
-          {% endif %}
-        friendly_name: 'Hisense TV'
-        value_template: >
-          {{ is_state('device_tracker.hisense_tv', 'home') }}
-        turn_on:
-          service: wake_on_lan.send_magic_packet
-          data:
-            mac: !secret hisensetv_mac
-        turn_off:
-          service: mqtt.publish
-          data:
-            topic: !secret turn_off_hisensetv_topic
-            payload: 'KEY_POWER'
-
-device_tracker:
-  - platform: nmap_tracker
-    hosts:
-      - 192.168.1.3
-    home_interval: 1
-
-wake_on_lan:
-
 yandex_station:
   username: !secret yandex_username
   password: !secret yandex_password
