@@ -29,13 +29,6 @@ device_tracker:
 
 wake_on_lan:
 
-media_player:
-  - platform: samsungtv_custom
-    host: !secret samsungtv_host
-    port: 8001
-    name: Телевизор в гостиной
-    mac: !secret samsungtv_mac
-
 yandex_station:
   username: !secret yandex_username
   password: !secret yandex_password
@@ -47,9 +40,9 @@ automation:
   - alias: 'Turn off kitchen speakers if samsung tv in living room turns on'
     trigger:
       - platform: state
-        entity_id: media_player.televizor_v_gostinoi
-        from: 'off'
-        to: 'on'
+        entity_id: device_tracker.samsung
+        from: 'not_home'
+        to: 'home'
     action:
       - service: media_player.turn_off
         entity_id: media_player.yandex_station_ff98f02970565b8d4d33fe93
