@@ -2,10 +2,10 @@
 import aioblescan as aiobs
 import asyncio
 import copy
+import janus
 import json
 import logging
 from threading import Thread
-import janus
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -62,6 +62,7 @@ from .const import (
     MAC_REGEX,
     AES128KEY24_REGEX,
     AES128KEY32_REGEX,
+    MEASUREMENT_DICT,
     SERVICE_CLEANUP_ENTRIES,
 )
 
@@ -110,6 +111,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.deprecated(CONF_ROUNDING),
+            cv.deprecated(CONF_BATT_ENTITIES),
             vol.Schema(
                 {
                     vol.Optional(CONF_ROUNDING, default=DEFAULT_ROUNDING): cv.positive_int,
@@ -135,7 +137,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(
                         CONF_REPORT_UNKNOWN, default=DEFAULT_REPORT_UNKNOWN
                     ): vol.In(
-                        ["Xiaomi", "Qingping", "ATC", "Mi Scale", "Kegtron", "Other", False]
+                        ["Xiaomi", "Qingping", "ATC", "Mi Scale", "Kegtron", "Thermoplus", "Govee", "Other", False]
                     ),
                 }
             )
@@ -239,7 +241,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         # Configuration in YAML
         for key, value in CONFIG_YAML.items():
             config[key] = value
-        _LOGGER.warning("Available Bluetooth interfaces for BLE monitor: %s", BT_MAC_INTERFACES)
+        _LOGGER.info("Available Bluetooth interfaces for BLE monitor: %s", BT_MAC_INTERFACES)
 
         if config[CONF_HCI_INTERFACE]:
             # Configuration of BT interface with hci number
@@ -428,12 +430,6 @@ class HCIdump(Thread):
     def __init__(self, config, dataqueue):
         """Initiate HCIdump thread."""
 
-        def reverse_mac(rmac):
-            """Change LE order to BE."""
-            if len(rmac) != 12:
-                return None
-            return rmac[10:12] + rmac[8:10] + rmac[6:8] + rmac[4:6] + rmac[2:4] + rmac[0:2]
-
         Thread.__init__(self)
         _LOGGER.debug("HCIdump thread: Init")
         self.dataqueue_bin = dataqueue["binary"]
@@ -442,6 +438,8 @@ class HCIdump(Thread):
         self._joining = False
         self.evt_cnt = 0
         self.lpacket_ids = {}
+        self.movements_list = {}
+        self.adv_priority = {}
         self.config = config
         self._interfaces = config[CONF_HCI_INTERFACE]
         self._active = int(config[CONF_ACTIVE_SCAN] is True)
@@ -460,7 +458,7 @@ class HCIdump(Thread):
             for device in self.config[CONF_DEVICES]:
                 if CONF_ENCRYPTION_KEY in device and device[CONF_ENCRYPTION_KEY]:
                     p_mac = bytes.fromhex(
-                        reverse_mac(device["mac"].replace(":", "")).lower()
+                        device["mac"].replace(":", "").lower()
                     )
                     p_key = bytes.fromhex(device[CONF_ENCRYPTION_KEY].lower())
                     self.aeskeys[p_mac] = p_key
@@ -478,7 +476,7 @@ class HCIdump(Thread):
         self.whitelist = list(dict.fromkeys(self.whitelist))
         _LOGGER.debug("whitelist: [%s]", ", ".join(self.whitelist).upper())
         for i, mac in enumerate(self.whitelist):
-            self.whitelist[i] = bytes.fromhex(reverse_mac(mac.replace(":", "")).lower())
+            self.whitelist[i] = bytes.fromhex(mac.replace(":", "")).lower()
         _LOGGER.debug("%s whitelist item(s) loaded.", len(self.whitelist))
 
     def process_hci_events(self, data):
@@ -486,8 +484,14 @@ class HCIdump(Thread):
         self.evt_cnt += 1
         if len(data) < 12:
             return
-        msg, binary, measuring = ble_parser(self, data)
+        msg = ble_parser(self, data)
         if msg:
+            measurements = list(msg.keys())
+            device_type = msg["type"]
+            sensor_list = MEASUREMENT_DICT[device_type][0] + MEASUREMENT_DICT[device_type][1]
+            binary_list = MEASUREMENT_DICT[device_type][2]
+            measuring = any(x in measurements for x in sensor_list)
+            binary = any(x in measurements for x in binary_list)
             if binary == measuring:
                 self.dataqueue_bin.sync_q.put_nowait(msg)
                 self.dataqueue_meas.sync_q.put_nowait(msg)
