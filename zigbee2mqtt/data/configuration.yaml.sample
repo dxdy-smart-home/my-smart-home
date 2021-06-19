@@ -5,5 +5,7 @@ mqtt:
   base_topic: zigbee2mqtt
   server: 'mqtt://localhost'
 serial:
-  port: /dev/ttyACM0                                                                                                    
-  disable_led: true
+  port: /dev/ttyUSB0                                                                                                    
+advanced:
+  rtscts: false
+  pan_id: 0x1a63
