@@ -36,6 +36,8 @@ recorder:
        - sensor.ble_humidity_a4c138f88a98
        - sensor.rpi_co2
        - binary_sensor.0x00158d0005443bfb_contact
+       - sensor.0x00124b00234c8afc_co2
+       - sensor.0x00124b00234c8801_co2
 
 history:
    include:
@@ -54,6 +56,8 @@ history:
        - sensor.ble_humidity_a4c138f88a98
        - sensor.rpi_co2
        - binary_sensor.0x00158d0005443bfb_contact
+       - sensor.0x00124b00234c8afc_co2
+       - sensor.0x00124b00234c8801_co2
 
 #influxdb:
 #  username: !secret influxdb_username
