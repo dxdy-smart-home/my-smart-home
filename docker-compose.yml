@@ -3,7 +3,7 @@ version: '3'
 services:
   duckdns:
     container_name: duckdns
-    image: linuxserver/duckdns:latest
+    image: linuxserver/duckdns:version-4c2a0989
     restart: always
     network_mode: host
     env_file:
