@@ -84,6 +84,11 @@ mqtt:
     topic: 'hass/status'
     payload: 'offline'
 
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 127.0.0.1
+
 sonoff:
   username: !secret sonoff_username
   password: !secret sonoff_password
