@@ -1,4 +1,23 @@
+input_boolean:
+  alarm_system:
+    name: Сигнализация
+    initial: off
+
 automation:
+  - alias: Кто-то проник в дом
+    trigger:
+    - platform: state
+      entity_id: binary_sensor.0x00158d0005443bfb_contact
+      to: 'on'
+    condition:
+      - condition: state
+        entity_id: input_boolean.alarm_system
+        state: 'on'
+    action:
+    - data:
+        message: Кто-то проник в дом
+      service: notify.telegram_family
+
   - alias: Протечка на кухне
     trigger: 
     - platform: state
