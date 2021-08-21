@@ -5,31 +5,32 @@ import logging
 import statistics as sts
 
 from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
-    CONDUCTIVITY,
-    PRESSURE_HPA,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    VOLT,
     ATTR_BATTERY_LEVEL,
+    CONDUCTIVITY,
     CONF_DEVICES,
     CONF_NAME,
     CONF_TEMPERATURE_UNIT,
     CONF_UNIQUE_ID,
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
+    ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
+    POWER_KILO_WATT,
+    PRESSURE_HPA,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT
 )
-
-try:
-    from homeassistant.const import PERCENTAGE
-except ImportError:
-    from homeassistant.const import UNIT_PERCENTAGE as PERCENTAGE
 
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.components.sensor import SensorEntity, STATE_CLASS_MEASUREMENT
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -53,6 +54,7 @@ from .const import (
     MANUFACTURER_DICT,
     MEASUREMENT_DICT,
     SENSOR_DICT,
+    RENAMED_MODEL_DICT,
     DOMAIN,
 )
 
@@ -133,8 +135,14 @@ class BLEupdater():
                 if dev:
                     mac = mac.replace(":", "")
                     sensortype = dev.model
+                    # migrate to new model name if changed
+                    if dev.model in RENAMED_MODEL_DICT.keys():
+                        sensortype = RENAMED_MODEL_DICT[dev.model]
                     firmware = dev.sw_version
-                    sensors = await async_add_sensor(mac, sensortype, firmware)
+                    if sensortype and firmware:
+                        sensors = await async_add_sensor(mac, sensortype, firmware)
+                    else:
+                        continue
                 else:
                     pass
         else:
@@ -162,6 +170,9 @@ class BLEupdater():
                 rssi[mac].append(int(data["rssi"]))
                 batt_attr = None
                 sensortype = data["type"]
+                # migrate to new model name if changed
+                if data["type"] in RENAMED_MODEL_DICT.keys():
+                    sensortype = RENAMED_MODEL_DICT[data["type"]]
                 firmware = data["firmware"]
                 averaging_sensors = MEASUREMENT_DICT[sensortype][0]
                 instant_sensors = MEASUREMENT_DICT[sensortype][1]
@@ -219,13 +230,15 @@ class BLEupdater():
             ble_adv_cnt = 0
 
 
-class BaseSensor(RestoreEntity):
+class BaseSensor(RestoreEntity, SensorEntity):
     """Base class for all sensor entities."""
 
     # BaseSensor
     # |--MeasuringSensor
     # |  |--TemperatureSensor
+    # |  |--TemperatureOutdoorSensor
     # |  |--HumiditySensor
+    # |  |--HumidityOutdoorSensor
     # |  |--MoistureSensor
     # |  |--PressureSensor
     # |  |--ConductivitySensor
@@ -240,6 +253,8 @@ class BaseSensor(RestoreEntity):
     # |  |--WeightSensor
     # |  |--NonStabilizedWeightSensor
     # |  |--ImpedanceSensor
+    # |  |--EnergySensor
+    # |  |--PowerSensor
     # |  |--SwitchSensor
     # |  |  |--SingleSwitchSensor
     # |  |  |--DoubleSwitchLeftSensor
@@ -266,6 +281,7 @@ class BaseSensor(RestoreEntity):
         self._fmac = ":".join(self._mac[i:i + 2] for i in range(0, len(self._mac), 2))
         self._name = ""
         self._state = None
+        self._state_class = None
         self._unit_of_measurement = ""
         self._device_settings = self.get_device_settings()
         self._device_name = self._device_settings["name"]
@@ -326,6 +342,8 @@ class BaseSensor(RestoreEntity):
             self._device_state_attributes["last type of press"] = old_state.attributes["last type of press"]
         if "dimmer value" in old_state.attributes:
             self._device_state_attributes["dimmer value"] = old_state.attributes["dimmer value"]
+        if "constant" in old_state.attributes:
+            self._device_state_attributes["constant"] = old_state.attributes["constant"]
         if ATTR_BATTERY_LEVEL in old_state.attributes:
             self._device_state_attributes[ATTR_BATTERY_LEVEL] = old_state.attributes[ATTR_BATTERY_LEVEL]
         self.ready_for_update = True
@@ -339,6 +357,11 @@ class BaseSensor(RestoreEntity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def state_class(self):
+        """Return type of state."""
+        return self._state_class
 
     @property
     def unit_of_measurement(self):
@@ -466,6 +489,7 @@ class MeasuringSensor(BaseSensor):
         self._jagged = False
         self._fmdh_dec = 0
         self._use_median = self._device_settings["use median"]
+        self._state_class = STATE_CLASS_MEASUREMENT
 
     def collect(self, data, batt_attr=None):
         """Measurements collector."""
@@ -552,9 +576,9 @@ class TemperatureSensor(MeasuringSensor):
         if self.enabled is False:
             self.pending_update = False
             return
-        if not self._lower_temp_limit <= data["temperature"] <= self._upper_temp_limit:
+        if not self._lower_temp_limit <= data[self._measurement] <= self._upper_temp_limit:
             if self._log_spikes:
-                _LOGGER.error("Temperature spike: %s (%s)", data["temperature"], self._mac)
+                _LOGGER.error("Temperature spike: %s (%s)", data[self._measurement], self._mac)
             self.pending_update = False
             return
         self._measurements.append(data[self._measurement])
@@ -564,6 +588,23 @@ class TemperatureSensor(MeasuringSensor):
         if batt_attr is not None:
             self._device_state_attributes[ATTR_BATTERY_LEVEL] = batt_attr
         self.pending_update = True
+
+
+class TemperatureOutdoorSensor(TemperatureSensor):
+    """Representation of an outdoor temperature sensor."""
+
+    def __init__(self, config, mac, devtype, firmware):
+        """Initialize the sensor."""
+        super().__init__(config, mac, devtype, firmware)
+        self._measurement = "temperature outdoor"
+        self._name = "ble temperature outdoor {}".format(self._device_name)
+        self._unique_id = "t_outdoor_" + self._device_name
+        self._unit_of_measurement = self._device_settings["temperature unit"]
+        self._device_class = DEVICE_CLASS_TEMPERATURE
+
+        self._lower_temp_limit = self.temperature_limit(config, mac, self._temp_min)
+        self._upper_temp_limit = self.temperature_limit(config, mac, self._temp_max)
+        self._log_spikes = config[CONF_LOG_SPIKES]
 
 
 class HumiditySensor(MeasuringSensor):
@@ -577,6 +618,7 @@ class HumiditySensor(MeasuringSensor):
         self._unique_id = "h_" + self._device_name
         self._unit_of_measurement = PERCENTAGE
         self._device_class = DEVICE_CLASS_HUMIDITY
+        self._log_spikes = config[CONF_LOG_SPIKES]
         # LYWSD03MMC / MHO-C401 "jagged" humidity workaround
         if devtype in ('LYWSD03MMC', 'MHO-C401'):
             if self._device_firmware is not None:
@@ -588,9 +630,9 @@ class HumiditySensor(MeasuringSensor):
         if self.enabled is False:
             self.pending_update = False
             return
-        if not CONF_HMIN <= data["humidity"] <= CONF_HMAX:
+        if not CONF_HMIN <= data[self._measurement] <= CONF_HMAX:
             if self._log_spikes:
-                _LOGGER.error("Humidity spike: %s (%s)", data["humidity"], self._mac)
+                _LOGGER.error("Humidity spike: %s (%s)", data[self._measurement], self._mac)
             self.pending_update = False
             return
         if self._jagged is True:
@@ -603,6 +645,20 @@ class HumiditySensor(MeasuringSensor):
         if batt_attr is not None:
             self._device_state_attributes[ATTR_BATTERY_LEVEL] = batt_attr
         self.pending_update = True
+
+
+class HumidityOutdoorSensor(HumiditySensor):
+    """Representation of an Outdoor Humidity sensor."""
+
+    def __init__(self, config, mac, devtype, firmware):
+        """Initialize the sensor."""
+        super().__init__(config, mac, devtype, firmware)
+        self._measurement = "humidity outdoor"
+        self._name = "ble humidity outdoor {}".format(self._device_name)
+        self._unique_id = "h_outdoor_" + self._device_name
+        self._unit_of_measurement = PERCENTAGE
+        self._device_class = DEVICE_CLASS_HUMIDITY
+        self._log_spikes = config[CONF_LOG_SPIKES]
 
 
 class MoistureSensor(MeasuringSensor):
@@ -690,7 +746,7 @@ class VoltageSensor(MeasuringSensor):
         self._measurement = "voltage"
         self._name = "ble voltage {}".format(self._device_name)
         self._unique_id = "v_" + self._device_name
-        self._unit_of_measurement = VOLT
+        self._unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
         self._device_class = DEVICE_CLASS_VOLTAGE
 
 
@@ -731,6 +787,7 @@ class InstantUpdateSensor(BaseSensor):
         """Initialize the sensor."""
         super().__init__(config, mac, devtype, firmware)
         self._reset_timer = self._device_settings["reset timer"]
+        self._state_class = STATE_CLASS_MEASUREMENT
 
     def collect(self, data, batt_attr=None):
         """Measurements collector."""
@@ -778,9 +835,9 @@ class AccelerationSensor(InstantUpdateSensor):
         self._device_state_attributes["sensor type"] = data["type"]
         self._device_state_attributes["last packet id"] = data["packet"]
         self._device_state_attributes["firmware"] = data["firmware"]
-        self._device_state_attributes["acceleration x"] = data["acceleration_x"]
-        self._device_state_attributes["acceleration y"] = data["acceleration_y"]
-        self._device_state_attributes["acceleration z"] = data["acceleration_z"]
+        self._device_state_attributes["acceleration x"] = data["acceleration x"]
+        self._device_state_attributes["acceleration y"] = data["acceleration y"]
+        self._device_state_attributes["acceleration z"] = data["acceleration z"]
         if batt_attr is not None:
             self._device_state_attributes[ATTR_BATTERY_LEVEL] = batt_attr
         self.pending_update = True
@@ -908,6 +965,72 @@ class ImpedanceSensor(InstantUpdateSensor):
         return "mdi:omega"
 
 
+class EnergySensor(InstantUpdateSensor):
+    """Representation of an Energy sensor."""
+
+    def __init__(self, config, mac, devtype, firmware):
+        """Initialize the sensor."""
+        super().__init__(config, mac, devtype, firmware)
+        self._measurement = "energy"
+        self._name = "ble energy {}".format(self._device_name)
+        self._unique_id = "e_" + self._device_name
+        self._device_class = DEVICE_CLASS_ENERGY
+        self._rdecimals = self._device_settings["decimals"]
+
+    def collect(self, data, batt_attr=None):
+        """Measurements collector."""
+        if self.enabled is False:
+            self.pending_update = False
+            return
+        self._state = round(data[self._measurement], self._rdecimals)
+        self._device_state_attributes["sensor type"] = data["type"]
+        self._device_state_attributes["last packet id"] = data["packet"]
+        self._device_state_attributes["firmware"] = data["firmware"]
+        if "energy unit" in data:
+            self._unit_of_measurement = data["energy unit"]
+        else:
+            self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
+        if "constant" in data:
+            self._device_state_attributes["constant"] = data["constant"]
+        if "light level" in data:
+            self._device_state_attributes["light level"] = data["light level"]
+        if batt_attr is not None:
+            self._device_state_attributes[ATTR_BATTERY_LEVEL] = batt_attr
+        self.pending_update = True
+
+
+class PowerSensor(InstantUpdateSensor):
+    """Representation of a Power sensor."""
+
+    def __init__(self, config, mac, devtype, firmware):
+        """Initialize the sensor."""
+        super().__init__(config, mac, devtype, firmware)
+        self._measurement = "power"
+        self._name = "ble power {}".format(self._device_name)
+        self._unique_id = "pow_" + self._device_name
+        self._device_class = DEVICE_CLASS_POWER
+        self._rdecimals = self._device_settings["decimals"]
+
+    def collect(self, data, batt_attr=None):
+        """Measurements collector."""
+        if self.enabled is False:
+            self.pending_update = False
+            return
+        self._state = round(data[self._measurement], self._rdecimals)
+        self._device_state_attributes["sensor type"] = data["type"]
+        self._device_state_attributes["last packet id"] = data["packet"]
+        self._device_state_attributes["firmware"] = data["firmware"]
+        if "power unit" in data:
+            self._unit_of_measurement = data["power unit"]
+        else:
+            self._unit_of_measurement = POWER_KILO_WATT
+        if "constant" in data:
+            self._device_state_attributes["constant"] = data["constant"]
+        if batt_attr is not None:
+            self._device_state_attributes[ATTR_BATTERY_LEVEL] = batt_attr
+        self.pending_update = True
+
+
 class SwitchSensor(InstantUpdateSensor):
     """Representation of a Switch sensor."""
 
@@ -916,6 +1039,7 @@ class SwitchSensor(InstantUpdateSensor):
         super().__init__(config, mac, devtype, firmware)
         self._measurement = ""
         self._button = ""
+        self._state_class = None
 
     @property
     def icon(self):
@@ -1070,7 +1194,7 @@ class DimmerSensor(SwitchSensor):
         if self.enabled is False:
             self.pending_update = False
             return
-        self._state = data[self._button] + " " + data[self._dimmer]
+        self._state = data[self._button] + " " + str(data[self._dimmer]) + " steps"
         self._device_state_attributes["last packet id"] = data["packet"]
         self._device_state_attributes["firmware"] = data["firmware"]
         self._device_state_attributes["dimmer value"] = data[self._dimmer]

@@ -139,7 +139,7 @@ def obj1001(xobj):
             remote_binary = None
         elif button_type == 3:
             remote_command = "+"
-            fan_remote_command = "brightness min"
+            fan_remote_command = "color temperature"
             ven_fan_remote_command = "strong wind speed"
             bathroom_remote_command = "speed +"
             three_btn_switch_left = "toggle"
@@ -155,7 +155,7 @@ def obj1001(xobj):
             remote_binary = None
         elif button_type == 5:
             remote_command = "-"
-            fan_remote_command = "brightness min"
+            fan_remote_command = "brightness"
             ven_fan_remote_command = "low wind speed"
             bathroom_remote_command = "dry"
             three_btn_switch_left = "toggle"
@@ -188,24 +188,24 @@ def obj1001(xobj):
         elif press == 3:
             if button_type == 0:
                 button_press_type = "short press"
-                dimmer = str(value) + " x"
+                dimmer = value
             if button_type == 1:
                 button_press_type = "long press"
-                dimmer = str(value) + " seconds"
+                dimmer = value
         elif press == 4:
             if button_type == 0:
                 if value <= 127:
                     button_press_type = "rotate right"
-                    dimmer = str(value) + " step(s)"
+                    dimmer = value
                 else:
                     button_press_type = "rotate left"
-                    dimmer = str(256 - value) + " step(s)"
+                    dimmer = 256 - value
             elif button_type <= 127:
                 button_press_type = "rotate right (pressed)"
-                dimmer = str(button_type) + " step(s)"
+                dimmer = button_type
             else:
                 button_press_type = "rotate left (pressed)"
-                dimmer = str(256 - button_type) + " step(s)"
+                dimmer = 256 - button_type
         elif press == 5:
             button_press_type = "short press"
         elif press == 6:
@@ -367,6 +367,7 @@ xiaomi_dataobject_dict = {
     0x1012: obj1012,
     0x1013: obj1013,
     0x1014: obj1014,
+    0x1015: obj1015,
     0x1017: obj1017,
     0x1018: obj1018,
     0x1019: obj1019,
@@ -420,7 +421,6 @@ def parse_xiaomi(self, data, source_mac, rssi):
             return None
     else:
         xiaomi_mac = source_mac
-        xiaomi_mac_reversed = source_mac[::-1]
 
     # determine the device type
     device_id = data[6] + (data[7] << 8)
@@ -457,8 +457,9 @@ def parse_xiaomi(self, data, source_mac, rssi):
     elif frctrl_auth_mode == 2:
         sinfo += ', Standard certification'
 
-    # check for MAC presence in whitelist, if needed
-    if self.discovery is False and xiaomi_mac.lower() not in self.whitelist:
+    # check for MAC presence in sensor whitelist, if needed
+    if self.discovery is False and xiaomi_mac.lower() not in self.sensor_whitelist:
+        _LOGGER.debug("Discovery is disabled. MAC: %s is not whitelisted!", to_mac(xiaomi_mac))
         return None
 
     # check for unique packet_id and advertisement priority
@@ -482,7 +483,10 @@ def parse_xiaomi(self, data, source_mac, rssi):
         elif adv_priority == prev_adv_priority:
             # only process messages with same priority that have a unique packet id
             if prev_packet == packet_id:
-                return None
+                if self.filter_duplicates is True:
+                    return None
+                else:
+                    pass
             else:
                 pass
         else:
@@ -492,8 +496,9 @@ def parse_xiaomi(self, data, source_mac, rssi):
             return None
     else:
         if prev_packet == packet_id:
-            # only process messages with highest priority and messages with unique packet id
-            return None
+            if self.filter_duplicates is True:
+                # only process messages with highest priority and messages with unique packet id
+                return None
     self.lpacket_ids[xiaomi_mac] = packet_id
 
     # check for capability byte present
