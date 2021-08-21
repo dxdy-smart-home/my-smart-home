@@ -1,13 +1,6 @@
 version: '3'
 
 services:
-  duckdns:
-    container_name: duckdns
-    image: linuxserver/duckdns:version-4c2a0989
-    restart: always
-    network_mode: host
-    env_file:
-      - ./duckdns/.env
   nginx_certbot:
     container_name: nginx_certbot
     image: mrdxdy/nginx-certbot:0.1.0
