@@ -12,7 +12,7 @@ services:
       - ./homeassistant/config:/homeassistant
   homeassistant:
     container_name: homeassistant
-    image: homeassistant/raspberrypi4-homeassistant:2021.9.6
+    image: homeassistant/raspberrypi4-homeassistant:2021.10.5
     restart: always
     privileged: true
     volumes:
