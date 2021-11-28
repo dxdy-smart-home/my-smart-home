@@ -1,3 +1,4 @@
+
 group:
   all_lights:
     - light.svet_v_spalne
@@ -23,6 +24,38 @@ yeelight:
       name: Свет в спальне
 
 script:
+  turn_on_comfortable_light:
+    sequence:
+      - service: light.turn_on
+        data_template:
+          entity_id: light.svet_v_spalne
+          kelvin: > 
+           {% if states.sun.sun.state == "above_horizon" %} 
+             6500 
+           {% else  %} 
+             2000 
+           {% endif %}
+          brightness: >
+           {% if states.sun.sun.state == "above_horizon" %}·
+             255
+           {% else %}
+             1
+           {% endif %}
+
+  turn_off_comfortable_light:
+    sequence:
+      - service: light.turn_off
+        entity_id: light.svet_v_spalne
+
+  toogle_comfortable_light:
+    sequence:
+      - service_template: > 
+         {% if is_state('light.svet_v_spalne', 'off') %} 
+           script.turn_on_comfortable_light 
+         {% else %} 
+           script.turn_off_comfortable_light 
+         {% endif %}
+           
   turn_on_moonlight:
     sequence:
       - service: yeelight.set_mode
@@ -83,11 +116,7 @@ automation:
       - platform: state
         entity_id: binary_sensor.bed_switch
     action:
-      - service: light.toggle
-        data:
-          entity_id: light.svet_v_spalne
-          color_temp: 1
-          brightness: 255
+      - service: script.toogle_comfortable_light
 
   - alias: 'Включить свет в спальне'
     mode: queued
@@ -99,11 +128,7 @@ automation:
           - sensor.0x00158d000424fadf_click
         to: 'double'
     action:
-      - service: light.turn_on
-        data:
-          entity_id: light.svet_v_spalne
-          color_temp: 1
-          brightness: 255
+      - service: script.turn_on_comfortable_light
 
   - alias: 'Выключить свет в спальне'
     mode: queued
@@ -115,8 +140,7 @@ automation:
           - sensor.0x00158d000424fadf_click
         to: 'long'
     action:
-      - service: light.turn_off
-        entity_id: light.svet_v_spalne
+      - service: script.turn_off_comfortable_light
 
   - alias: 'Включить свет в большой прихожей через датчик движения'
     trigger:
