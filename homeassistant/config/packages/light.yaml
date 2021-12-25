@@ -31,15 +31,15 @@ script:
           entity_id: light.svet_v_spalne
           kelvin: > 
            {% if states.sun.sun.state == "above_horizon" %} 
-             6500 
+             {{ 6500 }} 
            {% else  %} 
-             2000 
+             {{ 2000 }} 
            {% endif %}
           brightness: >
            {% if states.sun.sun.state == "above_horizon" %}·
-             255
+             {{ 255 }}
            {% else %}
-             1
+             {{ 1 }}
            {% endif %}
 
   turn_off_comfortable_light:
