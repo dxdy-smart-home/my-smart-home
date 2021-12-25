@@ -3,7 +3,7 @@ version: '3'
 services:
   nginx_certbot:
     container_name: nginx_certbot
-    image: mrdxdy/nginx-certbot:0.1.0
+    image: mrdxdy/nginx-certbot:0.1.1
     restart: always
     network_mode: host
     volumes:
@@ -12,7 +12,7 @@ services:
       - ./homeassistant/config:/homeassistant
   homeassistant:
     container_name: homeassistant
-    image: homeassistant/raspberrypi4-homeassistant:2021.11.5
+    image: homeassistant/home-assistant:2021.12.5
     restart: always
     privileged: true
     volumes:
