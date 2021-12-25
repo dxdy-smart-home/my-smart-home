@@ -1,5 +1,8 @@
 **/__pycache__/*
 
+/torrserver/*
+!/torrserver/.keep
+
 /mqtt/ssl/*
 !/mqtt/ssl/.keep
 
