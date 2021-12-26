@@ -36,7 +36,7 @@ script:
              {{ 2000 }} 
            {% endif %}
           brightness: >
-           {% if states.sun.sun.state == "above_horizon" %}·
+           {% if states.sun.sun.state == "above_horizon" %}
              {{ 255 }}
            {% else %}
              {{ 1 }}
