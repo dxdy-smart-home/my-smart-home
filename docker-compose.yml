@@ -11,13 +11,14 @@ services:
       - ./torrserver/db:/TS/db
   nginx_certbot:
     container_name: nginx_certbot
-    image: mrdxdy/nginx-certbot:0.1.1
+    image: mrdxdy/nginx-certbot:0.1.2
     restart: always
     network_mode: host
     volumes:
       - ./certbot/letsencrypt:/etc/letsencrypt
       - ./nginx/conf.d:/etc/nginx/conf.d
       - ./homeassistant/config:/homeassistant
+      - ./nginx/auth:/etc/nginx/auth
   homeassistant:
     container_name: homeassistant
     image: homeassistant/home-assistant:2021.12.7

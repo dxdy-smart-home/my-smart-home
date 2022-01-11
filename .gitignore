@@ -1,5 +1,8 @@
 **/__pycache__/*
 
+/nginx/auth/*
+!/nginx/auth/.keep
+
 /torrserver/*
 !/torrserver/.keep
 
