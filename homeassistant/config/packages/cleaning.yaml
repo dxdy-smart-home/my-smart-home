@@ -20,3 +20,13 @@ vacuum_zones:
     #  token: !secret smartthinq_token
     #  region: RU
     #  language: ru-RU
+
+automation:
+   - alias: 'Включить или выключить измельчитель'
+     trigger:
+       - platform: state
+         entity_id: sensor.0x00158d00070b5fee_action
+         to: 'release'
+     action:
+       - service: switch.toggle
+         entity_id: switch.0x000d6f0013369f96

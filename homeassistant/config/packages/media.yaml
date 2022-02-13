@@ -1,9 +1,3 @@
-yandex_station:
-  username: !secret yandex_username
-  password: !secret yandex_password
-
-yandex_smart_home:
-
 # Samsung tv is evil
 automation:
   - alias: 'Turn off kitchen speakers if samsung tv in living room turns on'
