@@ -25,7 +25,9 @@ automation:
    - alias: 'Включить или выключить измельчитель'
      trigger:
        - platform: state
-         entity_id: sensor.0x00158d00070b5fee_action
+         entity_id: 
+           - sensor.0x00158d00070b5fee_action
+           - sensor.0x00158d00075e267b_action
          to: 'single'
      action:
        - service: switch.toggle
