@@ -75,14 +75,6 @@ duckdns:
   access_token: !secret duckdns_access_token 
 
 mqtt:
-  discovery: true
-  broker: 'localhost'
-  birth_message:
-    topic: 'hass/status'
-    payload: 'online'
-  will_message:
-    topic: 'hass/status'
-    payload: 'offline'
 
 http:
   use_x_forwarded_for: true
