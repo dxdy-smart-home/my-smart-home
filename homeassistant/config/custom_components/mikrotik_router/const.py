@@ -1,8 +1,15 @@
 """Constants used by the Mikrotik Router component and platforms."""
+from homeassistant.const import Platform
 
+PLATFORMS = [
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.SWITCH,
+    Platform.BUTTON,
+]
 DOMAIN = "mikrotik_router"
 DEFAULT_NAME = "Mikrotik Router"
-DATA_CLIENT = "client"
 ATTRIBUTION = "Data provided by Mikrotik"
 
 RUN_SCRIPT_COMMAND = "run_script"
@@ -12,7 +19,7 @@ DEFAULT_LOGIN_METHOD = "plain"
 
 DEFAULT_HOST = "10.0.0.1"
 DEFAULT_USERNAME = "admin"
-DEFAULT_PASSWORD = "admin"
+DEFAULT_PASSWORD = ""
 DEFAULT_PORT = 0
 DEFAULT_DEVICE_NAME = "Mikrotik"
 DEFAULT_SSL = False
