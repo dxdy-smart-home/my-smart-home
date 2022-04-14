@@ -21,7 +21,7 @@ services:
       - ./nginx/auth:/etc/nginx/auth
   homeassistant:
     container_name: homeassistant
-    image: homeassistant/home-assistant:2022.3.5
+    image: homeassistant/home-assistant:2022.3.8
     restart: always
     privileged: true
     volumes:
