@@ -68,6 +68,16 @@ script:
          {% else %} 
            script.turn_off_comfortable_light 
          {% endif %}
+
+  toggle_lounge_light:
+    sequence:
+      - service_template: >
+         {% if is_state('switch.0x00124b0024c3375f', 'on') or is_state('switch.0x00124b0024c33795', 'on') %}
+           homeassistant.turn_off
+         {% else %}
+           homeassistant.turn_on
+         {% endif %}
+        entity_id: group.lounge_lights
            
   turn_on_moonlight:
     sequence:
@@ -228,26 +238,12 @@ automation:
     action:
       - service: light.turn_off
         entity_id: light.sonoff_1000a8d068_1
-  - alias: 'Включить свет в гостиной'
+  - alias: 'Включить или выключить свет в гостиной'
     trigger:
       - platform: state
         entity_id: binary_sensor.lounge_switch
-        to: 'on'
     action:
-      - service: switch.turn_on
-        entity_id: switch.0x00124b0024c3375f
-      - service: switch.turn_on
-        entity_id: switch.0x00124b0024c33795 
-  - alias: 'Выключить свет в гостиной'
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.lounge_switch
-        to: 'off'
-    action:
-      - service: switch.turn_off
-        entity_id: switch.0x00124b0024c3375f
-      - service: switch.turn_off
-        entity_id: switch.0x00124b0024c33795
+      - service: script.toggle_lounge_light
   - alias: 'Включить или выключить свет через выключатель на кухне'
     trigger:
       - platform: state
