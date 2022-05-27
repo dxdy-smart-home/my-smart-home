@@ -40,7 +40,7 @@ services:
       - ./mqtt/ssl:/mosquitto/ssl
   zigbee2mqtt:
     container_name: zigbee2mqtt
-    image: koenkk/zigbee2mqtt:1.23.0
+    image: koenkk/zigbee2mqtt:1.25.1
     volumes:
       - ./zigbee2mqtt/data:/app/data
       - /run/udev:/run/udev:ro
