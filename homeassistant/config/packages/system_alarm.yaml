@@ -21,7 +21,7 @@ automation:
   - alias: Протечка на кухне
     trigger: 
     - platform: state
-      entity_id: binary_sensor.0x00158d00049fc6ec_water_leak
+      entity_id: binary_sensor.0x000d6f00131c5259_water_leak
       to: 'on'
     action:
     - data:
@@ -33,7 +33,9 @@ automation:
     description: ''
     trigger:
     - platform: state
-      entity_id: binary_sensor.0x00158d000400f5c7_water_leak
+      entity_id: 
+        - binary_sensor.0x00158d000400f5c7_water_leak
+        - binary_sensor.0x00158d00049fc6ec_water_leak
       to: 'on'
     condition: []
     action:
