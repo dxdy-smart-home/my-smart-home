@@ -1,8 +1,8 @@
-sensor:
-  - platform: mqtt
-    name: "rpi_co2"
-    state_topic: "/rpi/co2"
-    unit_of_measurement: "ppm" 
+mqtt:
+  sensor:
+    - name: "rpi_co2"
+      state_topic: "/rpi/co2"
+      unit_of_measurement: "ppm" 
 
 automation:
   - alias: Проветрить спальню перед сном

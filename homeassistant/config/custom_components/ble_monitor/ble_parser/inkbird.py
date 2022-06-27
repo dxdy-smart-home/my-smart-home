@@ -2,6 +2,11 @@
 import logging
 from struct import unpack
 
+from .helpers import (
+    to_mac,
+    to_unformatted_mac,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -34,7 +39,7 @@ def parse_inkbird(self, data, complete_local_name, source_mac, rssi):
                 }
             )
         elif complete_local_name == "tps":
-            device_type = "IBS-TH2/P01R"
+            device_type = "IBS-TH2/P01B"
             result.update(
                 {
                     "temperature": temp / 100,
@@ -128,15 +133,10 @@ def parse_inkbird(self, data, complete_local_name, source_mac, rssi):
 
     result.update({
         "rssi": rssi,
-        "mac": ''.join('{:02X}'.format(x) for x in source_mac[:]),
+        "mac": to_unformatted_mac(source_mac),
         "type": device_type,
         "packet": "no packet id",
         "firmware": firmware,
         "data": True
     })
     return result
-
-
-def to_mac(addr: int):
-    """Return formatted MAC address"""
-    return ':'.join(f'{i:02X}' for i in addr)

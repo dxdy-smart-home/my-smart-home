@@ -36,3 +36,6 @@ backup:
 
 restore:
 	./script/restore.sh
+
+ble_restart:
+	sudo hciconfig hci0 up
