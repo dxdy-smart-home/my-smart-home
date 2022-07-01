@@ -4,6 +4,15 @@ input_boolean:
     initial: off
 
 automation:
+  - alias: Сообщить хозяевам, что отключали электричество
+    trigger:
+    - platform: homeassistant
+      event: start
+    action:
+    - data:
+        message: Да будет свет! Электричество восстановлено
+      service: notify.telegram_dxdy
+      
   - alias: Кто-то проник в дом
     trigger:
     - platform: state
