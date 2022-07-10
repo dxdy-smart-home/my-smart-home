@@ -17,15 +17,11 @@ sudo cp duckdns/.env $BACKUP_NAME/duckdns/.env
 sudo cp homeassistant/config/secrets.yaml $BACKUP_NAME/homeassistant/config/secrets.yaml
 sudo cp homeassistant/config/html5_push_registrations.conf $BACKUP_NAME/homeassistant/config/html5_push_registrations.conf
 sudo cp homeassistant/config/known_devices.yaml $BACKUP_NAME/homeassistant/config/known_devices.yaml
-sudo cp homeassistant/config/home-assistant_v2.db $BACKUP_NAME/homeassistant/config/home-assistant_v2.db
 sudo cp -r homeassistant/config/.storage/ $BACKUP_NAME/homeassistant/config/.storage/
 
 sudo cp zigbee2mqtt/data/configuration.yaml $BACKUP_NAME/zigbee2mqtt/data/configuration.yaml
 sudo cp zigbee2mqtt/data/state.json $BACKUP_NAME/zigbee2mqtt/data/state.json
-
-sudo cp -r certbot/letsencrypt/ $BACKUP_NAME/certbot/letsencrypt/
-
-sudo cp -r influxdb/ $BACKUP_NAME/influxdb
+sudo cp zigbee2mqtt/data/database.db $BACKUP_NAME/zigbee2mqtt/data/database.db
 
 sudo cp -r mqtt/ssl/ $BACKUP_NAME/mqtt/ssl/
 
