@@ -9,6 +9,8 @@ automation:
     - platform: homeassistant
       event: start
     action:
+    - delay:
+        minutes: 5
     - data:
         message: Да будет свет! Электричество восстановлено
       service: notify.telegram_dxdy
