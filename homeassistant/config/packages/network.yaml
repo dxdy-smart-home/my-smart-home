@@ -1,0 +1,18 @@
+input_datetime:
+  internet_ends_at:
+    name: Время отключения интернета
+    icon: mdi:timer
+    has_date: false
+    has_time: true
+    initial: '23:00'
+
+automation:
+  - alias: Выключить интернет вечером
+    trigger:
+      platform: time
+      at: input_datetime.internet_ends_at
+    action:
+      - service: switch.turn_off
+        entity_id: switch.mikrotik_kidcontrol_paused_veronika
+      - service: switch.turn_off
+        entity_id: switch.mikrotik_kidcontrol_paused_dana
