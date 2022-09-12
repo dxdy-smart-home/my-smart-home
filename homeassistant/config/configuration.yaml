@@ -82,4 +82,7 @@ sonoff:
   devices:
     1000a8d068:
       device_class: [light, light]
-      name: Светильник 
+      name: Светильник
+    1000e55030:
+      device_class: light
+      name: Цветы в спальне 
