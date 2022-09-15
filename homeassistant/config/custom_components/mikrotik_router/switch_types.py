@@ -1,8 +1,7 @@
-"""Definitions for Mikrotik Router sensor entities."""
+"""Definitions for Mikrotik Router switch entities."""
 from dataclasses import dataclass, field
 from typing import List
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntityDescription,
@@ -55,6 +54,29 @@ DEVICE_ATTRIBUTES_IFACE_SFP = [
     "sfp-vendor-serial",
     "sfp-manufacturing-date",
     "eeprom-checksum",
+]
+
+DEVICE_ATTRIBUTES_IFACE_WIRELESS = [
+    "ssid",
+    "mode",
+    "radio-name",
+    "interface-type",
+    "country",
+    "installation",
+    "antenna-gain",
+    "frequency",
+    "band",
+    "channel-width",
+    "secondary-frequency",
+    "wireless-protocol",
+    "rate-set",
+    "distance",
+    "tx-power-mode",
+    "vlan-id",
+    "wds-mode",
+    "wds-default-bridge",
+    "bridge-mode",
+    "hide-ssid",
 ]
 
 DEVICE_ATTRIBUTES_NAT = [
@@ -147,7 +169,7 @@ class MikrotikSwitchEntityDescription(SwitchEntityDescription):
     ha_connection: str = ""
     ha_connection_value: str = ""
     data_path: str = ""
-    data_is_on: str = "enabled"
+    data_attribute: str = "enabled"
     data_switch_path: str = ""
     data_switch_parameter: str = "disabled"
     data_name: str = ""
@@ -155,12 +177,13 @@ class MikrotikSwitchEntityDescription(SwitchEntityDescription):
     data_uid: str = ""
     data_reference: str = ""
     data_attributes_list: List = field(default_factory=lambda: [])
+    func: str = "MikrotikSwitch"
 
 
-SWITCH_TYPES = {
+SENSOR_TYPES = {
     "interface": MikrotikSwitchEntityDescription(
         key="interface",
-        name="port",
+        name="Port",
         icon_enabled="mdi:lan-connect",
         icon_disabled="mdi:lan-pending",
         entity_category=None,
@@ -169,14 +192,15 @@ SWITCH_TYPES = {
         ha_connection_value="data__port-mac-address",
         data_path="interface",
         data_switch_path="/interface",
-        data_name="name",
+        data_name="default-name",
         data_uid="name",
         data_reference="default-name",
         data_attributes_list=DEVICE_ATTRIBUTES_IFACE,
+        func="MikrotikPortSwitch",
     ),
     "nat": MikrotikSwitchEntityDescription(
         key="nat",
-        name="NAT",
+        name="",
         icon_enabled="mdi:network-outline",
         icon_disabled="mdi:network-off-outline",
         entity_category=None,
@@ -190,10 +214,11 @@ SWITCH_TYPES = {
         data_uid="uniq-id",
         data_reference="uniq-id",
         data_attributes_list=DEVICE_ATTRIBUTES_NAT,
+        func="MikrotikNATSwitch",
     ),
     "mangle": MikrotikSwitchEntityDescription(
         key="mangle",
-        name="Mangle",
+        name="",
         icon_enabled="mdi:bookmark-outline",
         icon_disabled="mdi:bookmark-off-outline",
         entity_category=None,
@@ -207,10 +232,11 @@ SWITCH_TYPES = {
         data_uid="uniq-id",
         data_reference="uniq-id",
         data_attributes_list=DEVICE_ATTRIBUTES_MANGLE,
+        func="MikrotikMangleSwitch",
     ),
     "filter": MikrotikSwitchEntityDescription(
         key="filter",
-        name="Filter",
+        name="",
         icon_enabled="mdi:filter-variant",
         icon_disabled="mdi:filter-variant-remove",
         entity_category=None,
@@ -224,6 +250,7 @@ SWITCH_TYPES = {
         data_uid="uniq-id",
         data_reference="uniq-id",
         data_attributes_list=DEVICE_ATTRIBUTES_FILTER,
+        func="MikrotikFilterSwitch",
     ),
     "ppp_secret": MikrotikSwitchEntityDescription(
         key="ppp_secret",
@@ -243,7 +270,7 @@ SWITCH_TYPES = {
     ),
     "queue": MikrotikSwitchEntityDescription(
         key="queue",
-        name="Queue",
+        name="",
         icon_enabled="mdi:leaf",
         icon_disabled="mdi:leaf-off",
         entity_category=None,
@@ -256,10 +283,11 @@ SWITCH_TYPES = {
         data_uid="name",
         data_reference="name",
         data_attributes_list=DEVICE_ATTRIBUTES_QUEUE,
+        func="MikrotikQueueSwitch",
     ),
     "kidcontrol_enable": MikrotikSwitchEntityDescription(
         key="kidcontrol_enable",
-        name="kidcontrol",
+        name="",
         icon_enabled="mdi:account",
         icon_disabled="mdi:account-off",
         entity_category=None,
@@ -275,7 +303,7 @@ SWITCH_TYPES = {
     ),
     "kidcontrol_pause": MikrotikSwitchEntityDescription(
         key="kidcontrol_paused",
-        name="kidcontrol paused",
+        name="paused",
         icon_enabled="mdi:account-outline",
         icon_disabled="mdi:account-off-outline",
         entity_category=None,
@@ -283,11 +311,14 @@ SWITCH_TYPES = {
         ha_connection=DOMAIN,
         ha_connection_value="Kidcontrol",
         data_path="kid-control",
-        data_is_on="paused",
+        data_attribute="paused",
         data_switch_path="/ip/kid-control",
         data_name="name",
         data_uid="name",
         data_reference="name",
         data_attributes_list=DEVICE_ATTRIBUTES_KIDCONTROL,
+        func="MikrotikKidcontrolPauseSwitch",
     ),
 }
+
+SENSOR_SERVICES = {}
