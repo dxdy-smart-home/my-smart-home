@@ -25,3 +25,36 @@ telegram_bot:
     allowed_chat_ids:
       - !secret telegram_bot_dxdy_chat_id
       - !secret telegram_bot_oav_chat_id
+
+automation:
+  - trigger:
+      platform: event
+      event_type: telegram_text
+    action:
+      - service: media_player.volume_set
+        data:
+          entity_id: media_player.yandex_station_lb0000000000000717140000f8d0c603
+          volume_level: 0
+      - service: media_player.play_media
+        data:
+          entity_id: media_player.yandex_station_lb0000000000000717140000f8d0c603
+          media_content_id: "{{ trigger.event.data.text }}"
+          media_content_type: "question:{{ trigger.event.data.user_id }}"
+  - trigger:
+      platform: event
+      event_type: yandex_station_response
+    action:
+      - service: telegram_bot.send_message
+        data:
+          target: "{{ trigger.event.data.request_id }}"
+          message: "{{ trigger.event.data.text }}"
+      - service: media_player.play_media
+        data:
+          entity_id: media_player.yandex_station_lb0000000000000717140000f8d0c603
+          media_content_id: Хватит
+          media_content_type: command
+      - service: media_player.volume_set
+        data:
+          entity_id: media_player.yandex_station_lb0000000000000717140000f8d0c603
+          volume_level: 0.3
+
