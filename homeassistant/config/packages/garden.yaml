@@ -43,14 +43,14 @@ automation:
   - alias: Включить свет у цветов в спальне
     trigger:
       - platform: time
-        at: 08:30:00
+        at: 08:00:00
     action:
       - service: light.turn_on
         entity_id: light.sonoff_1000e55030
   - alias: Выключить свет у цветов в спальне
     trigger:
       - platform: time
-        at: '22:10:00'
+        at: '21:30:00'
     action:
       - service: light.turn_off
         entity_id: light.sonoff_1000e55030
