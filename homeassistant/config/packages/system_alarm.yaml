@@ -4,7 +4,7 @@ input_boolean:
     initial: off
 
 automation:
-  - alias: Сообщить хозяевам, что отключали электричество
+  - alias: Сообщить хозяевам, что умный дом запустился
     trigger:
     - platform: homeassistant
       event: start
@@ -12,7 +12,7 @@ automation:
     - delay:
         minutes: 5
     - data:
-        message: Да будет свет! Электричество восстановлено
+        message: Умный дом запущен
       service: notify.telegram_dxdy
       
   - alias: Кто-то проник в дом
