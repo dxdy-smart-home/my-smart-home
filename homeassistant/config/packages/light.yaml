@@ -4,14 +4,12 @@ group:
     - light.svet_v_spalne
     - light.sonoff_1000a8d068_1
     - light.sonoff_1000a8d068_2
-    - switch.0x00124b0024c1ecb5
     - switch.0x00124b0024c34eca
     - switch.0x00124b0024c3375f
     - switch.0x00124b0024c33795
   kitchen_lights:
     - switch.0x00124b0024c34eca
   lounge_lights:
-    - switch.0x00124b0024c1ecb5
     - switch.0x00124b0024c3375f
     - switch.0x00124b0024c33795
 
@@ -72,7 +70,7 @@ script:
   toggle_lounge_light:
     sequence:
       - service_template: >
-         {% if is_state('switch.0x00124b0024c3375f', 'on') or is_state('switch.0x00124b0024c33795', 'on') or is_state('switch.0x00124b0024c1ecb5', 'on') %}
+         {% if is_state('switch.0x00124b0024c3375f', 'on') or is_state('switch.0x00124b0024c33795', 'on') %}
            homeassistant.turn_off
          {% else %}
            homeassistant.turn_on
