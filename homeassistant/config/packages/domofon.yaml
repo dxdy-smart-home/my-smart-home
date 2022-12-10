@@ -1,3 +1,20 @@
+# для интеграции с Алисой
+lock:
+  - platform: template
+    name: domofon_door
+    unique_id: domofon_door
+    value_template: "{{ states('select.0x00124b00180597b4_mode') == 'never' or states('select.0x00124b00180597b4_mode') == 'drop' }}"
+    lock:
+      - service: select.select_option
+        data:
+          entity_id: select.0x00124b00180597b4_mode
+          option: 'never'
+    unlock:
+      - service: select.select_option
+        data:
+          entity_id: select.0x00124b00180597b4_mode
+          option: 'once'
+
 script:
   accept_domofon:
     sequence:
