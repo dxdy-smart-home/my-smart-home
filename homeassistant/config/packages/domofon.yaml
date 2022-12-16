@@ -104,17 +104,15 @@ automation:
                 state: 'ring'
             sequence:
               # Отправить подтверждение о намерении открыть
-              - service: telegram_bot.answer_callback_query
-                data_template:
-                  callback_query_id: "{{ trigger.event.data.id }}"
+              - service: notify.telegram_family
+                data:
                   message: "Открываю..."
               # Открыть
               - service: script.accept_domofon
         default:
           # Отправить ответ, что нету звонка
-          - service: telegram_bot.answer_callback_query
-            data_template:
-              callback_query_id: "{{ trigger.event.data.id }}"
+          - service: notify.telegram_family
+            data:
               message: "Нет входящего звонка"
 
   - alias: Telegram /domofon_reject callback
@@ -134,17 +132,15 @@ automation:
                 state: 'ring'
             sequence:
               # Отправить подтверждение о намерении отклонить
-              - service: telegram_bot.answer_callback_query
-                data_template:
-                  callback_query_id: "{{ trigger.event.data.id }}"
+              - service: notify.telegram_family
+                data:
                   message: "Отклоняю..."
               # Отклонить
               - service: script.reject_domofon
         default:
           # Отправить ответ, что нету звонка
-          - service: telegram_bot.answer_callback_query
-            data_template:
-              callback_query_id: "{{ trigger.event.data.id }}"
+          - service: notify.telegram_family
+            data:
               message: "Нет входящего звонка"
 
   - alias: 'Выключить звук домофона в обеденный сон'
@@ -154,9 +150,6 @@ automation:
     action:
       - service: switch.turn_off
         entity_id: switch.0x00124b00180597b4_sound
-      - service: notify.telegram_family
-        data:
-          message: "Детский сон начался. Звук домофона выключен."
 
   - alias: 'Включить звук домофона после обеденного сона'
     trigger:
@@ -165,9 +158,6 @@ automation:
     action:
       - service: switch.turn_on
         entity_id: switch.0x00124b00180597b4_sound
-      - service: notify.telegram_family
-        data:
-          message: "Детский сон закончился. Звук домофона включен."
 
   - alias: 'Выключить звук домофона на ночь'
     trigger:
