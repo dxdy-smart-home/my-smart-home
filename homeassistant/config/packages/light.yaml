@@ -136,6 +136,9 @@ automation:
     trigger:
       - platform: state
         entity_id: binary_sensor.bed_switch
+        to:
+          - 'on'
+          - 'off'
     action:
       - service: script.toogle_comfortable_light
 
@@ -240,12 +243,18 @@ automation:
     trigger:
       - platform: state
         entity_id: binary_sensor.lounge_switch
+        to:
+          - 'on'
+          - 'from'
     action:
       - service: script.toggle_lounge_light
   - alias: 'Включить или выключить свет через выключатель на кухне'
     trigger:
       - platform: state
         entity_id: binary_sensor.kitchen_switch
+        to:
+          - 'on'
+          - 'from'
     action:
       - service: homeassistant.toggle
         entity_id: group.kitchen_lights
