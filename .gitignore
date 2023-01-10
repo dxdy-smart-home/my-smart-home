@@ -35,3 +35,5 @@
 /homeassistant/config/.yandex_station.json
 
 my_smart_home_*tar.gz
+
+/postgresql/pgdata/

@@ -1,6 +1,18 @@
 version: '3'
 
 services:
+  postgresql:
+    image: postgres:alpine3.17
+    restart: always
+    network_mode: host
+    environment:
+      - TZ=Europe/Moscow
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=homeassistant
+      - POSTGRES_HOST_AUTH_METHOD=md5
+      - POSTGRES_INITDB_ARGS="-E utf8"
+    volumes:
+      - ./postgresql/pgdata:/var/lib/postgresql/data        
   disk:
     image: mrdxdy/nginx-file-browser:0.1.0
     restart: always
@@ -33,6 +45,8 @@ services:
     image: homeassistant/home-assistant:2022.12.7
     restart: always
     privileged: true
+    depends_on:
+      - postgresql
     volumes:
       - ./homeassistant/config:/config
     network_mode: host

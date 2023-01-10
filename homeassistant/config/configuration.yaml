@@ -19,6 +19,7 @@ python_script:
 webhook:
 
 recorder:
+   db_url: "postgresql://postgres:postgres@0.0.0.0/homeassistant"
    include:
      entities:
        - sensor.0x00158d00044afc42_temperature
