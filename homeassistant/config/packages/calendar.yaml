@@ -7,6 +7,6 @@ automation:
   action:
     - service: notify.telegram_family
       data:
-        message:|
-        {{ trigger.calendar_event.summary }}
-        {{ trigger.calendar_event.description  }}
+        message: |
+          {{ trigger.calendar_event.summary }}
+          {{ trigger.calendar_event.description  }}
