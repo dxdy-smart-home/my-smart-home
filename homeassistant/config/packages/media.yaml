@@ -1,11 +1,7 @@
-# Samsung tv is evil
-automation:
-  - alias: 'Turn off kitchen speakers if samsung tv in living room turns on'
-    trigger:
-      - platform: state
-        entity_id: device_tracker.samsung
-        from: 'not_home'
-        to: 'home'
-    action:
-      - service: media_player.turn_off
-        entity_id: media_player.yandex_station_lb0000000000000717140000f8d0c603
+media_player:
+  - platform: samsungtv_tizen
+    host: !secret samsungtv_host
+    mac: !secret samsungtv_mac
+    update_method: smartthings
+    api_key: !secret samsungtv_api_key
+    device_id: !secret samsungtv_device_id
