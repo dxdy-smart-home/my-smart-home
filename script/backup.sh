@@ -2,9 +2,6 @@
 
 set -e
 
-read -p "Enter login: " LOGIN
-read -s -p "Enter password: " PASSWORD
-
 ENDPOINT="https://webdav.yandex.ru/dump"
 BACKUP_NAME=my_smart_home_$(date +"%Y%m%d_%H%M%S")
 
@@ -28,7 +25,7 @@ sudo cp -r mqtt/ssl/ $BACKUP_NAME/mqtt/ssl/
 sudo tar czf $BACKUP_NAME.tar.gz $BACKUP_NAME
 
 sudo rm -rf ./$BACKUP_NAME
-curl --progress-bar -o /dev/stdout --verbose -T $BACKUP_NAME.tar.gz --user $LOGIN:$PASSWORD $ENDPOINT/$BACKUP_NAME.tar.gz
+curl --progress-bar -o /dev/stdout --verbose -T $BACKUP_NAME.tar.gz --header "Authorization: OAuth $OAUTH_YANDEX_API_KEY" $ENDPOINT/$BACKUP_NAME.tar.gz
 sudo rm ./$BACKUP_NAME.tar.gz
 
 echo "Done"
