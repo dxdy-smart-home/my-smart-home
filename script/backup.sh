@@ -9,8 +9,6 @@ echo "Waiting..."
 
 mkdir -p $BACKUP_NAME/{duckdns,homeassistant/config,zigbee2mqtt/data,certbot,mqtt}
 
-sudo cp duckdns/.env $BACKUP_NAME/duckdns/.env
-
 sudo cp homeassistant/config/secrets.yaml $BACKUP_NAME/homeassistant/config/secrets.yaml
 sudo cp homeassistant/config/html5_push_registrations.conf $BACKUP_NAME/homeassistant/config/html5_push_registrations.conf
 sudo cp homeassistant/config/known_devices.yaml $BACKUP_NAME/homeassistant/config/known_devices.yaml

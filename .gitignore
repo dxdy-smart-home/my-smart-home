@@ -9,8 +9,6 @@
 /mqtt/ssl/*
 !/mqtt/ssl/.keep
 
-/duckdns/.env
-
 /certbot/letsencrypt/*
 
 /homeassistant/config/.shopping_list.json
