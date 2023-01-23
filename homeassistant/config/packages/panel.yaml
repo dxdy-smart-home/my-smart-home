@@ -9,7 +9,3 @@ panel_iframe:
     url: !secret torr_url
     icon: mdi:filmstrip
     require_admin: true
-  disk:
-    title: Disk
-    url: !secret disk_url
-    icon: mdi:cloud

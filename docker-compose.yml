@@ -12,16 +12,7 @@ services:
       - POSTGRES_HOST_AUTH_METHOD=md5
       - POSTGRES_INITDB_ARGS="-E utf8"
     volumes:
-      - ./postgresql/pgdata:/var/lib/postgresql/data        
-  disk:
-    image: mrdxdy/nginx-file-browser:0.1.0
-    restart: always
-    ports:
-      - 8081:80
-    volumes:
-      - /buffer/samba:/opt/www/files
-    networks:
-      my-smart-home:
+      - ./postgresql/pgdata:/var/lib/postgresql/data
   torrserver:
     image: ksey/torrserver
     restart: always

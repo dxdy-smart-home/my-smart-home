@@ -59,13 +59,6 @@ history:
        - sensor.0x00124b00234c8afc_co2
        - sensor.0x00124b00234c8801_co2
 
-#influxdb:
-#  username: !secret influxdb_username
-#  password: !secret influxdb_password
-#  default_measurement: state
-#  include:
-#    entities: []
-
 homeassistant:
   packages: !include_dir_named packages
   external_url: !secret homeassistant_url 
