@@ -60,7 +60,7 @@ history:
        - sensor.0x00124b00234c8801_co2
 
 homeassistant:
-  packages: !include_dir_named packages
+  packages: !include_dir_named packages/
   external_url: !secret homeassistant_url 
 
 mqtt:

@@ -1,0 +1,73 @@
+yandex_station_intents:
+  intents:
+    Включи свет на кухне:
+    Выключи свет на кухне:
+    Включи свет в гостиной:
+    Выключи свет в гостиной:
+    Включи свет над цветами:
+      extra_phrases:
+        - Включи свет над цветами в гостиной
+    Выключи свет над цветами:
+      extra_phrases:
+        - Выключи свет над цветами в гостиной
+
+automation:
+  - alias: Включить свет на кухне через алису
+    trigger:
+      - platform: event
+        event_type: yandex_intent
+        event_data:
+          text: Включи свет на кухне
+    action:
+      - service: switch.turn_on
+        entity_id: switch.0xa4c1381fc1e36875_left
+
+  - alias: Выключить свет на кухне через алису
+    trigger:
+      - platform: event
+        event_type: yandex_intent
+        event_data:
+          text: Выключи свет на кухне
+    action:
+      - service: switch.turn_off
+        entity_id: switch.0xa4c1381fc1e36875_left
+
+  - alias: Включить свет в гостиной через алису
+    trigger:
+      - platform: event
+        event_type: yandex_intent
+        event_data:
+          text: Включи свет в гостиной
+    action:
+      - service: switch.turn_on
+        entity_id: switch.0xa4c1381fc1e36875_right
+
+  - alias: Выключить свет в гостиной через алису
+    trigger:
+      - platform: event
+        event_type: yandex_intent
+        event_data:
+          text: Выключи свет в гостиной
+    action:
+      - service: switch.turn_off
+        entity_id: switch.0xa4c1381fc1e36875_right
+
+  - alias: Включить свет над цветами через алису
+    trigger:
+      - platform: event
+        event_type: yandex_intent
+        event_data:
+          text: Включи свет над цветами
+    action:
+      - service: switch.turn_on
+        entity_id: switch.0x00124b0024c1ecb5
+
+  - alias: Выключить свет над цветами через алису
+    trigger:
+      - platform: event
+        event_type: yandex_intent
+        event_data:
+          text: Выключи свет над цветами
+    action:
+      - service: switch.turn_off
+        entity_id: switch.0x00124b0024c1ecb5
