@@ -10,6 +10,15 @@ yandex_station_intents:
     Выключи свет над цветами:
       extra_phrases:
         - Выключи свет над цветами в гостиной
+    Включи свет в душевой:
+    Выключи свет в душевой:
+
+switch:
+  - platform: group
+    name: "Выключатели в прихожей"
+    entities:
+      - switch.0xa4c13845d5d8c9a3_right
+      - switch.0xa4c1380aed5b5a4a
 
 automation:
   - alias: Включить свет на кухне через алису
@@ -71,3 +80,23 @@ automation:
     action:
       - service: switch.turn_off
         entity_id: switch.0x00124b0024c1ecb5
+
+  - alias: Включить свет в душевой через алису
+    trigger:
+      - platform: event
+        event_type: yandex_intent
+        event_data:
+          text: Включи свет в душевой
+    action:
+      - service: switch.turn_on
+        entity_id: switch.0xa4c13845d5d8c9a3_right
+
+  - alias: Выключить свет в душевой через алису
+    trigger:
+      - platform: event
+        event_type: yandex_intent
+        event_data:
+          text: Выключи свет в душевой
+    action:
+      - service: switch.turn_off
+        entity_id: switch.0xa4c13845d5d8c9a3_right
