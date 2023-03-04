@@ -27,10 +27,10 @@ script:
           entity_id: "{{ station }}"
           is_volume_muted: false
 
-automation:
-  - alias: "Sync with yandex shopping list"
-    trigger:
-      - platform: event
-        event_type: shopping_list_updated
-    action:
-      - service: script.update_shopping_list
+#automation:
+#  - alias: "Sync with yandex shopping list"
+#    trigger:
+#      - platform: event
+#        event_type: shopping_list_updated
+#    action:
+#      - service: script.update_shopping_list
