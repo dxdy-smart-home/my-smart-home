@@ -21,11 +21,6 @@ script:
            {% else %}
              {{ 1 }}
            {% endif %}
-
-  turn_off_comfortable_light:
-    sequence:
-      - service: light.turn_off
-        entity_id: light.svet_v_spalne
            
 automation:
   - alias: 'Включить ночник'
@@ -63,7 +58,10 @@ automation:
           - sensor.0x00158d000424fadf_click
         to: 'long'
     action:
-      - service: script.turn_off_comfortable_light
+      - service: light.turn_off
+        entity_id:
+          - light.svet_v_spalne_nightlight
+          - light.svet_v_spalne
 
   - alias: 'Включить свет в большой прихожей через датчик движения'
     trigger:
