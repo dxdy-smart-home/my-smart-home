@@ -1,0 +1,20 @@
+children_light_package:
+  automation:
+    - alias: Включить свет в детской через алису
+      trigger:
+          - platform: event
+            event_type: yandex_intent
+            event_data:
+              text: Включи свет в детской
+      action:
+          - service: switch.turn_on
+            entity_id: switch.0xa4c138fad011d9df
+    - alias: Выключить свет в детской через алису
+      trigger:
+          - platform: event
+            event_type: yandex_intent
+            event_data:
+              text: Выключи свет в детской
+      action:
+          - service: switch.turn_off
+            entity_id: switch.0xa4c138fad011d9df

@@ -1,0 +1,41 @@
+lounge_light_package:
+  automation:
+    - alias: Включить свет в гостиной через алису
+      trigger:
+        - platform: event
+          event_type: yandex_intent
+          event_data:
+            text: Включи свет в гостиной
+      action:
+        - service: switch.turn_on
+          entity_id: switch.0xa4c1381fc1e36875_right
+
+    - alias: Выключить свет в гостиной через алису
+      trigger:
+        - platform: event
+          event_type: yandex_intent
+          event_data:
+            text: Выключи свет в гостиной
+      action:
+        - service: switch.turn_off
+          entity_id: switch.0xa4c1381fc1e36875_right
+
+    - alias: Включить свет над цветами через алису
+      trigger:
+        - platform: event
+          event_type: yandex_intent
+          event_data:
+            text: Включи свет над цветами
+      action:
+        - service: switch.turn_on
+          entity_id: switch.0x00124b0024c1ecb5
+
+    - alias: Выключить свет над цветами через алису
+      trigger:
+        - platform: event
+          event_type: yandex_intent
+          event_data:
+            text: Выключи свет над цветами
+      action:
+        - service: switch.turn_off
+          entity_id: switch.0x00124b0024c1ecb5

@@ -1,0 +1,20 @@
+kitchen_light_package:
+  automation:
+    - alias: Включить свет на кухне через алису
+      trigger:
+          - platform: event
+            event_type: yandex_intent
+            event_data:
+              text: Включи свет на кухне
+      action:
+          - service: switch.turn_on
+            entity_id: switch.0xa4c1381fc1e36875_left
+    - alias: Выключить свет на кухне через алису
+      trigger:
+          - platform: event
+            event_type: yandex_intent
+            event_data:
+              text: Выключи свет на кухне
+      action:
+          - service: switch.turn_off
+            entity_id: switch.0xa4c1381fc1e36875_left

@@ -1,4 +1,11 @@
 hallway_light_package:
+    switch:
+      - platform: group
+        name: "Выключатели в прихожей"
+        entities:
+          - switch.0xa4c13845d5d8c9a3_right
+          - switch.0xa4c1380aed5b5a4a
+          
     automation:
       - alias: 'Включить свет в большой прихожей через датчик движения'
         trigger:
