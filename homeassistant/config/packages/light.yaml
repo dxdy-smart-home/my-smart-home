@@ -4,7 +4,7 @@ yeelight:
       name: Свет в спальне
 
 script:
-  turn_on_comfortable_light:
+  set_comfortable_light:
     sequence:
       - service: light.turn_on
         data_template:
@@ -23,6 +23,20 @@ script:
            {% endif %}
            
 automation:
+  - alias: 'Если свет в спальне включили через FLEX выключатель'
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: light.svet_v_spalne
+        to: 'on'
+    condition:
+      - condition: template
+        value_template: '{{ trigger.to_state.context.user_id is none }}'
+      - condition: template
+        value_template: '{{ trigger.to_state.context.parent_id is none }}'
+    action:
+      - service: script.set_comfortable_light
+
   - alias: 'Включить ночник'
     mode: queued
     max: 5
@@ -33,8 +47,10 @@ automation:
           - sensor.0x00158d000424fadf_click
         to: 'single'
     action:
-      - service: light.turn_on
-        entity_id: light.svet_v_spalne_nightlight
+      - service: yeelight.set_mode
+        data:
+          entity_id: light.svet_v_spalne
+          mode: moonlight
 
   - alias: 'Включить свет в спальне'
     mode: queued
@@ -46,7 +62,7 @@ automation:
           - sensor.0x00158d000424fadf_click
         to: 'double'
     action:
-      - service: script.turn_on_comfortable_light
+      - service: script.set_comfortable_light
 
   - alias: 'Выключить свет в спальне'
     mode: queued
