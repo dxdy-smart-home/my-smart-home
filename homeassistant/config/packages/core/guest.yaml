@@ -1,0 +1,6 @@
+guest_package:
+    input_boolean:
+      guest_mode:
+        name: Гостевой режим
+        initial: off
+        icon: mdi:emoji_people

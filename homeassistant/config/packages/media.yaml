@@ -1,7 +1,0 @@
-media_player:
-  - platform: samsungtv_tizen
-    host: !secret samsungtv_host
-    mac: !secret samsungtv_mac
-    #update_method: smartthings
-    #api_key: !secret samsungtv_api_key
-    #device_id: !secret samsungtv_device_id

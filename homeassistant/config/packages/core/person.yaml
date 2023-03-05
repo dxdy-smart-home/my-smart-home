@@ -1,0 +1,42 @@
+person_package:
+    group:
+      family:
+        entities:
+          - person.dxdy
+          - person.aleksandra
+
+    homeassistant:
+      customize:
+        person.dxdy:
+          entity_picture: https://avatars2.githubusercontent.com/u/2061165?s=88&v=4
+        person.aleksandra:
+          entity_picture: https://sun9-68.userapi.com/c850236/v850236988/271ee/iRzpFmY1DI8.jpg?ava=1  
+
+    automation:
+      - alias: 'Stop alarm music when away'
+        trigger:
+          - platform: state
+            entity_id: group.family
+            to: 'not_home'
+        condition:
+          - condition: state
+            entity_id: input_boolean.guest_mode
+            state: 'off'
+        action:
+          - service: script.stop_alarm_music
+      - alias: 'Встречать музыкой первого кто пришел домой после работы'
+        trigger:
+          - platform: state
+            entity_id: group.family
+            from: 'not_home'
+            to:  'home'
+        condition:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: input_boolean.guest_mode
+                state: 'off'
+              - condition: time
+                before: '21:00:00'
+        action:
+          - service: script.start_alarm_music

@@ -1,0 +1,23 @@
+hallway_light_package:
+    automation:
+      - alias: 'Включить свет в большой прихожей через датчик движения'
+        trigger:
+          - platform: state
+            entity_id: binary_sensor.0x00158d00041faacf_occupancy
+            to: 'on'
+        condition:
+          - condition: time
+            after: '08:00:00'
+            before: '21:00:00'
+        action:
+          - service: switch.turn_on
+            entity_id: switch.0xa4c13845d5d8c9a3_left
+
+      - alias: 'Выключить свет в большой прихожей через датчик движения'
+        trigger:
+          - platform: state
+            entity_id: binary_sensor.0x00158d00041faacf_occupancy
+            to: 'off'
+        action:
+          - service: switch.turn_off
+            entity_id: switch.0xa4c13845d5d8c9a3_left

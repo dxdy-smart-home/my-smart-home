@@ -1,0 +1,35 @@
+cleaning_package:
+    #vacuum_zones:
+    #   entity_id: vacuum.pylesos_maksimka
+    #   zones:
+    #     cleaning_children:
+    #       zone: [[25230,24205,29430,27355]]
+    #     cleaning_bathroom:
+    #       zone: [[23087,25247,24437,27197]]
+    #     cleaning_hall:
+    #       zone: [[20705,20019,23305,24019],[22387,24067,25137,25267],[18449,22856,20749,24056]]
+    #     cleaning_kitchen:
+    #       zone: [[19134,24804,21484,27354]]
+    #     cleaning_lounge:
+    #       zone: [[13963,23945,18763,27395],[18786,23874,19286,26174]]
+    #     cleaning_shower:
+    #       zone: [[18205,21021,19155,22971],[17537,20442,18287,21742]]
+    #     cleaning_bedroom:
+    #       zone: [[14056,20388,17556,24138]]
+
+        #smartthinq:
+        #  token: !secret smartthinq_token
+        #  region: RU
+        #  language: ru-RU
+
+    automation:
+       - alias: 'Включить или выключить измельчитель'
+         trigger:
+           - platform: state
+             entity_id: 
+               - sensor.0x00158d00070b5fee_action
+               - sensor.0x00158d00075e267b_action
+             to: 'single'
+         action:
+           - service: switch.toggle
+             entity_id: switch.0x000d6f0013369f96

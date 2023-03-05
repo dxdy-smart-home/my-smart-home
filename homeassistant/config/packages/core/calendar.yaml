@@ -1,0 +1,13 @@
+calendar_package:
+    automation:
+      alias: Calendar notification about happy days
+      trigger:
+        - platform: calendar
+          event: start
+          entity_id: calendar.holidays
+      action:
+        - service: notify.telegram_family
+          data:
+            message: |
+              {{ trigger.calendar_event.summary }}
+              {{ trigger.calendar_event.description  }}
