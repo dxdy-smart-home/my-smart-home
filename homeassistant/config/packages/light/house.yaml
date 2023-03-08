@@ -14,3 +14,24 @@ house_light_package:
       name: "Свет в доме"
       entities:
         - light.svet_v_spalne
+
+  media_player:
+    - platform: group
+      name: "Медиа плееры"
+      entities:
+        - media_player.yandex_station_ff98f02970565b8d4d33fe93
+        - media_player.yandex_station_lb0000000000000717140000f8d0c603
+  
+  automation:
+    - alias: Выключить свет в доме через Алису
+      trigger:
+          - platform: event
+            event_type: yandex_intent
+            event_data:
+              text: Выключи свет в доме
+      action:
+          - service: switch.turn_off
+            entity_id: switch.vykliuchateli_v_dome
+
+          - service: light.turn_off
+            entity_id: light.svet_v_dome

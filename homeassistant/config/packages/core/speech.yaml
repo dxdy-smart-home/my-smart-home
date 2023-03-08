@@ -1,19 +1,65 @@
 speech_package:
-    yandex_station_intents:
-      intents:
-        Включи свет на кухне:
-        Выключи свет на кухне:
-        Включи свет в гостиной:
-        Выключи свет в гостиной:
-        Включи свет над цветами:
-          extra_phrases:
-            - Включи свет над цветами в гостиной
-        Выключи свет над цветами:
-          extra_phrases:
-            - Выключи свет над цветами в гостиной
-        Включи свет в душевой:
-        Выключи свет в душевой:
-        Включи свет в спальне:
-        Выключи свет в спальне:
-        Включи свет в детской:
-        Выключи свет в детской:
+  yandex_station_intents:
+    intents:
+      Включи свет на кухне:
+      Выключи свет на кухне:
+      Включи свет в гостиной:
+      Выключи свет в гостиной:
+      Включи свет над цветами:
+        extra_phrases:
+          - Включи свет над цветами в гостиной
+      Выключи свет над цветами:
+        extra_phrases:
+          - Выключи свет над цветами в гостиной
+      Включи свет в душевой:
+      Выключи свет в душевой:
+      Включи свет в спальне:
+      Выключи свет в спальне:
+      Включи свет в детской:
+      Выключи свет в детской:
+      Включи свет в прихожей:
+        extra_phrases:
+          - Включи свет в коридоре
+      Выключи свет в прихожей:
+        extra_phrases:
+          - Выключи свет в коридоре
+      Выключи свет в доме:
+      Я ушел:
+        extra_phrases:
+          - Я ушла
+        say_phrase: Поняла, я начинаю уборку
+      Мы уехали:
+        extra_phrases:
+          - Я уехал
+          - Я уехала
+        say_phrase: Поняла, поставила дом на сигнализацию 
+  automation:
+    - alias: Сказать Алисе, что я ушел
+      trigger:
+          - platform: event
+            event_type: yandex_intent
+            event_data:
+              text: Я ушел
+      action:
+          - service: vacuum.start
+            entity_id: vacuum.pylesos_maksimka
+
+          - service: switch.turn_off
+            entity_id: switch.vykliuchateli_v_dome
+
+          - service: light.turn_off
+            entity_id: light.svet_v_dome
+
+          - service: media_player.turn_off
+            entity_id: media_player.media_pleery
+      
+    - alias: Сказать Алисе, что мы уехали
+      trigger:
+        - platform: event
+          event_type: yandex_intent
+          event_data:
+            text: Мы уехали
+      action:
+        - service: input_boolean.turn_on
+          entity_id: input_boolean.alarm_system
+
