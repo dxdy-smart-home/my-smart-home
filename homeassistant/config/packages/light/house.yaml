@@ -9,6 +9,7 @@ house_light_package:
         - switch.0xa4c1380aed5b5a4a
         - switch.0xa4c13845d5d8c9a3_left
         - switch.0xa4c138fad011d9df
+        - switch.yandex_switch
   light:
     - platform: group
       name: "Свет в доме"

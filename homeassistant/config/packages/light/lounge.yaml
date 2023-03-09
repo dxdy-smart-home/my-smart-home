@@ -1,5 +1,25 @@
 lounge_light_package:
   automation:
+    - alias: Включить гирлянду в гостиной через алису
+      trigger:
+        - platform: event
+          event_type: yandex_intent
+          event_data:
+            text: Включи гирлянду в гостиной
+      action:
+        - service: switch.turn_on
+          entity_id: switch.yandex_switch
+
+    - alias: Выключить гирлянду в гостиной через алису
+      trigger:
+        - platform: event
+          event_type: yandex_intent
+          event_data:
+            text: Выключи гирлянду в гостиной
+      action:
+        - service: switch.turn_off
+          entity_id: switch.yandex_switch
+
     - alias: Включить свет в гостиной через алису
       trigger:
         - platform: event
