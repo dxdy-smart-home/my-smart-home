@@ -1,0 +1,14 @@
+bath_cleaning_package:
+  automation:
+    - alias: Попросить Алису пропылесосить в ванной
+      trigger:
+          - platform: event
+            event_type: yandex_intent
+            event_data:
+              text: Пропылесось в ванной
+      action:
+          - service: xiaomi_miio.vacuum_clean_segment
+            data:
+              segments: 4
+            target:
+              entity_id: vacuum.pylesos_maksimka

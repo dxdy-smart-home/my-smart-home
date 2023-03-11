@@ -1,0 +1,14 @@
+children_cleaning_package:
+  automation:
+    - alias: Попросить Алису пропылесосить в детской
+      trigger:
+          - platform: event
+            event_type: yandex_intent
+            event_data:
+              text: Пропылесось в детской
+      action:
+          - service: xiaomi_miio.vacuum_clean_segment
+            data:
+              segments: 1
+            target:
+              entity_id: vacuum.pylesos_maksimka

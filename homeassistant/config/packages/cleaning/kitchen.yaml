@@ -1,0 +1,23 @@
+kitchen_cleaning_package:
+  automation:
+    - alias: 'Включить или выключить измельчитель'
+      trigger:
+        - platform: state
+          entity_id: sensor.0x00158d00075e267b_action
+          to: 'single'
+      action:
+        - service: switch.toggle
+          entity_id: switch.0x000d6f0013369f96
+
+    - alias: Попросить Алису пропылесосить на кухне
+      trigger:
+          - platform: event
+            event_type: yandex_intent
+            event_data:
+              text: Пропылесось на кухне
+      action:
+          - service: xiaomi_miio.vacuum_clean_segment
+            data:
+              segments: 16
+            target:
+              entity_id: vacuum.pylesos_maksimka
