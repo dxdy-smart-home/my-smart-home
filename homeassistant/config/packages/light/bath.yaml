@@ -1,0 +1,21 @@
+bath_light_package:
+  automation:
+    - alias: Включить свет в ванной через алису
+      trigger:
+        - platform: event
+          event_type: yandex_intent
+          event_data:
+            text: Включи свет в ванной
+      action:
+        - service: switch.turn_on
+          entity_id: switch.0xa4c1388f0f370f16
+
+    - alias: Выключить свет в ванной через алису
+      trigger:
+        - platform: event
+          event_type: yandex_intent
+          event_data:
+            text: Выключи свет в ванной
+      action:
+        - service: switch.turn_off
+          entity_id: switch.0xa4c1388f0f370f16
