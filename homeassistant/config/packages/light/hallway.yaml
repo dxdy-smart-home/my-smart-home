@@ -8,7 +8,7 @@ hallway_light_package:
             {{ is_state('binary_sensor.0x00158d00041faacf_occupancy', 'off')
                 and is_state('switch.0xa4c13845d5d8c9a3_left', 'on') 
             }}
-          delay_on: 00:00:07
+          delay_on: 00:01:00
   switch:
     - platform: group
       name: "Выключатели в прихожей"
