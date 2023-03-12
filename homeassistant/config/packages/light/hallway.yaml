@@ -1,49 +1,66 @@
 hallway_light_package:
-    switch:
-      - platform: group
-        name: "Выключатели в прихожей"
-        entities:
-          - switch.0xa4c13845d5d8c9a3_left
-          - switch.0xa4c1380aed5b5a4a
-          
-    automation:
-      - alias: 'Включить свет в большой прихожей через датчик движения'
-        trigger:
-          - platform: state
-            entity_id: binary_sensor.0x00158d00041faacf_occupancy
-            to: 'on'
-        condition:
-          - condition: time
-            after: '08:00:00'
-            before: '21:00:00'
-        action:
+  template:
+      # Idea 1: https://www.youtube.com/watch?v=SK9CYq5GtH8
+      # Idea 2: https://www.youtube.com/watch?v=B0N0D82Ozkc
+    - binary_sensor:
+        - name: 0xa4c13845d5d8c9a3_left_light
+          state: >
+            {{ is_state('binary_sensor.0x00158d00041faacf_occupancy', 'off')
+                and is_state('switch.0xa4c13845d5d8c9a3_left', 'on') 
+            }}
+          delay_on: 00:00:07
+  switch:
+    - platform: group
+      name: "Выключатели в прихожей"
+      entities:
+        - switch.0xa4c13845d5d8c9a3_left
+        - switch.0xa4c1380aed5b5a4a
+        
+  automation:
+    - alias: 'Включить/выключить свет в большой прихожей через датчик движения'
+      trigger:
+        - platform: state
+          entity_id: binary_sensor.0x00158d00041faacf_occupancy
+        - platform: state
+          entity_id: binary_sensor.0xa4c13845d5d8c9a3_left_light
+      action:
+        - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.0x00158d00041faacf_occupancy
+                state: 'on'
+              - condition: state
+                entity_id: switch.0xa4c13845d5d8c9a3_left
+                state: 'off'
+              - condition: time
+                after: '08:00:00'
+                before: '21:00:00'
+            sequence:
+              - service: switch.turn_on
+                entity_id: switch.0xa4c13845d5d8c9a3_left
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.0xa4c13845d5d8c9a3_left_light
+                state: 'on'
+            sequence:
+                - service: switch.turn_off
+                  entity_id: switch.0xa4c13845d5d8c9a3_left                                  
+
+    - alias: Включить свет в прихожей через алису
+      trigger:
+          - platform: event
+            event_type: yandex_intent
+            event_data:
+              text: Включи свет в прихожей
+      action:
           - service: switch.turn_on
-            entity_id: switch.0xa4c13845d5d8c9a3_left
-
-      - alias: 'Выключить свет в большой прихожей через датчик движения'
-        trigger:
-          - platform: state
-            entity_id: binary_sensor.0x00158d00041faacf_occupancy
-            to: 'off'
-        action:
+            entity_id: switch.0xa4c1380aed5b5a4a
+    - alias: Выключить свет в прихожей через алису
+      trigger:
+          - platform: event
+            event_type: yandex_intent
+            event_data:
+              text: Выключи свет в прихожей
+      action:
           - service: switch.turn_off
-            entity_id: switch.0xa4c13845d5d8c9a3_left
-
-      - alias: Включить свет в прихожей через алису
-        trigger:
-            - platform: event
-              event_type: yandex_intent
-              event_data:
-                text: Включи свет в прихожей
-        action:
-            - service: switch.turn_on
-              entity_id: switch.0xa4c1380aed5b5a4a
-      - alias: Выключить свет в прихожей через алису
-        trigger:
-            - platform: event
-              event_type: yandex_intent
-              event_data:
-                text: Выключи свет в прихожей
-        action:
-            - service: switch.turn_off
-              entity_id: switch.0xa4c1380aed5b5a4a
+            entity_id: switch.0xa4c1380aed5b5a4a
