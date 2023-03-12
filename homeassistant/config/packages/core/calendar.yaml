@@ -1,13 +1,42 @@
 calendar_package:
     automation:
-      alias: Calendar notification about happy days
-      trigger:
-        - platform: calendar
-          event: start
-          entity_id: calendar.holidays
-      action:
-        - service: notify.telegram_family
-          data:
-            message: |
-              {{ trigger.calendar_event.summary }}
-              {{ trigger.calendar_event.description  }}
+      - alias: Сообщить в телегу, что сегодня день рождения
+        trigger:
+          - platform: calendar
+            event: start
+            entity_id: calendar.holidays
+        action:
+          - service: notify.telegram_family
+            data:
+              message: |
+                {{ trigger.calendar_event.summary }}
+                {{ trigger.calendar_event.description  }}
+      
+      - alias: Сообщить в телегу за сутки о событии в календаре
+        mode: queued
+        trigger:
+          - platform: calendar
+            event: start
+            offset: "-23:59:59"
+            entity_id: calendar.dxdy
+
+          - platform: calendar
+            event: start
+            offset: "-23:59:59"
+            entity_id: calendar.oav
+
+          - platform: calendar
+            event: start
+            offset: "-23:59:59"
+            entity_id: calendar.family
+
+          - platform: calendar
+            event: start
+            offset: "-23:59:59"
+            entity_id: calendar.holidays
+        action:
+          - service: notify.telegram_family
+            data:
+              message: |
+                {{ trigger.calendar_event.summary }}
+                {{ trigger.calendar_event.description  }}        
