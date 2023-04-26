@@ -5,9 +5,11 @@ import logging
 import pickle
 import re
 
+from aiohttp import __version__ as aiohttp_version
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from pkg_resources import parse_version
 
 from .const import CONF_COOKIE, CONF_X_TOKEN
 
@@ -23,7 +25,7 @@ class AuthException(Exception):
 
 
 class LoginResponse:
-    """"
+    """
     status: ok
        uid: 1234567890
        display_name: John
@@ -85,7 +87,17 @@ class YandexSession:
             cookie = entry.data.get(CONF_COOKIE)
             if cookie:
                 raw = base64.b64decode(cookie)
-                self._session.cookie_jar._cookies = pickle.loads(raw)
+                cookies = pickle.loads(raw)
+
+                # https://github.com/aio-libs/aiohttp/pull/6638
+                # https://github.com/aio-libs/aiohttp/issues/7216
+                if parse_version(aiohttp_version) >= parse_version('3.8.4') and isinstance(list(cookies)[0], str):
+                    cookies_by_name = [(name, c) for sc in cookies.values() for name, c in sc.items()]
+                    cookies.clear()
+                    for name, c in cookies_by_name:
+                        cookies[(c['domain'], c['path'])][name] = c
+
+                self._session.cookie_jar._cookies = cookies
 
     async def login_cookies(self, cookies: dict[str, str]):
         payload = {
@@ -95,8 +107,7 @@ class YandexSession:
             'host': 'passport.yandex.com',
         }
         r = await self._session.post(
-            'https://mobileproxy.passport.yandex.net/1/token',
-            data=payload, headers=HEADERS, cookies=cookies
+            'https://mobileproxy.passport.yandex.net/1/token', data=payload, headers=HEADERS, cookies=cookies
         )
         resp = await r.json()
         if 'error' in resp:
@@ -111,8 +122,8 @@ class YandexSession:
     async def validate_token(self, x_token: str) -> LoginResponse:
         headers = {'Authorization': f'OAuth {x_token}'}
         r = await self._session.get(
-            'https://mobileproxy.passport.yandex.net/1/bundle/account/'
-            'short_info/?avatar_size=islands-300', headers=headers
+            'https://mobileproxy.passport.yandex.net/1/bundle/account/' 'short_info/?avatar_size=islands-300',
+            headers=headers,
         )
         resp = await r.json()
         resp['x_token'] = x_token
@@ -122,14 +133,11 @@ class YandexSession:
     async def login_token(self, x_token: str) -> bool:
         _LOGGER.debug('Авторизация в Яндекс с помощью токена')
 
-        payload = {
-            'type': 'x-token',
-            'retpath': 'https://www.yandex.ru'
-        }
+        payload = {'type': 'x-token', 'retpath': 'https://www.yandex.ru'}
         headers = {'Ya-Consumer-Authorization': f'OAuth {x_token}'}
         r = await self._session.post(
-            'https://mobileproxy.passport.yandex.net/1/bundle/auth/x_token/',
-            data=payload, headers=headers)
+            'https://mobileproxy.passport.yandex.net/1/bundle/auth/x_token/', data=payload, headers=headers
+        )
         resp = await r.json()
         if resp['status'] != 'ok':
             _LOGGER.error(f'Ошибка авторизации: {resp}')
@@ -185,6 +193,7 @@ class YandexSession:
             kwargs['headers'] = {'x-csrf-token': self._csrf_token}
 
         r = await getattr(self._session, method)(url, **kwargs)
+        response_text = (await r.text())[:1024]
         if r.status == 200:
             return r
         elif r.status == 400:
@@ -196,13 +205,13 @@ class YandexSession:
             # 403 - no x-csrf-token
             self._csrf_token = None
         else:
-            _LOGGER.warning(f'{url} вернул {r.status}')
+            _LOGGER.warning(f'{url} вернул {r.status}: {response_text}')
 
         if retry:
             _LOGGER.debug(f'Повтор {method} {url}')
             return await self._request(method, url, retry - 1, **kwargs)
 
-        raise Exception(f'{url} вернул {r.status}')
+        raise Exception(f'{url} вернул {r.status}: {response_text}')
 
     @property
     def _session_cookie(self) -> str:
