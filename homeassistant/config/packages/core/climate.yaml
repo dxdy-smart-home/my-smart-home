@@ -8,6 +8,10 @@ climate_package:
         trigger:
         - platform: homeassistant
           event: start
+        condition:
+          condition: state
+          entity_id: climate.lytko_5130000
+          state: 'unavailable'
         action:
         - delay:
             minutes: 3
