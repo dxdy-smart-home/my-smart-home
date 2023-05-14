@@ -1,0 +1,33 @@
+windows_package:
+  automation:
+    - alias: Закрыть шторы в спальне
+      trigger:
+          platform: time
+          at: "20:30:00"
+      action:
+        service: cover.close_cover
+        entity_id: cover.0x00124b0029ded4a3
+
+    - alias: Открыть шторы в спальне в рабочий день
+      trigger:
+        platform: time
+        at: "08:00:00"
+      condition:
+        - condition: state
+          entity_id: binary_sensor.rabochii_den
+          state: 'on'
+      action:
+        service: cover.open_cover
+        entity_id: cover.0x00124b0029ded4a3
+
+    - alias: Открыть шторы в спальне в выходной день
+      trigger:
+        platform: time
+        at: "08:30:00"
+      condition:
+        - condition: state
+          entity_id: binary_sensor.rabochii_den
+          state: 'off'
+      action:
+        service: cover.open_cover
+        entity_id: cover.0x00124b0029ded4a3
