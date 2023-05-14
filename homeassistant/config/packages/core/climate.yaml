@@ -20,7 +20,7 @@ climate_package:
       - alias: Оповестить в телеграм о включении обогревателя в душевой
         trigger:
           - platform: state
-            entity_id: switch.0x00158d000424fa2c_click
+            entity_id: switch.0x00124b0024c33795
             to: 'on'
         action:
           - service: notify.telegram_family
