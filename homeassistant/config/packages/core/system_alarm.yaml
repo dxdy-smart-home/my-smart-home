@@ -5,6 +5,16 @@ system_alarm_package:
         initial: off
 
     automation:
+      - alias: Сообщить в телеграм об утечке газа на кухне
+        trigger:
+          - platform: state
+            entity_id: binary_sensor.0x000d6f0010dce129_gas
+            to: 'on'
+        action:
+          - service: notify.telegram_family
+            data:
+              message: На кухне утечка газа!
+
       - alias: Сообщить хозяевам, что умный дом запустился
         trigger:
         - platform: homeassistant
