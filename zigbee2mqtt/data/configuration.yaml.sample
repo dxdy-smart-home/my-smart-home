@@ -1,11 +1,28 @@
 homeassistant: true
 permit_join: true
-
 mqtt:
   base_topic: zigbee2mqtt
-  server: 'mqtt://localhost'
+  server: mqtt://localhost
 serial:
-  port: /dev/ttyUSB0                                                                                                    
+  port: /dev/ttyUSB0
 advanced:
   rtscts: false
-  pan_id: 0x1a63
+  log_level: debug
+  ikea_ota_use_test_url: false
+  log_syslog:
+    app_name: Zigbee2MQTT
+    eol: /n
+    host: localhost
+    localhost: localhost
+    path: /dev/log
+    pid: process.pid
+    port: 123
+    protocol: tcp4
+    type: '5424'
+frontend:
+  port: 8080
+experimental:
+  new_api: true
+  pan_id: 6755
+external_converters:
+  - DIYRuZ_Flower_WS.js

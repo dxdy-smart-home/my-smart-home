@@ -26,6 +26,7 @@
 
 /zigbee2mqtt/data/*
 !/zigbee2mqtt/data/configuration.yaml.sample
+!zigbee2mqtt/data/DIYRuZ_Flower_WS.js
 
 /influxdb/
 
