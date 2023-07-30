@@ -1,4 +1,13 @@
 shower_light_package:
+  template:
+    - binary_sensor:
+        - name: 0x00124b0024c1dd35_light
+          state: > 
+            {{ is_state('binary_sensor.0x00158d000421cf9a_occupancy', 'off') 
+              and is_state('switch.0x00124b0024c1dd35', 'on') 
+            }}
+          delay_on: 00:03:00
+
   automation:
     - alias: Включить свет в душевой через алису
       trigger:
@@ -18,4 +27,33 @@ shower_light_package:
             text: Выключи свет в душевой
       action:
         - service: switch.turn_off
-          entity_id: switch.0xa4c13845d5d8c9a3_right
+          entity_id: switch.0xa4c13845d5d8c9a3_right 
+
+    - alias: 'Включить/выключить ночник в душевой комнате через датчик движения'
+      trigger:
+        - platform: state
+          entity_id: binary_sensor.0x00158d000421cf9a_occupancy
+        - platform: state
+          entity_id: binary_sensor.0x00124b0024c1dd35_light
+      action:
+        - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.0x00158d000421cf9a_occupancy
+                state: 'on'
+              - condition: state
+                entity_id: switch.0x00124b0024c1dd35
+                state: 'off'
+              - condition: time
+                after: '21:00:00'
+                before: '09:00:00'
+            sequence:
+              - service: switch.turn_on
+                entity_id: switch.0x00124b0024c1dd35
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.0x00124b0024c1dd35_light
+                state: 'on'
+            sequence:
+                - service: switch.turn_off
+                  entity_id: switch.0x00124b0024c1dd35 
