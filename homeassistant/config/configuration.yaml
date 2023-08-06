@@ -40,24 +40,6 @@ recorder:
        - sensor.0x00124b00234c8801_co2
 
 history:
-   include:
-     entities:
-       - sensor.0x00158d00044afc42_temperature
-       - sensor.0x00158d00039e4a23_temperature
-       - sensor.0x00158d000418d85c_temperature
-       - sensor.ble_temperature_a4c138fb313d
-       - sensor.ble_temperature_582d3436ab19
-       - sensor.ble_temperature_a4c138f88a98
-       - sensor.0x00158d000418d85c_humidity
-       - sensor.0x00158d00039e4a23_humidity
-       - sensor.0x00158d00044afc42_humidity
-       - sensor.ble_humidity_a4c138fb313d
-       - sensor.ble_humidity_582d3436ab19
-       - sensor.ble_humidity_a4c138f88a98
-       - sensor.rpi_co2
-       - binary_sensor.0x00158d0005443bfb_contact
-       - sensor.0x00124b00234c8afc_co2
-       - sensor.0x00124b00234c8801_co2
 
 homeassistant:
   packages: !include_dir_merge_named packages/

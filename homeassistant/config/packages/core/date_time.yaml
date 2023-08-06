@@ -1,6 +1,0 @@
-date_time_package:
-    binary_sensor:
-      - platform: workday
-        name: Рабочий день
-        country: RU
-        excludes: [sat, sun]

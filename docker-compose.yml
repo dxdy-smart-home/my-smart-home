@@ -54,7 +54,7 @@ services:
       - ./nginx/auth:/etc/nginx/auth
   homeassistant:
     container_name: homeassistant
-    image: homeassistant/home-assistant:2023.4.6
+    image: homeassistant/home-assistant:2023.7.3
     restart: always
     privileged: true
     depends_on:
