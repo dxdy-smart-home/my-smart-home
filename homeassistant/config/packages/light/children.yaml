@@ -8,7 +8,7 @@ children_light_package:
               text: Включи свет в детской
       action:
           - service: switch.turn_on
-            entity_id: switch.0xa4c138fad011d9df
+            entity_id: switch.0xa4c138eca234241c
     - alias: Выключить свет в детской через алису
       trigger:
           - platform: event
@@ -17,4 +17,4 @@ children_light_package:
               text: Выключи свет в детской
       action:
           - service: switch.turn_off
-            entity_id: switch.0xa4c138fad011d9df
+            entity_id: switch.0xa4c138eca234241c
