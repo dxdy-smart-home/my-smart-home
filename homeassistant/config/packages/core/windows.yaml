@@ -11,7 +11,7 @@ windows_package:
     - alias: Открыть шторы в спальне в рабочий день
       trigger:
         platform: time
-        at: "07:00:00"
+        at: "07:03:00"
       condition:
         - condition: state
           entity_id: binary_sensor.rabochii_den
@@ -23,7 +23,7 @@ windows_package:
     - alias: Открыть шторы в спальне в выходной день
       trigger:
         platform: time
-        at: "08:00:00"
+        at: "08:03:00"
       condition:
         - condition: state
           entity_id: binary_sensor.rabochii_den
