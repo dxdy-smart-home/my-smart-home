@@ -1,4 +1,17 @@
 windows_package:
+  input_datetime:
+    working_alarm_time:
+      name: Подъем на работу
+      icon: mdi:timer
+      has_date: false
+      has_time: true
+      initial: '07:00'
+    weekend_alarm_time:
+      name: Подъем в выходной
+      icon: mdi:timer
+      has_date: false
+      has_time: true
+      initial: '08:00'
   automation:
     - alias: Закрыть шторы в спальне
       trigger:
@@ -11,23 +24,25 @@ windows_package:
     - alias: Открыть шторы в спальне в рабочий день
       trigger:
         platform: time
-        at: "07:03:00"
+        at: input_datetime.working_alarm_time
       condition:
         - condition: state
           entity_id: binary_sensor.rabochii_den
           state: 'on'
       action:
-        service: cover.open_cover
-        entity_id: cover.0x00124b0029ded4a3
+        - delay: '00:03:00'
+        - service: cover.open_cover
+          entity_id: cover.0x00124b0029ded4a3
 
     - alias: Открыть шторы в спальне в выходной день
       trigger:
         platform: time
-        at: "08:03:00"
+        at: input_datetime.weekend_alarm_time
       condition:
         - condition: state
           entity_id: binary_sensor.rabochii_den
           state: 'off'
       action:
-        service: cover.open_cover
-        entity_id: cover.0x00124b0029ded4a3
+        - delay: '00:03:00'
+        - service: cover.open_cover
+          entity_id: cover.0x00124b0029ded4a3
