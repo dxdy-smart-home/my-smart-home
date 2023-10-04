@@ -26,3 +26,19 @@ climate_package:
           - service: notify.telegram_family
             data:
               message: Обогреватель в душевой включен  
+
+      - alias: Включить утром теплый пол
+        trigger:
+            platform: time
+            at: "06:30:00"
+        action:
+          service: climate.turn_on
+          entity_id: climate.lytko_5130000
+
+      - alias: Выключить утром теплый пол
+        trigger:
+            platform: time
+            at: "07:30:00"
+        action:
+          service: climate.turn_off
+          entity_id: climate.lytko_5130000
