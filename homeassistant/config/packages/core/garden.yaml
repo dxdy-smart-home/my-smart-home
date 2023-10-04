@@ -3,7 +3,7 @@ garden_package:
       - alias: Включить свет у цветов в спальне
         trigger:
           - platform: time
-            at: 08:00:00
+            at: 07:00:00
         action:
           - service: switch.turn_on
             entity_id: switch.0x00124b0024c1ecb5 
