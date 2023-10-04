@@ -33,7 +33,7 @@ hallway_light_package:
                 entity_id: switch.0xa4c13845d5d8c9a3_left
                 state: 'off'
               - condition: time
-                after: '08:00:00'
+                after: '07:00:00'
                 before: '21:00:00'
             sequence:
               - service: switch.turn_on
