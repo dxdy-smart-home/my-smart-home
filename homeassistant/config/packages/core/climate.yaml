@@ -31,6 +31,10 @@ climate_package:
         trigger:
             platform: time
             at: "06:30:00"
+        condition:
+          condition: state
+          entity_id: input_boolean.alarm_system
+          state: 'off'
         action:
           service: climate.turn_on
           entity_id: climate.lytko_5130000
