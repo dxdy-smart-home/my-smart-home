@@ -1,16 +1,16 @@
 garden_package:
     automation:
-      - alias: Включить свет у цветов в спальне
+      - alias: Включить свет у цветов в гостиной
         trigger:
           - platform: time
             at: 07:00:00
         action:
           - service: switch.turn_on
             entity_id: switch.0x00124b0024c1ecb5 
-      - alias: Выключить свет у цветов в спальне
+      - alias: Выключить свет у цветов в гостиной
         trigger:
           - platform: time
-            at: '21:30:00'
+            at: '21:00:00'
         action:
           - service: switch.turn_off
             entity_id: switch.0x00124b0024c1ecb5
