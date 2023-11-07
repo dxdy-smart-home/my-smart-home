@@ -1,12 +1,29 @@
 garden_package:
     automation:
-      - alias: Включить свет у цветов в гостиной
+      - alias: Включить свет у цветов в гостиной в рабочий день
         trigger:
           - platform: time
-            at: 07:00:00
+            at: input_datetime.working_alarm_time
+        condition:
+          - condition: state
+            entity_id: binary_sensor.rabochii_den
+            state: 'on'
         action:
           - service: switch.turn_on
-            entity_id: switch.0x00124b0024c1ecb5 
+            entity_id: switch.0x00124b0024c1ecb5
+
+      - alias: Включить свет у цветов в гостиной в выходной день
+        trigger:
+          - platform: time
+            at: input_datetime.weekend_alarm_time
+        condition:
+          - condition: state
+            entity_id: binary_sensor.rabochii_den
+            state: 'off'
+        action:
+          - service: switch.turn_on
+            entity_id: switch.0x00124b0024c1ecb5
+
       - alias: Выключить свет у цветов в гостиной
         trigger:
           - platform: time
