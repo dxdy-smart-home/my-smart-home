@@ -11,7 +11,7 @@ class TestKKM:
 
         # pylint: disable=unused-variable
         ble_parser = BleParser()
-        sensor_msg, tracker_msg = ble_parser.parse_data(data)
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
 
         assert sensor_msg["firmware"] == "KKM"
         assert sensor_msg["type"] == "K6 Sensor Beacon"
@@ -21,9 +21,9 @@ class TestKKM:
         assert sensor_msg["temperature"] == 25.42
         assert sensor_msg["humidity"] == 34.79
         assert sensor_msg["acceleration"] == 1003.2
-        assert sensor_msg["acceleration_x"] == -4
-        assert sensor_msg["acceleration_y"] == -20
-        assert sensor_msg["acceleration_z"] == 1003
+        assert sensor_msg["acceleration x"] == -4
+        assert sensor_msg["acceleration y"] == -20
+        assert sensor_msg["acceleration z"] == 1003
         assert sensor_msg["voltage"] == 3.591
         assert sensor_msg["battery"] == 100
         assert sensor_msg["rssi"] == -45

@@ -2,10 +2,7 @@
 import logging
 from struct import unpack
 
-from .helpers import (
-    to_mac,
-    to_unformatted_mac,
-)
+from .helpers import to_mac, to_unformatted_mac
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +23,7 @@ def parse_qingping(self, data, source_mac, rssi):
             device_type = "CGPR1"
         elif device_id == 0x0C:
             device_type = "CGD1"
-        elif device_id == 0x0E:
+        elif device_id in [0x0E, 0x24]:
             device_type = "CGDN1"
         else:
             device_type = None
@@ -53,8 +50,8 @@ def parse_qingping(self, data, source_mac, rssi):
                     batt = data[xdata_point]
                     result.update({"battery": batt})
                 elif xdata_id == 0x07 and xdata_size == 2:
-                    (pres,) = unpack("<H", data[xdata_point:xdata_point + xdata_size])
-                    result.update({"pressure": pres / 10})
+                    (press,) = unpack("<H", data[xdata_point:xdata_point + xdata_size])
+                    result.update({"pressure": press / 10})
                 elif xdata_id == 0x08 and xdata_size == 4:
                     (motion, illuminance_1, illuminance_2) = unpack(
                         "<BHB", data[xdata_point:xdata_point + xdata_size]

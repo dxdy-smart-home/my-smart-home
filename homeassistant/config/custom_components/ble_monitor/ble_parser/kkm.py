@@ -2,10 +2,8 @@
 import logging
 import math
 from struct import unpack
-from .helpers import (
-    to_mac,
-    to_unformatted_mac,
-)
+
+from .helpers import to_mac, to_unformatted_mac
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,9 +34,9 @@ def parse_kkm(self, data, source_mac, rssi):
                     "temperature": temperature,
                     "humidity": humidity,
                     "acceleration": round(math.sqrt(accx ** 2 + accy ** 2 + accz ** 2), 1),
-                    "acceleration_x": accx,
-                    "acceleration_y": accy,
-                    "acceleration_z": accz,
+                    "acceleration x": accx,
+                    "acceleration y": accy,
+                    "acceleration z": accz,
                     "voltage": volt / 1000,
                     "firmware": "KKM",
                     "packet": "no packet id",

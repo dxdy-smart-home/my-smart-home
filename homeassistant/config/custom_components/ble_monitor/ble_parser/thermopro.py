@@ -2,17 +2,14 @@
 import logging
 from struct import unpack
 
-from .helpers import (
-    to_mac,
-    to_unformatted_mac,
-)
+from .helpers import to_mac, to_unformatted_mac
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def parse_thermopro(self, data, device_type, source_mac, rssi):
     """Thermopro parser"""
-    if device_type == "TP359":
+    if device_type in ["TP357", "TP359"]:
         firmware = "Thermopro"
         thermopro_mac = source_mac
 
