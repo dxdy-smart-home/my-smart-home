@@ -35,7 +35,7 @@ services:
     volumes:
       - ./postgresql/pgdata:/var/lib/postgresql/data
   torrserver:
-    image: ksey/torrserver
+    image: yourok/torrserver
     restart: always
     network_mode: host
     environment:
