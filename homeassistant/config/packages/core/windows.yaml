@@ -44,6 +44,10 @@ windows_package:
       trigger:
           platform: time
           at: "20:30:00"
+      condition:
+        condition: state
+        entity_id: input_boolean.alarm_system
+        state: 'off'
       action:
         service: cover.close_cover
         entity_id: cover.0x00124b0029ded4a3
@@ -56,6 +60,9 @@ windows_package:
         - condition: state
           entity_id: binary_sensor.rabochii_den
           state: 'on'
+        - condition: state
+          entity_id: input_boolean.alarm_system
+          state: 'off'
       action:
         - delay: '00:03:00'
         - service: cover.open_cover
@@ -68,6 +75,9 @@ windows_package:
       condition:
         - condition: state
           entity_id: binary_sensor.rabochii_den
+          state: 'off'
+        - condition: state
+          entity_id: input_boolean.alarm_system
           state: 'off'
       action:
         - delay: '00:03:00'
