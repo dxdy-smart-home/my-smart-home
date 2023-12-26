@@ -53,6 +53,7 @@ CONF_INTENTS = "intents"
 CONF_DEBUG = "debug"
 CONF_RECOGNITION_LANG = "recognition_lang"
 CONF_PROXY = "proxy"
+CONF_SSL = "ssl"
 
 DATA_SPEAKERS = "speakers"
 
@@ -78,6 +79,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_MEDIA_PLAYERS): vol.Any(dict, list),
                 vol.Optional(CONF_RECOGNITION_LANG): cv.string,
                 vol.Optional(CONF_PROXY): cv.string,
+                vol.Optional(CONF_SSL): cv.boolean,
                 vol.Optional(CONF_DEBUG, default=False): cv.boolean,
             },
             extra=vol.ALLOW_EXTRA,
@@ -99,6 +101,7 @@ async def async_setup(hass: HomeAssistant, hass_config: dict):
         )
 
     YandexSession.proxy = config.get(CONF_PROXY)
+    YandexSession.ssl = config.get(CONF_SSL)
 
     await _init_local_discovery(hass)
     await _init_services(hass)
@@ -179,8 +182,7 @@ async def _init_local_discovery(hass: HomeAssistant):
     async def found_local_speaker(info: dict):
         speaker = speakers.setdefault(info["device_id"], {})
         speaker.update(info)
-        if "entity" in speaker:
-            entity: "YandexStation" = speaker["entity"]
+        if (entity := speaker.get("entity")) and entity.hass:
             await entity.init_local_mode()
             entity.async_write_ha_state()
 
