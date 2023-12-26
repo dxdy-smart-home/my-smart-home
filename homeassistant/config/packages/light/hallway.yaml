@@ -15,8 +15,29 @@ hallway_light_package:
       entities:
         - switch.0xa4c13845d5d8c9a3_left
         - switch.0xa4c1380aed5b5a4a
-        
+
+  input_datetime:
+    hallway_light_starts_at:
+      has_date: false
+      has_time: true
+      initial: '07:00'
+    hallway_light_ends_at:
+      has_date: false
+      has_time: true
+      initial: '21:00'
+
   automation:
+    - alias: Сброс времени включения света в прихожей
+      trigger:
+        platform: time
+        at: '23:59:59'
+      action:
+        - service: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.hallway_light_starts_at
+          data:
+            time: "07:00:00"
+
     - alias: 'Включить/выключить свет в большой прихожей через датчик движения'
       trigger:
         - platform: state
@@ -33,8 +54,8 @@ hallway_light_package:
                 entity_id: switch.0xa4c13845d5d8c9a3_left
                 state: 'off'
               - condition: time
-                after: '07:00:00'
-                before: '21:00:00'
+                after: input_datetime.hallway_light_starts_at
+                before: input_datetime.hallway_light_ends_at
             sequence:
               - service: switch.turn_on
                 entity_id: switch.0xa4c13845d5d8c9a3_left

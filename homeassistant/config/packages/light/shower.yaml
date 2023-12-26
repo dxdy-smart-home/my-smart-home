@@ -8,7 +8,28 @@ shower_light_package:
             }}
           delay_on: 00:03:00
 
+  input_datetime:
+    shower_night_light_starts_at:
+      has_date: false
+      has_time: true
+      initial: '21:00'
+    shower_night_light_ends_at:
+      has_date: false
+      has_time: true
+      initial: '08:00'
+
   automation:
+    - alias: Сброс времени включения ночника в душевой
+      trigger:
+        platform: time
+        at: '23:59:59'
+      action:
+        - service: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.shower_night_light_ends_at
+          data:
+            time: "08:00:00"
+
     - alias: 'Включить/выключить ночник в душевой комнате через датчик движения'
       trigger:
         - platform: state
@@ -25,8 +46,8 @@ shower_light_package:
                 entity_id: switch.0x00124b0024c1dd35
                 state: 'off'
               - condition: time
-                after: '21:00:00'
-                before: '08:00:00'
+                after: input_datetime.shower_night_light_starts_at
+                before: input_datetime.shower_night_light_ends_at
             sequence:
               - service: switch.turn_on
                 entity_id: switch.0x00124b0024c1dd35

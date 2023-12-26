@@ -57,7 +57,9 @@ speech_package:
         extra_phrases:
           - Я уехал
           - Я уехала
-        say_phrase: Поняла, поставила дом на сигнализацию 
+        say_phrase: Поняла, поставила дом на сигнализацию
+      Доброе утро:
+        say_phrase: Спасибо! Хорошего дня 
   automation:
     - alias: Сказать Алисе, что я ушел
       trigger:
@@ -87,4 +89,23 @@ speech_package:
       action:
         - service: input_boolean.turn_on
           entity_id: input_boolean.alarm_system
+    
+    - alias: Сказать Алисе доброе утро
+      trigger:
+        - platform: event
+          event_type: yandex_intent
+          event_data:
+            text: Доброе утро
+      action:
+        - service: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.hallway_light_starts_at
+          data:
+            time: "{{ now().strftime('%H:%M:%S') }}"
+
+        - service: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.shower_night_light_ends_at
+          data:
+            time: "{{ now().strftime('%H:%M:%S') }}"
 
