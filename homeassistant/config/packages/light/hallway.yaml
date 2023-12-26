@@ -44,23 +44,4 @@ hallway_light_package:
                 state: 'on'
             sequence:
                 - service: switch.turn_off
-                  entity_id: switch.0xa4c13845d5d8c9a3_left                                  
-
-    - alias: Включить свет в прихожей через алису
-      trigger:
-          - platform: event
-            event_type: yandex_intent
-            event_data:
-              text: Включи свет в прихожей
-      action:
-          - service: switch.turn_on
-            entity_id: switch.0xa4c1380aed5b5a4a
-    - alias: Выключить свет в прихожей через алису
-      trigger:
-          - platform: event
-            event_type: yandex_intent
-            event_data:
-              text: Выключи свет в прихожей
-      action:
-          - service: switch.turn_off
-            entity_id: switch.0xa4c1380aed5b5a4a
+                  entity_id: switch.0xa4c13845d5d8c9a3_left

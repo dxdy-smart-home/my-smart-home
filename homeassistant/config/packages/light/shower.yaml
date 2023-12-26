@@ -9,26 +9,6 @@ shower_light_package:
           delay_on: 00:03:00
 
   automation:
-    - alias: Включить свет в душевой через алису
-      trigger:
-        - platform: event
-          event_type: yandex_intent
-          event_data:
-            text: Включи свет в душевой
-      action:
-        - service: switch.turn_on
-          entity_id: switch.0xa4c13845d5d8c9a3_right
-
-    - alias: Выключить свет в душевой через алису
-      trigger:
-        - platform: event
-          event_type: yandex_intent
-          event_data:
-            text: Выключи свет в душевой
-      action:
-        - service: switch.turn_off
-          entity_id: switch.0xa4c13845d5d8c9a3_right 
-
     - alias: 'Включить/выключить ночник в душевой комнате через датчик движения'
       trigger:
         - platform: state
