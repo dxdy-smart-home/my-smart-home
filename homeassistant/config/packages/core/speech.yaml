@@ -109,3 +109,5 @@ speech_package:
           data:
             time: "{{ now().strftime('%H:%M:%S') }}"
 
+        - service: cover.open_cover
+          entity_id: cover.0x00124b0029ded4a3
