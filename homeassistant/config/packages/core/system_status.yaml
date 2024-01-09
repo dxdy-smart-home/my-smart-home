@@ -1,7 +1,14 @@
 system_status_package:
+  sensor:
+    - platform: time_date
+      display_options:
+        - 'time'
+        - 'date'
+        - 'date_time'
+    
+  template:
     sensor:
-      - platform: time_date
-        display_options:
-          - 'time'
-          - 'date'
-          - 'date_time'
+      - name: "Locale month"       
+        state: >
+          {% set months = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"] %}
+          {{ months[now().month-1] }}

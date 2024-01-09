@@ -1,0 +1,139 @@
+energy_package:
+  input_number:
+    gas:
+      min: 0
+      max: 1000000
+      mode: box
+      step: 1
+    gas_price:
+      mode: box
+      min: 1
+      max: 10
+      initial: 9.773
+    power:
+      min: 0
+      max: 1000000
+      mode: box
+      step: 1
+    power_price:
+      min: 1
+      max: 10
+      mode: box
+      initial: 4.79
+    bath_hot_water:
+      min: 0
+      max: 1000000
+      mode: box
+      step: 1
+    bath_cold_water:
+      min: 0
+      max: 1000000
+      mode: box
+      step: 1
+    shower_hot_water:
+      min: 0
+      max: 1000000
+      mode: box
+      step: 1
+    shower_cold_water:
+      min: 0
+      max: 1000000
+      mode: box
+      step: 1
+    hot_water_price:
+      min: 1
+      max: 500
+      mode: box
+      initial: 190
+    cold_water_price:
+      min: 1
+      max: 50
+      mode: box
+      initial: 24.71
+  template:
+    sensor:
+      - name: "Gas"
+        device_class: gas
+        unique_id: "current_gas"
+        unit_of_measurement: "m³"
+        state: "{{ states('input_number.gas') }}"
+        state_class: total_increasing
+      - name: "Gas price"
+        unique_id: "gas_price"
+        state: "{{ states('input_number.gas_price') }}"
+        unit_of_measurement: "RUB"
+      - name: "Power"
+        device_class: energy
+        unique_id: "current_power"
+        unit_of_measurement: "kWh"
+        state: "{{ states('input_number.power') }}"
+        state_class: total_increasing
+      - name: "Power price"
+        unique_id: "power_price"
+        state: "{{ states('input_number.power_price') }}"
+        unit_of_measurement: "RUB"
+      - name: "Bath hot water"
+        device_class: water
+        unique_id: "current_bath_hot_water"
+        unit_of_measurement: "m³"
+        state: "{{ states('input_number.bath_hot_water') }}"
+        state_class: total_increasing
+      - name: "Bath cold water"
+        device_class: water
+        unique_id: "current_bath_cold_water"
+        unit_of_measurement: "m³"
+        state: "{{ states('input_number.bath_cold_water') }}"
+        state_class: total_increasing
+      - name: "Shower hot water"
+        device_class: water
+        unique_id: "current_shower_hot_water"
+        unit_of_measurement: "m³"
+        state: "{{ states('input_number.shower_hot_water') }}"
+        state_class: total_increasing
+      - name: "Shower cold water"
+        device_class: water
+        unique_id: "current_shower_cold_water"
+        unit_of_measurement: "m³"
+        state: "{{ states('input_number.shower_cold_water') }}"
+        state_class: total_increasing
+      - name: "Hot water price"
+        unique_id: "hot_water_price"
+        state: "{{ states('input_number.hot_water_price') }}"
+        unit_of_measurement: "RUB"
+      - name: "Cold water price"
+        unique_id: "cold_water_price"
+        state: "{{ states('input_number.cold_water_price') }}"
+        unit_of_measurement: "RUB"
+  input_button:
+    publish_energy_month_report:
+  automation:
+    trigger:
+      - platform: state
+        entity_id: input_button.publish_energy_month_report
+    variables:
+      energy_report_header: !secret energy_report_header
+      energy_report_title: !secret energy_report_title
+      day: "{{ now().day }}"
+      month: "{{ states('sensor.locale_month') }}"
+      year: "{{ now().year }}"
+    action:
+      - service: notify.telegram_dxdy
+        data:
+          message: |
+            *Заголовок письма*
+            `
+            {{ energy_report_title }}
+            `
+            *Тело письма*
+            `
+            {{ energy_report_header }}
+            Дата сдачи показаний: {{ day }} {{ month }} {{ year }}
+
+            Текущие показания ИПУ:
+            Счетчик ГВС санузел: {{ states('sensor.shower_hot_water') | int }}
+            Счетчик ГВС кухня: {{ states('sensor.bath_hot_water') | int }}
+            Счетчик ХВС санузел: {{  states('sensor.shower_cold_water') | int }}
+            Счетчик ХВС кухня: {{  states('sensor.bath_cold_water') | int }}
+            Счетчик газа: {{ states('sensor.gas') | int }}
+            Электроснабжение: {{ states('sensor.power') | int }}
+            `
