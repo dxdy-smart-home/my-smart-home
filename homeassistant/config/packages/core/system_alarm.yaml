@@ -2,7 +2,6 @@ system_alarm_package:
     input_boolean:
       alarm_system:
         name: Сигнализация
-        initial: off
 
     automation:
       - alias: Сообщить в телеграм об утечке газа на кухне

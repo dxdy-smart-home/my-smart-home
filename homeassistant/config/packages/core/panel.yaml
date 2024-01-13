@@ -14,3 +14,8 @@ panel_package:
         title: Disk
         url: !secret disk_url
         icon: mdi:cloud
+      esphome:
+        title: ESPHome
+        url: !secret esphome_url
+        icon: mdi:chip
+        require_admin: true

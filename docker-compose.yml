@@ -86,6 +86,16 @@ services:
     network_mode: host
     environment:
       - TZ=Europe/Moscow
+  esphome:
+    container_name: esphome
+    image: esphome/esphome:2023.12.5
+    volumes:
+      - ./esphome/config:/config
+    restart: always
+    privileged: true
+    network_mode: host
+    environment:
+      - TZ=Europe/Moscow
 
 networks:
   my-smart-home:

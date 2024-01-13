@@ -40,3 +40,6 @@ my_smart_home_*tar.gz
 /.envrc
 
 /syncthing
+
+/esphome/*
+!/esphome/.keep
