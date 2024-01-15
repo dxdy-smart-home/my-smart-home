@@ -3,6 +3,7 @@ bedroom_light_package:
     devices:
       192.168.1.6:
         name: Свет в спальне
+        save_on_change: true
 
   script:
     set_comfortable_light:
@@ -22,7 +23,17 @@ bedroom_light_package:
               {% else %}
                 {{ 1 }}
               {% endif %}
-              
+
+  light:
+    - platform: template
+      lights:
+        bedroom_light:
+          value_template: "{{ state('light.svet_v_spalne') }}"
+          turn_on:
+            service: script.set_comfortable_light
+          turn_off:
+            service: light.turn_off
+            entity_id: light.svet_v_spalne
   automation:
     - alias: 'Если свет в спальне включили через FLEX выключатель'
       mode: single
@@ -77,21 +88,3 @@ bedroom_light_package:
       action:
         - service: light.turn_off
           entity_id: light.svet_v_spalne
-
-    - alias: Включить свет в спальне через алису
-      trigger:
-          - platform: event
-            event_type: yandex_intent
-            event_data:
-              text: Включи свет в спальне
-      action:
-          - service: script.set_comfortable_light
-    - alias: Выключить свет в спальне через алису
-      trigger:
-          - platform: event
-            event_type: yandex_intent
-            event_data:
-              text: Выключи свет в спальне
-      action:
-          - service: light.turn_off
-            entity_id: light.svet_v_spalne
