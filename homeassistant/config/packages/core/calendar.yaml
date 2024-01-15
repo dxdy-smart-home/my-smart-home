@@ -9,6 +9,7 @@ calendar_package:
           - service: notify.telegram_family
             data:
               message: |
+                Не забудь, что сегодня:
                 {{ trigger.calendar_event.summary }}
                 {{ trigger.calendar_event.description  }}
       
@@ -38,5 +39,6 @@ calendar_package:
           - service: notify.telegram_family
             data:
               message: |
+                Не забудь, что завтра:
                 {{ trigger.calendar_event.summary }}
                 {{ trigger.calendar_event.description  }}        
