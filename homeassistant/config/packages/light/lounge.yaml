@@ -1,24 +1,24 @@
 lounge_light_package:
   automation:
-    - alias: Включить елку через алису
-      trigger:
-        - platform: event
-          event_type: yandex_intent
-          event_data:
-            text: Включи ёлку
-      action:
-        - service: switch.turn_on
-          entity_id: switch.mi_smart_plug_wifi
+    # - alias: Включить елку через алису
+    #   trigger:
+    #     - platform: event
+    #       event_type: yandex_intent
+    #       event_data:
+    #         text: Включи ёлку
+    #   action:
+    #     - service: switch.turn_on
+    #       entity_id: switch.mi_smart_plug_wifi
 
-    - alias: Выключить елку через алису
-      trigger:
-        - platform: event
-          event_type: yandex_intent
-          event_data:
-            text: Выключи ёлку
-      action:
-        - service: switch.turn_off
-          entity_id: switch.mi_smart_plug_wifi
+    # - alias: Выключить елку через алису
+    #   trigger:
+    #     - platform: event
+    #       event_type: yandex_intent
+    #       event_data:
+    #         text: Выключи ёлку
+    #   action:
+    #     - service: switch.turn_off
+    #       entity_id: switch.mi_smart_plug_wifi
 
     - alias: Включить гирлянду в гостиной через алису
       trigger:
@@ -28,7 +28,7 @@ lounge_light_package:
             text: Включи гирлянду в гостиной
       action:
         - service: switch.turn_on
-          entity_id: switch.yandex_switch
+          entity_id: switch.mi_smart_plug_wifi
 
     - alias: Выключить гирлянду в гостиной через алису
       trigger:
@@ -38,4 +38,4 @@ lounge_light_package:
             text: Выключи гирлянду в гостиной
       action:
         - service: switch.turn_off
-          entity_id: switch.yandex_switch
+          entity_id: switch.mi_smart_plug_wifi
