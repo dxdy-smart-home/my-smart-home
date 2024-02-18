@@ -48,6 +48,17 @@ recorder:
        - sensor.bath_cold_water
        - sensor.shower_hot_water
        - sensor.shower_cold_water
+       - sensor.power_cost
+       - sensor.gas_price
+       - sensor.gas_cost
+       - sensor.hot_water_price
+       - sensor.bath_hot_water_cost
+       - sensor.cold_water_price
+       - sensor.bath_cold_water_cost
+       - sensor.bath_hot_water
+       - sensor.shower_hot_water_cost
+       - sensor.cold_water_price
+       - sensor.shower_cold_water_cost
        - input_boolean.alarm_system
        - input_datetime.working_alarm_time
        - input_datetime.weekend_alarm_time
