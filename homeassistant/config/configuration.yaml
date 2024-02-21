@@ -38,6 +38,7 @@ recorder:
        - binary_sensor.0x00158d0005443bfb_contact
        - sensor.0x00124b00234c8afc_co2
        - sensor.0x00124b00234c8801_co2
+       - sensor.0x00124b001ec85723_co2
        - switch.0x00124b00272a7348_state_l4
        - switch.0x00124b00272a7348_state_l3
        - switch.0x00124b00272a7348_state_l2
