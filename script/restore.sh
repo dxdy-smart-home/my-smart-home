@@ -2,7 +2,7 @@
 
 read -p "Enter backup name: " BACKUP_NAME
 
-ENDPOINT="https://webdav.yandex.ru/dump"
+ENDPOINT="https://webdav.yandex.ru/dxdy/ha/dump"
 
 echo "Waiting..."
 

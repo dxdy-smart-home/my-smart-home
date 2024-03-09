@@ -2,7 +2,7 @@
 
 set -e
 
-ENDPOINT="https://webdav.yandex.ru/dump"
+ENDPOINT="https://webdav.yandex.ru/dxdy/ha/dump"
 BACKUP_NAME=my_smart_home_$(date +"%Y%m%d_%H%M%S")
 
 echo "Waiting..."
