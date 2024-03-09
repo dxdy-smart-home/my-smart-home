@@ -1,15 +1,6 @@
 version: '3'
 
 services:
-  disk:
-    image: mrdxdy/nginx-file-browser:0.1.0
-    restart: always
-    ports:
-      - 8081:80
-    volumes:
-      - /buffer/samba:/opt/www/files
-    networks:
-      my-smart-home:
   syncthing:
     image: syncthing/syncthing:1.23
     container_name: syncthing
@@ -96,6 +87,3 @@ services:
     network_mode: host
     environment:
       - TZ=Europe/Moscow
-
-networks:
-  my-smart-home:
