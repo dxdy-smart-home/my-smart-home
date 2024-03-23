@@ -1,18 +1,6 @@
 version: '3'
 
 services:
-  syncthing:
-    image: syncthing/syncthing:1.23
-    container_name: syncthing
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Moscow
-      - STGUIADDRESS=127.0.0.1:8384
-    volumes:
-      - ./syncthing:/var/syncthing
-    network_mode: host
-    restart: always
   postgresql:
     image: postgres:15-alpine3.17
     restart: always
