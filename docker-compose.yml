@@ -14,7 +14,7 @@ services:
     network_mode: host
     restart: always
   postgresql:
-    image: postgres:alpine3.17
+    image: postgres:15-alpine3.17
     restart: always
     network_mode: host
     environment:
