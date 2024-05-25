@@ -1,22 +1,5 @@
 climate_package:
-    rest_command:
-      reset_lytko:
-        url: http://192.168.1.21/reset
-
     automation:
-      - alias: Перезапускать экран теплого пола, если датчик запустился раньше роутера
-        trigger:
-        - platform: homeassistant
-          event: start
-        condition:
-          condition: state
-          entity_id: climate.lytko_5130000
-          state: 'unavailable'
-        action:
-        - delay:
-            minutes: 3
-        - service: rest_command.reset_lytko
-
       - alias: Оповестить в телеграм о включении обогревателя в душевой
         trigger:
           - platform: state
