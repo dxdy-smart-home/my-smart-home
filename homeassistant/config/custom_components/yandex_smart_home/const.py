@@ -16,6 +16,7 @@ from homeassistant.components import (
     light,
     lock,
     media_player,
+    remote,
     scene,
     script,
     sensor,
@@ -95,13 +96,11 @@ EVENT_CONFIG_CHANGED = 'yandex_smart_home_config_changed'
 # Fake device class
 DEVICE_CLASS_BUTTON = 'button'
 
-# Backported from newer versions
-DEVICE_CLASS_ATMOSPHERIC_PRESSURE = 'atmospheric_pressure'
-DEVICE_CLASS_WATER = 'water'
-
 # https://yandex.ru/dev/dialogs/smart-home/doc/concepts/device-types.html
 PREFIX_TYPES = 'devices.types.'
 TYPE_LIGHT = PREFIX_TYPES + 'light'
+TYPE_LIGHT_STRIP = TYPE_LIGHT + '.strip'
+TYPE_LIGHT_CEILING = TYPE_LIGHT + '.ceiling'
 TYPE_SOCKET = PREFIX_TYPES + 'socket'
 TYPE_SWITCH = PREFIX_TYPES + 'switch'
 TYPE_THERMOSTAT = PREFIX_TYPES + 'thermostat'
@@ -118,7 +117,6 @@ TYPE_MULTICOOKER = PREFIX_TYPES + 'cooking.multicooker'
 TYPE_OPENABLE = PREFIX_TYPES + 'openable'
 TYPE_OPENABLE_CURTAIN = PREFIX_TYPES + 'openable.curtain'
 TYPE_HUMIDIFIER = PREFIX_TYPES + 'humidifier'
-TYPE_FAN = PREFIX_TYPES + 'fan'
 TYPE_PURIFIER = PREFIX_TYPES + 'purifier'
 TYPE_VACUUM_CLEANER = PREFIX_TYPES + 'vacuum_cleaner'
 TYPE_WASHING_MACHINE = PREFIX_TYPES + 'washing_machine'
@@ -142,9 +140,12 @@ TYPE_SMART_METER_HEAT = TYPE_SMART_METER + '.heat'
 TYPE_SMART_METER_HOT_WATER = TYPE_SMART_METER + '.hot_water'
 TYPE_PET_DRINKING_FOUNTAIN = PREFIX_TYPES + 'pet_drinking_fountain'
 TYPE_PET_FEEDER = PREFIX_TYPES + 'pet_feeder'
+TYPE_VENTILATION_FAN = PREFIX_TYPES + 'ventilation.fan'
 TYPE_OTHER = PREFIX_TYPES + 'other'
 TYPES = (
     TYPE_LIGHT,
+    TYPE_LIGHT_STRIP,
+    TYPE_LIGHT_CEILING,
     TYPE_SOCKET,
     TYPE_SWITCH,
     TYPE_THERMOSTAT,
@@ -161,7 +162,6 @@ TYPES = (
     TYPE_OPENABLE,
     TYPE_OPENABLE_CURTAIN,
     TYPE_HUMIDIFIER,
-    TYPE_FAN,
     TYPE_PURIFIER,
     TYPE_VACUUM_CLEANER,
     TYPE_WASHING_MACHINE,
@@ -185,6 +185,7 @@ TYPES = (
     TYPE_SMART_METER_HOT_WATER,
     TYPE_PET_DRINKING_FOUNTAIN,
     TYPE_PET_FEEDER,
+    TYPE_VENTILATION_FAN,
     TYPE_OTHER,
 )
 
@@ -196,7 +197,7 @@ DOMAIN_TO_YANDEX_TYPES = {
     camera.DOMAIN: TYPE_CAMERA,
     climate.DOMAIN: TYPE_THERMOSTAT,
     cover.DOMAIN: TYPE_OPENABLE_CURTAIN,
-    fan.DOMAIN: TYPE_FAN,
+    fan.DOMAIN: TYPE_VENTILATION_FAN,
     group.DOMAIN: TYPE_SWITCH,
     humidifier.DOMAIN: TYPE_HUMIDIFIER,
     input_boolean.DOMAIN: TYPE_SWITCH,
@@ -205,6 +206,7 @@ DOMAIN_TO_YANDEX_TYPES = {
     light.DOMAIN: TYPE_LIGHT,
     lock.DOMAIN: TYPE_OPENABLE,
     media_player.DOMAIN: TYPE_MEDIA_DEVICE,
+    remote.DOMAIN: TYPE_SWITCH,
     scene.DOMAIN: TYPE_OTHER,
     script.DOMAIN: TYPE_OTHER,
     sensor.DOMAIN: TYPE_SENSOR,
@@ -241,7 +243,7 @@ DEVICE_CLASS_TO_YANDEX_TYPES = {
     (sensor.DOMAIN, sensor.SensorDeviceClass.PRESSURE): TYPE_SENSOR_CLIMATE,
     (sensor.DOMAIN, sensor.SensorDeviceClass.TEMPERATURE): TYPE_SENSOR_CLIMATE,
     (sensor.DOMAIN, sensor.SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS): TYPE_SENSOR_CLIMATE,
-    (sensor.DOMAIN, DEVICE_CLASS_WATER): TYPE_SMART_METER_COLD_WATER,
+    (sensor.DOMAIN, sensor.SensorDeviceClass.WATER): TYPE_SMART_METER_COLD_WATER,
     (switch.DOMAIN, switch.SwitchDeviceClass.OUTLET): TYPE_SOCKET,
 }
 
@@ -299,6 +301,7 @@ MODE_INSTANCE_PROGRAM = 'program'
 MODE_INSTANCE_SWING = 'swing'
 MODE_INSTANCE_TEA_MODE = 'tea_mode'
 MODE_INSTANCE_THERMOSTAT = 'thermostat'
+MODE_INSTANCE_VENTILATION_MODE = 'ventilation_mode'
 MODE_INSTANCE_WORK_SPEED = 'work_speed'
 MODE_INSTANCES = (
     MODE_INSTANCE_CLEANUP_MODE,
@@ -311,6 +314,7 @@ MODE_INSTANCES = (
     MODE_INSTANCE_SWING,
     MODE_INSTANCE_TEA_MODE,
     MODE_INSTANCE_THERMOSTAT,
+    MODE_INSTANCE_VENTILATION_MODE,
     MODE_INSTANCE_WORK_SPEED,
 )
 
@@ -413,6 +417,9 @@ COLOR_NAMES = (
 )
 
 # https://yandex.ru/dev/dialogs/smart-home/doc/concepts/mode-instance-modes.html
+MODE_INSTANCE_MODE_WET_CLEANING = 'wet_cleaning'
+MODE_INSTANCE_MODE_DRY_CLEANING = 'dry_cleaning'
+MODE_INSTANCE_MODE_MIXED_CLEANING = 'mixed_cleaning'
 MODE_INSTANCE_MODE_AUTO = 'auto'
 MODE_INSTANCE_MODE_ECO = 'eco'
 MODE_INSTANCE_MODE_SMART = 'smart'
@@ -435,6 +442,8 @@ MODE_INSTANCE_MODE_QUIET = 'quiet'
 MODE_INSTANCE_MODE_HORIZONTAL = 'horizontal'
 MODE_INSTANCE_MODE_STATIONARY = 'stationary'
 MODE_INSTANCE_MODE_VERTICAL = 'vertical'
+MODE_INSTANCE_MODE_SUPPLY_AIR = 'supply_air'
+MODE_INSTANCE_MODE_EXTRACTION_AIR = 'extraction_air'
 MODE_INSTANCE_MODE_ONE = 'one'
 MODE_INSTANCE_MODE_TWO = 'two'
 MODE_INSTANCE_MODE_THREE = 'three'
@@ -488,6 +497,9 @@ MODE_INSTANCE_MODE_VACUUM = 'vacuum'
 MODE_INSTANCE_MODE_YOGURT = 'yogurt'
 
 MODE_INSTANCE_MODES = (
+    MODE_INSTANCE_MODE_WET_CLEANING,
+    MODE_INSTANCE_MODE_DRY_CLEANING,
+    MODE_INSTANCE_MODE_MIXED_CLEANING,
     MODE_INSTANCE_MODE_AUTO,
     MODE_INSTANCE_MODE_ECO,
     MODE_INSTANCE_MODE_SMART,
@@ -510,6 +522,8 @@ MODE_INSTANCE_MODES = (
     MODE_INSTANCE_MODE_HORIZONTAL,
     MODE_INSTANCE_MODE_STATIONARY,
     MODE_INSTANCE_MODE_VERTICAL,
+    MODE_INSTANCE_MODE_SUPPLY_AIR,
+    MODE_INSTANCE_MODE_EXTRACTION_AIR,
     MODE_INSTANCE_MODE_ONE,
     MODE_INSTANCE_MODE_TWO,
     MODE_INSTANCE_MODE_THREE,
@@ -718,6 +732,8 @@ XIAOMI_AIRPURIFIER_PRESET_MIDDLE = 'Middle'
 
 # https://github.com/home-assistant/core/blob/d5a8f1af1d2dc74a12fb6870a4f1cb5318f88bf9/homeassistant/components/xiaomi_miio/humidifier.py#L316
 XIAOMI_HUMIDIFIER_PRESET_MID = 'Mid'
+# leshow.humidifier.jsq1
+XIAOMI_HUMIDIFIER_CONST_HUMIDITY = 'Const Humidity'
 
 # https://github.com/airens/tion_home_assistant#climateset_fan_mode
 TION_FAN_SPEED_1 = '1'
@@ -746,6 +762,9 @@ FAN_SPEED_MID_HIGH = 'mid_high'
 
 # SmartIR
 FAN_SPEED_HIGHEST = 'highest'
+
+# https://github.com/home-assistant/core/blob/2981d7ed0ec78f2271f5b6fac26a98d1b1b280df/homeassistant/components/esphome/climate.py#L110
+FAN_SPEED_QUIET = 'quiet'
 
 # https://github.com/humbertogontijo/python-roborock/blob/1616217a06e20d51921de984134555bcc0775a92/roborock/code_mappings.py#L61
 CLEANUP_MODE_OFF = 'off'

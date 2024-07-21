@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.const import (CONF_DEVICES, CONF_DISCOVERY, CONF_MAC,
                                  CONF_NAME, CONF_TEMPERATURE_UNIT,
-                                 TEMP_CELSIUS, TEMP_FAHRENHEIT)
+                                 UnitOfTemperature)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry
@@ -46,8 +46,8 @@ DEVICE_SCHEMA = vol.Schema(
         vol.Optional(CONF_MAC, default=DEFAULT_DEVICE_MAC): cv.string,
         vol.Optional(CONF_UUID, default=DEFAULT_DEVICE_UUID): cv.string,
         vol.Optional(CONF_DEVICE_ENCRYPTION_KEY, default=DEFAULT_DEVICE_ENCRYPTION_KEY): cv.string,
-        vol.Optional(CONF_TEMPERATURE_UNIT, default=TEMP_CELSIUS): vol.In(
-            [TEMP_CELSIUS, TEMP_FAHRENHEIT]
+        vol.Optional(CONF_TEMPERATURE_UNIT, default=UnitOfTemperature.CELSIUS): vol.In(
+            [UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT]
         ),
         vol.Optional(CONF_DEVICE_USE_MEDIAN, default=DEFAULT_DEVICE_USE_MEDIAN): vol.In(
             [DEFAULT_DEVICE_USE_MEDIAN, True, False]
@@ -196,7 +196,7 @@ class BLEMonitorFlow(data_entry_flow.FlowHandler):
                         vol.Optional(
                             CONF_TEMPERATURE_UNIT,
                             default=user_input[CONF_TEMPERATURE_UNIT],
-                        ): vol.In([TEMP_CELSIUS, TEMP_FAHRENHEIT]),
+                        ): vol.In([UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT]),
                         vol.Optional(
                             CONF_DEVICE_USE_MEDIAN,
                             default=user_input[CONF_DEVICE_USE_MEDIAN],
@@ -238,16 +238,16 @@ class BLEMonitorFlow(data_entry_flow.FlowHandler):
                 )
             if self._sel_device:
                 # Remove device from device registry
-                device_registry = self.hass.helpers.device_registry.async_get(self.hass)
+                devreg = device_registry.async_get(self.hass)
 
                 conf_key = dict_get_key_or(self._sel_device)
                 key = dict_get_or(self._sel_device).upper()
-                device = device_registry.async_get_device({(DOMAIN, key)}, set())
+                device = devreg.async_get_device({(DOMAIN, key)}, set())
                 if device is None:
                     errors[conf_key] = "cannot_delete_device"
                 else:
                     _LOGGER.error("Removing BLE monitor device %s from device registry", key)
-                    device_registry.async_remove_device(device.id)
+                    devreg.async_remove_device(device.id)
                 _LOGGER.error(f"Removing BLE monitor device %s from configuration {device}", key)
                 del self._devices[key]
             return self._show_main_form(errors)
@@ -274,9 +274,9 @@ class BLEMonitorFlow(data_entry_flow.FlowHandler):
                 vol.Optional(
                     CONF_TEMPERATURE_UNIT,
                     default=self._sel_device.get(
-                        CONF_TEMPERATURE_UNIT, TEMP_CELSIUS
+                        CONF_TEMPERATURE_UNIT, UnitOfTemperature.CELSIUS
                     ),
-                ): vol.In([TEMP_CELSIUS, TEMP_FAHRENHEIT]),
+                ): vol.In([UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT]),
                 vol.Optional(
                     CONF_DEVICE_USE_MEDIAN,
                     default=self._sel_device.get(
@@ -487,7 +487,7 @@ class BLEMonitorOptionsFlow(BLEMonitorFlow, config_entries.OptionsFlow):
             )
         for dev in self.config_entry.options.get(CONF_DEVICES):
             self._devices[dict_get_or(dev).upper()] = dev
-        devreg = self.hass.helpers.device_registry.async_get(self.hass)
+        devreg = device_registry.async_get(self.hass)
         for dev in device_registry.async_entries_for_config_entry(
             devreg, self.config_entry.entry_id
         ):

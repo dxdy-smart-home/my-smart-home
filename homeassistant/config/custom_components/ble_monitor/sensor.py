@@ -8,6 +8,7 @@ from homeassistant.components.sensor import RestoreSensor, SensorEntity
 from homeassistant.const import (ATTR_BATTERY_LEVEL, CONF_DEVICES, CONF_MAC,
                                  CONF_NAME, CONF_TEMPERATURE_UNIT,
                                  CONF_UNIQUE_ID, UnitOfMass, UnitOfTemperature)
+from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt
@@ -140,8 +141,8 @@ class BLEupdater:
 
         # setup sensors of configured devices on startup when device model is available in registry
         if self.config[CONF_DEVICES]:
-            dev_registry = hass.helpers.device_registry.async_get(hass)
-            ent_registry = hass.helpers.entity_registry.async_get(hass)
+            dev_registry = device_registry.async_get(hass)
+            ent_registry = entity_registry.async_get(hass)
             for device in self.config[CONF_DEVICES]:
                 # get device_model and firmware from device registry to setup sensor
                 key = dict_get_or(device)
@@ -158,7 +159,7 @@ class BLEupdater:
                     firmware = RENAMED_FIRMWARE_DICT.get(firmware, firmware)
                     manufacturer = RENAMED_MANUFACTURER_DICT.get(manufacturer, manufacturer)
                     # get all entities for this device
-                    entity_list = hass.helpers.entity_registry.async_entries_for_device(
+                    entity_list = entity_registry.async_entries_for_device(
                         registry=ent_registry, device_id=device_id, include_disabled_entities=False
                     )
                     # find the measurement key for each entity
@@ -306,12 +307,16 @@ class BaseSensor(RestoreSensor, SensorEntity):
     # |  |--TemperatureSensor (Class)
     # |  |  |**temperature
     # |  |  |**temperature probe 1 till 6
+    # |  |  |**temperature probe tip
     # |  |  |**temperature alarm 1 till 4
     # |  |  |**low temperature alarm 1 till 4
+    # |  |  |**meat temperature
+    # |  |  |**ambient temperature
     # |  |--HumiditySensor (Class)
     # |  |  |**humidity
     # |  |**moisture
     # |  |**pressure
+    # |  |**water pressure
     # |  |**conductivity
     # |  |**illuminance
     # |  |**formaldehyde
@@ -327,11 +332,13 @@ class BaseSensor(RestoreSensor, SensorEntity):
     # |  |**TVOC
     # |  |**Air Quality Index
     # |  |**UV index
-    # |  |**Volume
-    # |  |**Volume mL
-    # |  |**Volume flow rate
-    # |  |**Gas
-    # |  |**Water
+    # |  |**volume
+    # |  |**volume mL
+    # |  |**volume flow rate
+    # |  |**flow
+    # |  |**gas
+    # |  |**water
+    # |  |**fresh/grey/black/lpg/galley/chemical tank
     # |--InstantUpdateSensor (Class)
     # |  |**consumable
     # |  |**heart rate
@@ -344,6 +351,10 @@ class BaseSensor(RestoreSensor, SensorEntity):
     # |  |**distance
     # |  |**distance mm
     # |  |**duration
+    # |  |**pressure present duration
+    # |  |**pressure not present duration
+    # |  |**pressure present time set
+    # |  |**pressure present not time set
     # |  |**current
     # |  |**speed
     # |  |**gyroscope
@@ -360,6 +371,7 @@ class BaseSensor(RestoreSensor, SensorEntity):
     # |  |  |**score
     # |  |  |**air quality
     # |  |  |**text
+    # |  |  |**pump mode
     # |  |  |**timestamp
     # |  |--AccelerationSensor (Class)
     # |  |  |**acceleration
@@ -383,6 +395,10 @@ class BaseSensor(RestoreSensor, SensorEntity):
     # |  |  |**three btn switch left
     # |  |  |**three btn switch middle
     # |  |  |**three btn switch right
+    # |  |  |**four btn switch 1
+    # |  |  |**four btn switch 2
+    # |  |  |**four btn switch 3
+    # |  |  |**four btn switch 4
     # |  |--BaseRemoteSensor (Class)
     # |  |  |**remote
     # |  |  |**fan remote
@@ -519,7 +535,10 @@ class BaseSensor(RestoreSensor, SensorEntity):
         if not self.is_beacon:
             return True
 
-        if self.entity_description.key in ['cypress temperature', 'cypress humidity', 'uuid']:
+        if self.entity_description.key in [
+            'cypress temperature', 'cypress humidity', 'uuid', 'pressure present duration',
+            'pressure not present duration', 'pressure present time set', 'pressure not present time set'
+        ]:
             return False
 
         return True
@@ -643,7 +662,8 @@ class MeasuringSensor(BaseSensor):
             self._extra_state_attributes["median"] = state_median
             self._extra_state_attributes["mean"] = state_mean
             if self.entity_description.key != "rssi":
-                self._extra_state_attributes["rssi"] = round(sts.mean(self.rssi_values))
+                if self.rssi_values:
+                    self._extra_state_attributes["rssi"] = round(sts.mean(self.rssi_values))
             if self._period_cnt >= 1:
                 self._measurements.clear()
                 self.rssi_values.clear()
@@ -808,7 +828,8 @@ class BatterySensor(MeasuringSensor):
 
     async def async_update(self):
         """Update sensor state and attributes."""
-        self._extra_state_attributes["rssi"] = round(sts.mean(self.rssi_values))
+        if self.rssi_values:
+            self._extra_state_attributes["rssi"] = round(sts.mean(self.rssi_values))
         self.rssi_values.clear()
         self.pending_update = False
 
@@ -843,7 +864,8 @@ class InstantUpdateSensor(BaseSensor):
 
     async def async_update(self):
         """Update sensor state and attributes."""
-        self._extra_state_attributes["rssi"] = round(sts.mean(self.rssi_values))
+        if self.rssi_values:
+            self._extra_state_attributes["rssi"] = round(sts.mean(self.rssi_values))
         self.rssi_values.clear()
         self.pending_update = False
 
@@ -864,7 +886,10 @@ class StateChangedSensor(InstantUpdateSensor):
         if self.enabled is False or state == data[self.entity_description.key]:
             self.pending_update = False
             return
-
+        if "pump id" in data:
+            self._extra_state_attributes["pump_id"] = data["pump id"]
+        if "battery status" in data:
+            self._extra_state_attributes["battery_status"] = data["battery status"]
         super().collect(data, period_cnt, batt_attr)
 
 
@@ -981,7 +1006,7 @@ class PowerSensor(InstantUpdateSensor):
             return
         self._state = data[self.entity_description.key]
         self._extra_state_attributes["sensor_type"] = data["type"]
-        self._extra_state_attributes["last_packet id"] = data["packet"]
+        self._extra_state_attributes["last_packet_id"] = data["packet"]
         self._extra_state_attributes["firmware"] = data["firmware"]
         self._extra_state_attributes['mac_address' if self.is_beacon else 'uuid'] = dict_get_or_normalize(
             data, CONF_MAC, CONF_UUID
@@ -1028,7 +1053,8 @@ class ButtonSensor(InstantUpdateSensor):
 
     async def async_update(self):
         """Update."""
-        self._extra_state_attributes["rssi"] = round(sts.mean(self.rssi_values))
+        if self.rssi_values:
+            self._extra_state_attributes["rssi"] = round(sts.mean(self.rssi_values))
         if self._reset_timer > 0:
             _LOGGER.debug("Reset timer is set to: %i seconds", self._reset_timer)
             async_call_later(self.hass, self._reset_timer, self.reset_state)
@@ -1069,7 +1095,8 @@ class DimmerSensor(InstantUpdateSensor):
 
     async def async_update(self):
         """Update."""
-        self._extra_state_attributes["rssi"] = round(sts.mean(self.rssi_values))
+        if self.rssi_values:
+            self._extra_state_attributes["rssi"] = round(sts.mean(self.rssi_values))
         if self._reset_timer > 0:
             _LOGGER.debug("Reset timer is set to: %i seconds", self._reset_timer)
             async_call_later(self.hass, self._reset_timer, self.reset_state)
@@ -1096,7 +1123,7 @@ class SwitchSensor(InstantUpdateSensor):
         else:
             self.pending_update = False
             return
-        self._extra_state_attributes["last_packet id"] = data["packet"]
+        self._extra_state_attributes["last_packet_id"] = data["packet"]
         self._extra_state_attributes["firmware"] = data["firmware"]
         self._extra_state_attributes['mac_address' if self.is_beacon else 'uuid'] = dict_get_or_normalize(
             data, CONF_MAC, CONF_UUID
@@ -1113,7 +1140,8 @@ class SwitchSensor(InstantUpdateSensor):
 
     async def async_update(self):
         """Update."""
-        self._extra_state_attributes["rssi"] = round(sts.mean(self.rssi_values))
+        if self.rssi_values:
+            self._extra_state_attributes["rssi"] = round(sts.mean(self.rssi_values))
         if self._reset_timer > 0:
             _LOGGER.debug("Reset timer is set to: %i seconds", self._reset_timer)
             async_call_later(self.hass, self._reset_timer, self.reset_state)
@@ -1154,7 +1182,8 @@ class BaseRemoteSensor(InstantUpdateSensor):
 
     async def async_update(self):
         """Update."""
-        self._extra_state_attributes["rssi"] = round(sts.mean(self.rssi_values))
+        if self.rssi_values:
+            self._extra_state_attributes["rssi"] = round(sts.mean(self.rssi_values))
         if self._reset_timer > 0:
             _LOGGER.debug("Reset timer is set to: %i seconds", self._reset_timer)
             async_call_later(self.hass, self._reset_timer, self.reset_state)

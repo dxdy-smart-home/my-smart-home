@@ -18,6 +18,7 @@ from homeassistant.components import (
     light,
     lock,
     media_player,
+    remote,
     scene,
     script,
     switch,
@@ -275,6 +276,34 @@ class OnOffCapabilityCover(OnOffCapability):
 
 
 @register_capability
+class OnOffCapabilityRemote(OnOffCapability):
+    @property
+    def retrievable(self) -> bool:
+        return False
+
+    def get_value(self) -> None:
+        return None
+
+    def supported(self) -> bool:
+        return self.state.domain == remote.DOMAIN
+
+    async def _set_state(self, data: RequestData, state: dict[str, Any]):
+        if state['value']:
+            service = SERVICE_TURN_ON
+        else:
+            service = SERVICE_TURN_OFF
+
+        await self.hass.services.async_call(
+            remote.DOMAIN,
+            service, {
+                ATTR_ENTITY_ID: self.state.entity_id
+            },
+            blocking=False,
+            context=data.context
+        )
+
+
+@register_capability
 class OnOffCapabilityMediaPlayer(OnOffCapability):
     def supported(self) -> bool:
         if self.state.domain == media_player.DOMAIN:
@@ -359,7 +388,7 @@ class OnOffCapabilityVacuum(OnOffCapability):
 @register_capability
 class OnOffCapabilityClimate(OnOffCapability):
     def get_value(self) -> bool | None:
-        return self.state.state != climate.HVAC_MODE_OFF
+        return self.state.state != climate.HVACMode.OFF
 
     def supported(self) -> bool:
         return self.state.domain == climate.DOMAIN

@@ -6,9 +6,9 @@ import re
 import uuid
 from datetime import datetime
 from logging import Logger
-from typing import List
+from typing import Callable, List
 
-from aiohttp import web, ClientSession
+from aiohttp import ClientSession, web
 from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import SUPPORT_PLAY_MEDIA
@@ -16,10 +16,16 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import network
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.event import (
+    async_track_template_result,
+    TrackTemplate,
+    TrackTemplateResult,
+)
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import HomeAssistantType
 from yarl import URL
 
-from .const import *
+from .const import CONF_MEDIA_PLAYERS, DATA_CONFIG, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,10 +144,9 @@ async def has_custom_icons(hass: HomeAssistantType):
 
     resources = hass.data["lovelace"]["resources"]
     await resources.async_get_info()
-    for resource in resources.async_items():
-        if "/yandex-icons.js" in resource["url"]:
-            return True
-    return False
+    return any(
+        "/yandex-icons.js" in resource["url"] for resource in resources.async_items()
+    )
 
 
 def play_video_by_descriptor(provider: str, item_id: str):
@@ -185,13 +190,12 @@ RE_MEDIA = {
 
 async def get_media_payload(text: str, session):
     for k, v in RE_MEDIA.items():
-        m = v.search(text)
-        if m:
+        if m := v.search(text):
             if k in ("youtube", "kinopoisk", "strm", "yavideo"):
                 return play_video_by_descriptor(k, m[1])
 
             elif k == "vk":
-                url = "https://vk.com/" + m[1]
+                url = f"https://vk.com/{m[1]}"
                 return play_video_by_descriptor("yavideo", url)
 
             elif k == "music.yandex.playlist":
@@ -252,12 +256,12 @@ async def get_tts_message(session: ClientSession, url: str):
         m = RE_ID3.findall(data)
         if len(m) == 1 and m[0][0] == b"TIT2":
             # old Hass version has valid ID3 tags with `TIT2` for Title
-            _LOGGER.debug(f"Получение TTS из ID3")
+            _LOGGER.debug("Получение TTS из ID3")
             m = m[0]
         elif len(m) == 3 and m[2][0] == b"Text":
             # latest Hass version has bug with `Text` for all tags
             # there are 3 tags and the last one we need
-            _LOGGER.debug(f"Получение TTS из битого ID3")
+            _LOGGER.debug("Получение TTS из битого ID3")
             m = m[2]
         else:
             _LOGGER.debug(f"Невозможно получить TTS: {data}")
@@ -294,7 +298,7 @@ def fix_recognition_lang(hass: HomeAssistantType, folder: str, lng: str):
             _LOGGER.debug("Send fixed recognition lang to client")
             return web.Response(body=raw, content_type="application/javascript")
 
-        hass.http.app.router.add_get("/frontend_latest/" + child.name, recognition_lang)
+        hass.http.app.router.add_get(f"/frontend_latest/{child.name}", recognition_lang)
 
         resource = hass.http.app.router._resources.pop()
         hass.http.app.router._resources.insert(40, resource)
@@ -310,7 +314,6 @@ def fix_cloud_text(text: str) -> str:
     return text.strip()[:100]
 
 
-# https://music.yandex.ru/users/alexey.khit/playlists
 async def get_userid_v1(session: ClientSession, username: str, playlist_id: str):
     try:
         payload = {
@@ -365,8 +368,7 @@ def get_media_players(hass: HomeAssistant, speaker_id: str) -> List[dict]:
     # check entity_components because MPD not in entity_registry and DLNA has
     # wrong supported_features
     try:
-        conf = hass.data[DOMAIN][DATA_CONFIG].get(CONF_MEDIA_PLAYERS)
-        if conf:
+        if conf := hass.data[DOMAIN][DATA_CONFIG].get(CONF_MEDIA_PLAYERS):
             if isinstance(conf, dict):
                 return [{"entity_id": k, "name": v} for k, v in conf.items()]
             if isinstance(conf, list):
@@ -404,7 +406,7 @@ def encode_media_source(query: dict) -> str:
     """Convert message param as URL query and all other params as hex path."""
     if "message" in query:
         message = query.pop("message")
-        return encode_media_source(query) + "?message=" + message
+        return f"{encode_media_source(query)}?message={message}"
     return URL.build(query=query).query_string.encode().hex()
 
 
@@ -415,6 +417,19 @@ def decode_media_source(media_id: str) -> dict:
     except Exception:
         pass
     return dict(url.query)
+
+
+def track_template(hass: HomeAssistant, template: str, update: Callable) -> Callable:
+    template = Template(template, hass)
+    update(template.async_render())
+
+    def action(event, updates: list[TrackTemplateResult]):
+        update(next(i.result for i in updates))
+
+    track = async_track_template_result(
+        hass, [TrackTemplate(template=template, variables=None)], action
+    )
+    return track.async_remove
 
 
 class StreamingView(HomeAssistantView):
@@ -433,7 +448,7 @@ class StreamingView(HomeAssistantView):
         sid = sid.lower()
         uid = hashlib.md5(url.encode()).hexdigest()
         StreamingView.links[sid] = url
-        return network.get_url(hass) + f"/api/yandex_station/{sid}/{uid}.mp3"
+        return f"{network.get_url(hass)}/api/yandex_station/{sid}/{uid}.mp3"
 
     async def head(self, request: web.Request, sid: str, uid: str):
         url: str = self.links.get(sid)
