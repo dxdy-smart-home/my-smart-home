@@ -24,16 +24,6 @@ bedroom_light_package:
                 {{ 1 }}
               {% endif %}
 
-  light:
-    - platform: template
-      lights:
-        bedroom_light:
-          value_template: "{{ state('light.svet_v_spalne') }}"
-          turn_on:
-            service: script.set_comfortable_light
-          turn_off:
-            service: light.turn_off
-            entity_id: light.svet_v_spalne
   automation:
     - alias: 'Если свет в спальне включили через FLEX выключатель'
       mode: single
@@ -88,3 +78,34 @@ bedroom_light_package:
       action:
         - service: light.turn_off
           entity_id: light.svet_v_spalne
+    
+    - alias: 'Включить свет в спальне через кнопку у двери'
+      mode: queued
+      max: 5
+      trigger:
+        - platform: state
+          entity_id:
+            - sensor.0x00158d000578ce02_click
+          to: 'single'
+      condition: 
+        - condition: state
+          entity_id: light.svet_v_spalne
+          state: 'off'
+      action:
+        - service: script.set_comfortable_light
+
+    - alias: 'Выключить свет в спальне через кнопку у двери'
+      mode: queued
+      max: 5
+      trigger:
+        - platform: state
+          entity_id:
+            - sensor.0x00158d000578ce02_click
+          to: 'single'
+      condition: 
+        - condition: state
+          entity_id: light.svet_v_spalne
+          state: 'on'
+      action:
+        - service: light.turn_off
+          entity_id: light.svet_v_spalne    
