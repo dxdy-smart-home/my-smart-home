@@ -1,0 +1,89 @@
+name: Double switch
+products:
+  - id: zexdotwigwiobadr
+    name: SciMagic RX Double Garage door receiver
+primary_entity:
+  entity: switch
+  name: Switch 1
+  dps:
+    - id: 1
+      name: switch
+      type: boolean
+    - id: 42
+      type: string
+      name: random_schedule
+    - id: 43
+      type: string
+      name: repeating_schedule
+    - id: 44
+      type: string
+      name: inching
+    - id: 48
+      type: string
+      optional: true
+      name: interlock
+secondary_entities:
+  - entity: switch
+    name: Switch 2
+    dps:
+      - id: 2
+        name: switch
+        type: boolean
+  - entity: number
+    name: Timer 1
+    translation_key: timer
+    category: config
+    dps:
+      - id: 9
+        type: integer
+        name: value
+        range:
+          min: 0
+          max: 86400
+        mapping:
+          - scale: 60
+            step: 60
+  - entity: number
+    name: Timer 2
+    category: config
+    translation_key: timer
+    dps:
+      - id: 10
+        type: integer
+        name: value
+        range:
+          min: 0
+          max: 86400
+        mapping:
+          - scale: 60
+            step: 60
+  - entity: select
+    name: Restore power state
+    category: config
+    icon: "mdi:toggle-switch"
+    dps:
+      - id: 38
+        type: string
+        name: option
+        mapping:
+          - dps_val: memory
+            value: Remember last state
+          - dps_val: "on"
+            value: "On"
+          - dps_val: "off"
+            value: "Off"
+  - entity: select
+    name: Switch type
+    icon: "mdi:toggle-switch"
+    category: config
+    dps:
+      - id: 47
+        type: string
+        name: option
+        mapping:
+          - dps_val: flip
+            value: Flip
+          - dps_val: sync
+            value: Synchronized
+          - dps_val: button
+            value: Button
