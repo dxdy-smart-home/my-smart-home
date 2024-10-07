@@ -215,7 +215,10 @@
                             "smart_cool": "Smart cool",
                             "quick_cool": "Quick cool",
                             "quiet_cool": "Quiet cool",
-                            "auto": "Auto"
+                            "auto": "Auto",
+                            "smart": "Smart",
+                            "quick": "Quick",
+                            "quiet": "Quiet"
                         }
                     }
                 }
@@ -364,6 +367,42 @@
             }
         },
         "select": {
+            "initial_state": {
+                "name": "Initial state",
+                "state": {
+                    "off": "Off",
+                    "on": "On",
+                    "memory": "Memory"
+                }
+            },
+            "language": {
+                "name": "Language",
+                "state": {
+                    "chinese": "中文",
+                    "chinese_traditional": "中文(繁體)",
+                    "english": "English",
+                    "french": "Français",
+                    "german": "Deutsch",
+                    "italian": "Italiano",
+                    "japanese": "日本語",
+                    "korean": "한국어",
+                    "latin": "Lingua Latina",
+                    "portuguese": "Português",
+                    "russian": "Русский",
+                    "spanish": "Español",
+                    "turkish": "Türkçe"
+                }
+            },
+            "mopping": {
+                "name": "Mopping",
+                "state": {
+                    "off": "Off",
+                    "auto": "Auto",
+                    "low": "Low",
+                    "medium": "Medium",
+                    "high": "High"
+                }
+            },
             "recipe": {
                 "name": "Recipe",
                 "state": {
@@ -381,6 +420,7 @@
                     "onion_rings": "Onion Rings",
                     "bacon": "Bacon",
                     "cake": "Cake",
+                    "bread": "Bread",
                     "toast": "Toast",
                     "custom": "Custom",
                     "cloud_recipe": "Cloud Recipe",
@@ -504,6 +544,9 @@
             },
             "keytone": {
                 "name": "Keytone"
+            },
+            "sleep": {
+                "name": "Sleep"
             },
             "uv_sterilization": {
                 "name": "UV sterilization"

@@ -110,6 +110,15 @@
             }
         },
         "select": {
+            "initial_state": {
+                "default": "mdi:toggle-switch"
+            },
+            "language": {
+                "default": "mdi:translate"
+            },
+            "mopping": {
+                "default": "mdi:water"
+            },
             "recipe": {
                 "default": "mdi:nutrition",
                 "state": {
@@ -126,6 +135,7 @@
                     "onion_rings": "mdi:bullseye",
                     "bacon": "mdi:food-steak",
                     "cake": "mdi:cake-variant",
+                    "bread": "mdi:baguette",
                     "toast": "mdi:bread-slice",
                     "custom": "mdi:food-fork-drink",
                     "cloud_recipe": "mdi:cloud-print",
@@ -160,6 +170,9 @@
             },
             "keytone": {
                 "default": "mdi:bell-ring"
+            },
+            "sleep": {
+                "default": "mdi:power-sleep"
             },
             "uv_sterilization": {
                 "default": "mdi:solar-power"

@@ -215,7 +215,10 @@
                             "smart_cool": "智能冷却",
                             "quick_cool": "快速冷却",
                             "quiet_cool": "安静冷却",
-                            "auto": "自动"
+                            "auto": "自动",
+                            "smart": "智能",
+                            "quiet": "安静",
+                            "quick": "快速"
                         }
                     }
                 }
@@ -364,6 +367,42 @@
             }
         },
         "select": {
+            "initial_state": {
+                "name": "初始状态",
+                "state": {
+                    "off": "关闭",
+                    "on": "打开",
+                    "memory": "记忆"
+                }
+            },
+            "language": {
+                "name": "语言",
+                "state": {
+                    "chinese": "中文",
+                    "chinese_traditional": "中文(繁體)",
+                    "english": "English",
+                    "french": "Français",
+                    "german": "Deutsch",
+                    "italian": "Italiano",
+                    "japanese": "日本語",
+                    "korean": "한국어",
+                    "latin": "Lingua Latina",
+                    "portuguese": "Português",
+                    "russian": "Русский",
+                    "spanish": "Español",
+                    "turkish": "Türkçe"
+                }
+            },
+            "mopping": {
+                "name": "拖地",
+                "state": {
+                    "off": "关闭",
+                    "auto": "自动",
+                    "low": "低",
+                    "medium": "中",
+                    "high": "高"
+                }
+            },
             "recipe": {
                 "name": "菜谱",
                 "state": {
@@ -381,6 +420,7 @@
                     "onion_rings": "洋葱圈",
                     "bacon": "培根",
                     "cake": "蛋糕",
+                    "bread": "面包",
                     "toast": "吐司",
                     "custom": "自定义",
                     "cloud_recipe": "云菜谱",
@@ -504,6 +544,9 @@
             },
             "keytone": {
                 "name": "按键音"
+            },
+            "sleep": {
+                "name": "睡眠"
             },
             "uv_sterilization": {
                 "name": "紫外线消毒"
