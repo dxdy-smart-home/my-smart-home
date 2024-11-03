@@ -20,7 +20,7 @@ climate_package:
           state: 'off'
         action:
           service: climate.turn_on
-          entity_id: climate.bht_002_thermostat
+          entity_id: climate.thermostat
 
       - alias: Выключить утром теплый пол
         trigger:
@@ -28,4 +28,4 @@ climate_package:
             at: "08:00:00"
         action:
           service: climate.turn_off
-          entity_id: climate.bht_002_thermostat
+          entity_id: climate.thermostat
