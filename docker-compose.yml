@@ -31,7 +31,7 @@ services:
       - ./nginx/auth:/etc/nginx/auth
   homeassistant:
     container_name: homeassistant
-    image: homeassistant/home-assistant:2024.9.3
+    image: homeassistant/home-assistant:2024.10.4
     restart: always
     privileged: true
     depends_on:
@@ -52,7 +52,7 @@ services:
       - ./mqtt/ssl:/mosquitto/ssl
   zigbee2mqtt:
     container_name: zigbee2mqtt
-    image: koenkk/zigbee2mqtt:1.35.3
+    image: koenkk/zigbee2mqtt:1.40.2
     volumes:
       - ./zigbee2mqtt/data:/app/data
       - /run/udev:/run/udev:ro
