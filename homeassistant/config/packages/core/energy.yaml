@@ -8,8 +8,8 @@ energy_package:
     gas_price:
       mode: box
       min: 1
-      max: 10
-      initial: 9.773
+      max: 20
+      initial: 10.807
     power:
       min: 0
       max: 1000000
@@ -19,7 +19,7 @@ energy_package:
       min: 1
       max: 10
       mode: box
-      initial: 4.79
+      initial: 5.21
     bath_hot_water:
       min: 0
       max: 1000000
@@ -49,7 +49,7 @@ energy_package:
       min: 1
       max: 50
       mode: box
-      initial: 24.71
+      initial: 27.28
   template:
     sensor:
       - name: "Gas"
