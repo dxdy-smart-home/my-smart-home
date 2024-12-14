@@ -29,3 +29,13 @@ climate_package:
         action:
           service: climate.turn_off
           entity_id: climate.thermostat
+
+      - alias: Включить защиту от детей для теплого пола после отключения электричества
+        trigger:
+        - platform: homeassistant
+          event: start
+        action:
+        - delay:
+            minutes: 5
+        - service: lock.lock
+          entity_id: lock.thermostat_blokirovka_ot_detei
