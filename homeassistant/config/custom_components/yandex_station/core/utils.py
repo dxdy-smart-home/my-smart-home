@@ -184,10 +184,11 @@ RE_MEDIA = {
         r"(https?://ok\.ru/video/\d+|https?://vk.com/video-?[0-9_]+)"
     ),
     "vk": re.compile(r"https://vk\.com/.*(video-?[0-9_]+)"),
+    "bookmate": re.compile(r"https://books\.yandex\.ru/audiobooks/(\w+)"),
 }
 
 
-async def get_media_payload(text: str, session):
+async def get_media_payload(session, text: str) -> dict | None:
     for k, v in RE_MEDIA.items():
         if m := v.search(text):
             if k in ("youtube", "kinopoisk", "strm", "yavideo"):
@@ -198,8 +199,7 @@ async def get_media_payload(text: str, session):
                 return play_video_by_descriptor("yavideo", url)
 
             elif k == "music.yandex.playlist":
-                uid = await get_userid_v2(session, m[1])
-                if uid:
+                if uid := await get_playlist_uid(session, m[1], m[2]):
                     return {
                         "command": "playMusic",
                         "type": "playlist",
@@ -216,12 +216,27 @@ async def get_media_payload(text: str, session):
             elif k == "kinopoisk.id":
                 try:
                     r = await session.get(
-                        "https://ott-widget.kinopoisk.ru/ott/api/" "kp-film-status/",
+                        "https://ott-widget.kinopoisk.ru/ott/api/kp-film-status/",
                         params={"kpFilmId": m[1]},
                     )
                     resp = await r.json()
                     return play_video_by_descriptor("kinopoisk", resp["uuid"])
 
+                except:
+                    return None
+
+            elif k == "bookmate":
+                try:
+                    r = await session.post(
+                        "https://api-gateway-rest.bookmate.yandex.net/audiobook/album",
+                        json={"audiobook_uuid": m[1]},
+                    )
+                    resp = await r.json()
+                    return {
+                        "command": "playMusic",
+                        "type": "album",
+                        "id": resp["album_id"],
+                    }
                 except:
                     return None
 
@@ -313,31 +328,13 @@ def fix_cloud_text(text: str) -> str:
     return text.strip()[:100]
 
 
-async def get_userid_v1(session: ClientSession, username: str, playlist_id: str):
+async def get_playlist_uid(session, username: str, playlist_id: str) -> int | None:
     try:
-        payload = {
-            "owner": username,
-            "kinds": playlist_id,
-            "light": "true",
-            "withLikesCount": "false",
-            "lang": "ru",
-            "external-domain": "music.yandex.ru",
-            "overembed": "false",
-        }
         r = await session.get(
-            "https://music.yandex.ru/handlers/playlist.jsx", params=payload
+            f"https://api.music.yandex.net/users/{username}/playlists/{playlist_id}",
         )
         resp = await r.json()
-        return resp["playlist"]["owner"]["uid"]
-    except:
-        return None
-
-
-async def get_userid_v2(session: ClientSession, username: str):
-    try:
-        r = await session.get(f"https://music.yandex.ru/users/{username}/playlists")
-        resp = await r.text()
-        return re.search(r'"uid":"(\d+)",', resp)[1]
+        return resp["result"]["owner"]["uid"]
     except:
         return None
 
@@ -423,7 +420,8 @@ def track_template(hass: HomeAssistant, template: str, update: Callable) -> Call
     template = Template(template, hass)
     update(template.async_render())
 
-    def action(event, updates: list[TrackTemplateResult]):
+    # important to use async because from sync action will be problems with update state
+    async def action(event, updates: list[TrackTemplateResult]):
         update(next(i.result for i in updates))
 
     track = async_track_template_result(

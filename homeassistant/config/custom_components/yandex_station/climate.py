@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from homeassistant.components.climate import (
@@ -156,11 +157,7 @@ class YandexClimate(ClimateEntity, YandexEntity):
         elif self.hvac_instance is None:
             await self.quasar.device_action(self.device, "on", True)
         else:
-            if self._attr_hvac_mode == HVACMode.OFF:
-                await self.quasar.device_action(self.device, "on", True)
-            await self.quasar.device_action(
-                self.device, self.hvac_instance, str(hvac_mode)
-            )
+            await self.internal_set_hvac_mode(str(hvac_mode))
 
     async def async_set_temperature(self, temperature: float, **kwargs):
         await self.quasar.device_action(self.device, "temperature", temperature)
@@ -170,3 +167,20 @@ class YandexClimate(ClimateEntity, YandexEntity):
 
     async def async_set_preset_mode(self, preset_mode: str):
         await self.quasar.device_action(self.device, self.preset_instance, preset_mode)
+
+    async def internal_set_hvac_mode(self, value: str):
+        # https://github.com/AlexxIT/YandexStation/issues/577
+        if self._attr_hvac_mode == HVACMode.OFF:
+            await self.quasar.device_action(self.device, "on", True)
+            await asyncio.sleep(1)
+
+        for _ in range(3):
+            try:
+                await self.quasar.device_action(self.device, self.hvac_instance, value)
+            except Exception as e:
+                # https://github.com/AlexxIT/YandexStation/issues/561
+                if "DEVICE_OFF" in str(e):
+                    await self.quasar.device_action(self.device, "on", True)
+                    await asyncio.sleep(1)
+                else:
+                    raise e
