@@ -111,6 +111,3 @@ speech_package:
             entity_id: input_datetime.shower_night_light_ends_at
           data:
             time: "{{ now().strftime('%H:%M:%S') }}"
-
-        - service: cover.open_cover
-          entity_id: cover.0x00124b0029ded4a3
