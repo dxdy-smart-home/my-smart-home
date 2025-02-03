@@ -10,7 +10,9 @@ garden_package:
             state: 'on'
         action:
           - service: switch.turn_on
-            entity_id: switch.0x00124b0024c1ecb5
+            entity_id: 
+              - switch.0x00124b0024c1ecb5
+              - switch.0x000d6f0010dcb5e5
 
       - alias: Включить свет у цветов в гостиной в выходной день
         trigger:
@@ -22,7 +24,9 @@ garden_package:
             state: 'off'
         action:
           - service: switch.turn_on
-            entity_id: switch.0x00124b0024c1ecb5
+            entity_id: 
+              - switch.0x00124b0024c1ecb5
+              - switch.0x000d6f0010dcb5e5
 
       - alias: Выключить свет у цветов в гостиной
         trigger:
@@ -30,4 +34,6 @@ garden_package:
             at: '21:00:00'
         action:
           - service: switch.turn_off
-            entity_id: switch.0x00124b0024c1ecb5
+            entity_id: 
+              - switch.0x00124b0024c1ecb5
+              - switch.0x000d6f0010dcb5e5
