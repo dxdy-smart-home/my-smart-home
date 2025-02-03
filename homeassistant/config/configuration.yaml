@@ -65,6 +65,7 @@ recorder:
        - input_datetime.weekend_alarm_time
        - select.0x00124b00180597b4_mode
        - switch.0x00124b00180597b4_sound
+       - climate.thermostat
 
 history:
 
