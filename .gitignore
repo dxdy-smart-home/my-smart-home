@@ -41,3 +41,5 @@ my_smart_home_*tar.gz
 
 /esphome/*
 !/esphome/.keep
+
+/syncthing
