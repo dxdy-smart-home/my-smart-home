@@ -3,8 +3,13 @@ kitchen_cleaning_package:
     - alias: 'Включить или выключить измельчитель'
       trigger:
         - platform: state
-          entity_id: sensor.0x00158d00075e267b_action
-          to: 'single'
+          entity_id: event.0x00158d00075e267b_action
+          to: ~
+      conditions:
+          - condition: template
+            value_template: "{{trigger.from_state.state != 'unavailable'}}"
+          - condition: template
+            value_template: "{{trigger.to_state.attributes.event_type == 'single'}}"
       action:
         - service: switch.toggle
           entity_id: switch.0x000d6f0013369f96

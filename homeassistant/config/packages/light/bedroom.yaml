@@ -45,9 +45,14 @@ bedroom_light_package:
       trigger:
         - platform: state
           entity_id: 
-            - sensor.0x00158d000424fa2c_click
-            - sensor.0x00158d000424fadf_click
-          to: 'single'
+            - event.0x00158d000424fa2c_action
+            - event.0x00158d000424fadf_action
+          to: ~
+      conditions:
+          - condition: template
+            value_template: "{{trigger.from_state.state != 'unavailable'}}"
+          - condition: template
+            value_template: "{{trigger.to_state.attributes.event_type == 'single'}}"
       action:
         - service: yeelight.set_mode
           data:
@@ -60,9 +65,14 @@ bedroom_light_package:
       trigger:
         - platform: state
           entity_id:
-            - sensor.0x00158d000424fa2c_click
-            - sensor.0x00158d000424fadf_click
-          to: 'double'
+            - event.0x00158d000424fa2c_action
+            - event.0x00158d000424fadf_action
+          to: ~
+      conditions:
+          - condition: template
+            value_template: "{{trigger.from_state.state != 'unavailable'}}"
+          - condition: template
+            value_template: "{{trigger.to_state.attributes.event_type == 'double'}}"
       action:
         - service: script.set_comfortable_light
 
@@ -72,40 +82,14 @@ bedroom_light_package:
       trigger:
         - platform: state
           entity_id:
-            - sensor.0x00158d000424fa2c_click
-            - sensor.0x00158d000424fadf_click
-          to: 'long'
-      action:
-        - service: light.turn_off
-          entity_id: light.svet_v_spalne
-    
-    - alias: 'Включить свет в спальне через кнопку у двери'
-      mode: queued
-      max: 5
-      trigger:
-        - platform: state
-          entity_id:
-            - sensor.0x00158d000578ce02_click
-          to: 'single'
-      condition: 
-        - condition: state
-          entity_id: light.svet_v_spalne
-          state: 'off'
-      action:
-        - service: script.set_comfortable_light
-
-    - alias: 'Выключить свет в спальне через кнопку у двери'
-      mode: queued
-      max: 5
-      trigger:
-        - platform: state
-          entity_id:
-            - sensor.0x00158d000578ce02_click
-          to: 'single'
-      condition: 
-        - condition: state
-          entity_id: light.svet_v_spalne
-          state: 'on'
+            - event.0x00158d000424fa2c_action
+            - event.0x00158d000424fadf_action
+          to: ~
+      conditions:
+          - condition: template
+            value_template: "{{trigger.from_state.state != 'unavailable'}}"
+          - condition: template
+            value_template: "{{trigger.to_state.attributes.event_type == 'hold'}}"
       action:
         - service: light.turn_off
           entity_id: light.svet_v_spalne    
