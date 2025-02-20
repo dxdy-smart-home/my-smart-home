@@ -98,7 +98,9 @@ speech_package:
             text: Доброе утро
       action:
         - service: switch.turn_on
-          entity_id: switch.0x00124b0024c1ecb5
+          entity_id:
+              - switch.0x00124b0024c1ecb5
+              - switch.0x000d6f0010dcb5e5
 
         - service: input_datetime.set_datetime
           target:
