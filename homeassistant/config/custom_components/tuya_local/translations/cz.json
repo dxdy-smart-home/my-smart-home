@@ -37,11 +37,11 @@
                 "description": "[Postupujte podle tohoto návodu pro získaní identifikátoru zařízení (device_id) a lokálního klíče (local_key).](https://github.com/make-all/tuya-local#finding-your-device-id-and-local-key)",
                 "data": {
                     "host": "IP adresa nebo název hostitele (hostname)",
-                    "device_id": "identifikátor zařízení (device_id)",
+                    "device_id": "identifikátor zařízení (device_id, nebo device_id brány pro zařízení připojená pomocí brány) ",
                     "local_key": "lokální klíč (local_key)",
                     "protocol_version": "Verze protokolu (zkuste auto pokud ji neznáte)",
                     "poll_only": "Poll only (vyzkoušejte pokud zařízení úplně nefunguje)",
-                    "device_cid": "Sub device ID (pro zařízení připojená pomocí brány)"
+                     "device_cid": "Sub device node_id nebo uuid (pro zařízení připojená pomocí brány)"
                 }
             },
             "select_type": {
@@ -87,8 +87,7 @@
                     "host": "IP adresa nebo název hostitele (hostname)",
                     "local_key": "lokální klíč (local_key)",
                     "protocol_version": "Verze protokolu (zkuste auto pokud ji neznáte)",
-                    "poll_only": "Poll only (vyzkoušejte pokud zařízení úplně nefunguje)",
-                    "device_cid": "Sub device ID (pro zařízení připojená pomocí brány)"
+                    "poll_only": "Poll only (vyzkoušejte pokud zařízení úplně nefunguje)"
                 }
             }
         },
@@ -101,6 +100,13 @@
     },
     "entity": {
         "binary_sensor": {
+            "direction": {
+                "name": "Směr",
+                "state": {
+                    "off": "Příchozí",
+                    "on": "Odchozí"
+                }
+            },
             "defrost": {
                 "name": "Rozmrazovat",
                 "state": {
@@ -122,9 +128,16 @@
                     "on": "Plná"
                 }
             },
+            "wake": {
+                "name": "Probuzení",
+                "state": {
+                    "off": "Spí",
+                    "on": "Probuzený"
+                }
+            },
             "casdon_oven_fault": {
                 "state_attributes": {
-                    "fault_message": {
+                    "description": {
                         "state": {
                             "e1": "E1: Ochrana před přehřátím komory (překročení 290°C)",
                             "e2": "E2: Ochrana před přehřátím výparníku (překročení 200°C)",
@@ -137,6 +150,14 @@
                         }
                     }
                 }
+            }
+        },
+        "button": {
+            "factory_reset": {
+                "name": "Obnovení továrního nastavení"
+            },
+            "filter_reset": {
+                "name": "Obnovení filtru"
             }
         },
         "climate": {
@@ -165,6 +186,7 @@
                 }
             },
             "thermostat": {
+                "name": "Termostat",
                 "state_attributes": {
                     "fan_mode": {
                         "state": {
@@ -289,7 +311,8 @@
                             "medium": "Střední",
                             "high": "Vysoký",
                             "continuous": "Nepřetržitý",
-                            "intermittent": "Přerušovaný"
+                            "intermittent": "Přerušovaný",
+                            "timer": "Časovač"
                         }
                     }
                 }
@@ -324,7 +347,9 @@
                             "sleep": "Spát",
                             "auto": "Auto",
                             "eco": "Eco",
-                            "anti-condensation": "Proti kondenzaci"
+                            "anti-condensation": "Proti kondenzaci",
+                            "extractor": "Odsávání",
+                            "heat_recovery": "Ovzduší"
                         }
                     }
                 }
@@ -364,6 +389,9 @@
         "number": {
             "timer": {
                 "name": "Časovač"
+            },
+            "timer_x": {
+                "name": "Časovač {x}"
             }
         },
         "select": {
@@ -422,6 +450,8 @@
                     "cake": "Koláč",
                     "bread": "Chléb",
                     "toast": "Topinka",
+                    "sausage": "Klobása",
+                    "dry_fruit": "Sušené ovoce",
                     "custom": "Vlastní",
                     "cloud_recipe": "Recept z cloudu",
                     "default": "Výchozí",
@@ -429,11 +459,34 @@
                     "preheat": "Předehřátí"
                 }
             },
+            "scene": {
+                "name": "Scéna",
+                "state": {
+                    "relax": "Relax",
+                    "movie": "Film",
+                    "party": "Večírek",
+                    "romantic": "Romantický",
+                    "night": "Noc",
+                    "morning": "Ráno",
+                    "working": "Práce",
+                    "leisure": "Volný čas",
+                    "vacation": "Dovolená",
+                    "reading": "Čtení",
+                    "twinkle": "Blikání",
+                    "gaming": "Hraní her",
+                     "none": "Žádný"
+                }
+            },
             "timer": {
                 "name": "Časovač",
                 "state": {
                     "cancel": "Zrušit",
+                    "continuous": "Nepřetržitý",
+                    "5m": "5 minut",
+                    "10m": "10 minut",
+                    "20m": "20 minut",
                     "30m": "30 minut",
+                    "40m": "40 minut",
                     "1h": "1 hodina",
                     "1h30m": "1 hodina 30 minut",
                     "2h": "2 hodiny",
@@ -517,6 +570,85 @@
             }
         },
         "sensor": {
+            "air_quality": {
+                "name": "Kvalita vzduchu",
+                "state": {
+                    "excellent": "Výborná",
+                    "good": "Dobrá",
+                    "moderate": "Střední",
+                    "poor": "Špatná",
+                    "severe": "Velmi špatná"
+                }
+            },
+            "status": {
+                "name": "Stav",
+                "state": {
+                    "available": "Dostupné",
+                    "plugged_in": "Zapojeno",
+                    "fault_unplugged": "Chyba (Odpojeno)",
+                    "charging": "Nabíjení",
+                    "waiting": "Čekání",
+                    "charged": "Nabitý",
+                    "fault": "Chyba",
+                    "paused": "Pozastaveno",
+                    "waiting_for_authorization": "Čekání na autorizaci",
+                    "standby": "Pohotovost",
+                    "heating": "Teplo",
+                    "cooling": "Chlazení",
+                    "keeping_warm": "Udržování tepla",
+                    "no_water": "Bez vody",
+                    "boiling": "Vaření",
+                    "reserve_only": "Rezerva pouze",
+                    "unknown": "Neznámý",
+                    "idle": "Nečinný",
+                    "auto": "Auto",
+                    "manual": "Manuál",
+                    "rain_delay": "Zpoždění deště",
+                    "off": "Vypnuto",
+                    "cooking": "Vaření",
+                    "done": "Hotovo",
+                    "door_open": "Dveře otevřeny",
+                    "setting": "Nastavení",
+                    "pre_heating": "Předehřívání",
+                    "scheduled": "Plánováno",
+                    "at_temperature": "Na teplotě",
+                    "done_stage_1": "Hotovo fáze 1",
+                    "done_stage_2": "Hotovo fáze 2",
+                    "done_stage_3": "Hotovo fáze 3",
+                    "done_stage_4": "Hotovo fáze 4",
+                    "done_stage_5": "Hotovo fáze 5",
+                    "done_stage_6": "Hotovo fáze 6",
+                    "done_stage_7": "Hotovo fáze 7",
+                    "done_stage_8": "Hotovo fáze 8",
+                    "done_stage_9": "Hotovo fáze 9",
+                    "done_stage_10": "Hotovo fáze 10",
+                    "no_food": "Bez jídla",
+                    "jammed": "Zaseknutý",
+                    "blocked": "Blokováno",
+                    "feeding": "Krmení",
+                    "feeding_complete": "Krmení dokončeno",
+                    "caking": "Koláč",
+                    "cleaning": "Čištění",
+                    "sleep": "Spát",
+                    "sterilizing": "Sterilizace",
+                    "deodorizing": "Dezodorace",
+                    "occupied": "Obsazeno",
+                    "normal": "Normální",
+                    "low": "Nízký",
+                    "high": "Vysoký",
+                    "unwashed": "Nemytý",
+                    "pre_washing": "Předmytí",
+                    "washing": "Praní",
+                    "rinsing": "Oplachování",
+                    "drying": "Sušení",
+                    "air_purging": "Čištění vzduchu",
+                    "anti_freeze": "Proti mrazu",
+                    "close": "Zavřeno",
+                    "monitor": "Monitor",
+                    "working": "Pracuje",
+                    "warning": "Varování"
+                }
+            },
             "time_remaining": {
                 "name": "Zbývající čas"
             },
@@ -530,6 +662,37 @@
                     "done": "Vaření dokončeno",
                     "pause": "Vaření pozastaveno"
                 }
+            },
+            "water_level": {
+                "name": "Úroveň vody",
+                "state": {
+                    "full": "Plný",
+                    "high": "Vysoký",
+                    "medium": "Střední",
+                    "low": "Nízký",
+                    "empty": "Prázdný"
+                }
+            },
+            "energy_produced": {
+                "name": "Vyprodukována energie"
+            },
+            "energy_consumed": {
+                "name": "Spotřebována energie"
+            },
+            "energy_produced_x": {
+                "name": "Vyprodukována energie {x}"
+            },
+            "energy_consumed_x": {
+                "name": "Spotřebována energie {x}"
+            },
+            "current_x": {
+                "name": "Proud {x}"
+            },
+            "voltage_x": {
+                "name": "Napětí {x}"
+            },
+            "power_x": {
+                "name": "Výkon {x}"
             }
         },
         "switch": {
@@ -545,11 +708,25 @@
             "keytone": {
                 "name": "Tón kláves"
             },
+            "outlet_x": {
+                "name": "Zásuvka {x}"
+            },
             "sleep": {
                 "name": "Spát"
             },
+            "switch_x": {
+                "name": "Přepínač {x}"
+            },
+            "electrolytic_sterilization": {
+                "name": "Elektrolytická sterilizace"
+            },
             "uv_sterilization": {
                 "name": "UV sterilizace"
+            }
+        },
+        "text": {
+            "scene": {
+                "name": "Scéna"
             }
         }
     }

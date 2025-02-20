@@ -1,15 +1,15 @@
 name: Pool pump
 products:
   - id: i0elff0w1pehctax
-    name: AquaForte Inverter VSP
-primary_entity:
-  entity: valve
-  class: water
-  dps:
-    - id: 105
-      type: boolean
-      name: valve
-secondary_entities:
+    manufacturer: AquaForte
+    model: Inverter VSP
+entities:
+  - entity: valve
+    class: water
+    dps:
+      - id: 105
+        type: boolean
+        name: valve
   - entity: select
     name: Pump mode
     icon: "mdi:pump"
@@ -44,6 +44,7 @@ secondary_entities:
   - entity: number
     name: Boost timer
     translation_key: timer
+    class: duration
     category: config
     mode: box
     dps:
@@ -167,10 +168,13 @@ secondary_entities:
         mapping:
           - dps_val: 0
             value: false
-          - default: true
+          - value: true
       - id: 2
         type: bitfield
-        name: fault
+        name: fault_code
+      - id: 2
+        type: bitfield
+        name: description
         mapping:
           - dps_val: 0
             value: "None"

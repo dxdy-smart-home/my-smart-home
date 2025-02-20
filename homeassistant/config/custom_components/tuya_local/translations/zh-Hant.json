@@ -37,11 +37,11 @@
                 "description": "[請按照這些說明找到您的裝置ID和 Local key](https://github.com/make-all/tuya-local#finding-your-device-id-and-local-key)",
                 "data": {
                     "host": "IP位址或主機名",
-                    "device_id": "設備ID",
+                    "device_id": "設備ID(或device_id網關,對於透過網關連接的設備）",
                     "local_key": "Local key",
                     "protocol_version": "協議版本（如果不清楚，請選擇自動）",
                     "poll_only": "僅輪詢（如果設備無法正常運作，請選擇此項）",
-                    "device_cid": "子設備ID（對於透過網關連接的設備）"
+                    "device_cid": "子設備node_id或uuid（對於透過網關連接的設備）"
                 }
             },
             "select_type": {
@@ -87,8 +87,7 @@
                     "host": "IP位址或主機名",
                     "local_key": "Local key",
                     "protocol_version": "協議版本（如果不清楚，請選擇自動）",
-                    "poll_only": "僅輪詢（如果設備無法正常運作，請選擇此項）",
-                    "device_cid": "子設備ID（對於透過網關連接的設備）"
+                    "poll_only": "僅輪詢（如果設備無法正常運作，請選擇此項）"
                 }
             }
         },
@@ -101,6 +100,13 @@
     },
     "entity": {
         "binary_sensor": {
+            "direction": {
+                "name": "方向",
+                "state": {
+                    "off": "進入",
+                    "on": "離開"
+                }
+            },
             "defrost": {
                 "name": "除霜",
                 "state": {
@@ -122,9 +128,16 @@
                     "on": "滿水"
                 }
             },
+            "wake": {
+                "name": "唤醒",
+                "state": {
+                    "off": "睡眠",
+                    "on": "唤醒"
+                }
+            },
             "casdon_oven_fault": {
                 "state_attributes": {
-                    "fault_message": {
+                    "description": {
                         "state": {
                             "e1": "E1: 高溫保護 (超過290°C)",
                             "e2": "E2: 蒸發盤過熱保護 (超過200°C)",
@@ -137,6 +150,14 @@
                         }
                     }
                 }
+            }
+        },
+        "button": {
+            "factory_reset": {
+                "name": "恢復出廠設置"
+            },
+            "filter_reset": {
+                "name": "重置濾芯"
             }
         },
         "climate": {
@@ -165,6 +186,7 @@
                 }
             },
             "thermostat": {
+                "name": "恆溫器",
                 "state_attributes": {
                     "fan_mode": {
                         "state": {
@@ -290,7 +312,8 @@
                             "medium": "中",
                             "high": "高",
                             "continuous": "連續",
-                            "intermittent": "間歇"
+                            "intermittent": "間歇",
+                            "timer": "計時"
                         }
                     }
                 }
@@ -325,7 +348,9 @@
                             "sleep": "睡眠",
                             "auto": "自動",
                             "eco": "節能",
-                            "anti-condensation": "防凝結"
+                            "anti-condensation": "防凝結",
+                            "extractor": "抽氣",
+                            "heat_recovery": "熱回收"
                         }
                     }
                 }
@@ -365,6 +390,9 @@
         "number": {
             "timer": {
                 "name": "計時器"
+            },
+            "timer_x": {
+                "name": "計時器{x}"
             }
         },
         "select": {
@@ -423,6 +451,8 @@
                     "cake": "蛋糕",
                     "bread": "麵包",
                     "toast": "吐司",
+                    "sausage": "香腸",
+                    "dry_fruit": "乾果",
                     "custom": "自訂",
                     "cloud_recipe": "雲端食譜",
                     "default": "預設",
@@ -430,11 +460,34 @@
                     "preheat": "預熱"
                 }
             },
+            "scene": {
+                "name": "場景",
+                "state": {
+                    "relax": "放鬆",
+                    "movie": "電影",
+                    "party": "派對",
+                    "romantic": "浪漫",
+                    "night": "夜晚",
+                    "morning": "早晨",
+                    "working": "工作",
+                    "leisure": "休閒",
+                    "vacation": "度假",
+                    "reading": "閱讀",
+                    "twinkle": "閃爍",
+                    "gaming": "遊戲",
+                    "none": "無"
+                }
+            },
             "timer": {
                 "name": "計時器",
                 "state": {
                     "cancel": "取消",
+                    "continuous": "連續",
+                    "5m": "5分鐘",
+                    "10m": "10分鐘",
+                    "20m": "20分鐘",
                     "30m": "30分鐘",
+                    "40m": "40分鐘",
                     "1h": "1小時",
                     "1h30m": "1小時30分鐘",
                     "2h": "2小時",
@@ -518,6 +571,85 @@
             }
         },
         "sensor": {
+            "air_quality": {
+                "name": "空氣質量",
+                "state": {
+                    "excellent": "優",
+                    "good": "良",
+                    "moderate": "中",
+                    "poor": "差",
+                    "severe": "極差"
+                }
+            },
+            "status": {
+                "name": "狀態",
+                "state": {
+                    "available": "可用",
+                    "plugged_in": "已插入",
+                    "fault_unplugged": "故障（未插入）",
+                    "charging": "充電中",
+                    "waiting": "等待中",
+                    "charged": "已充滿",
+                    "fault": "故障",
+                    "paused": "已暫停",
+                    "waiting_for_authorization": "等待授權",
+                    "standby": "待機",
+                    "heating": "加熱",
+                    "cooling": "冷卻",
+                    "keeping_warm": "保溫中",
+                    "no_water": "無水",
+                    "boiling": "煮沸",
+                    "reserve_only": "僅預約",
+                    "unknown": "未知",
+                    "idle": "閒置",
+                    "auto": "自動",
+                    "manual": "手動",
+                    "rain_delay": "雨天延遲",
+                    "off": "關",
+                    "cooking": "烹飪中",
+                    "done": "完成",
+                    "door_open": "門打開",
+                    "setting": "設定中",
+                    "pre_heating": "預熱中",
+                    "scheduled": "已排程",
+                    "at_temperature": "已達溫度",
+                    "done_stage_1": "完成階段1",
+                    "done_stage_2": "完成階段2",
+                    "done_stage_3": "完成階段3",
+                    "done_stage_4": "完成階段4",
+                    "done_stage_5": "完成階段5",
+                    "done_stage_6": "完成階段6",
+                    "done_stage_7": "完成階段7",
+                    "done_stage_8": "完成階段8",
+                    "done_stage_9": "完成階段9",
+                    "done_stage_10": "完成階段10",
+                    "no_food": "無食物",
+                    "jammed": "卡住",
+                    "blocked": "阻塞",
+                    "feeding": "餵食中",
+                    "feeding_complete": "餵食完成",
+                    "caking": "結塊",
+                    "cleaning": "清潔中",
+                    "sleep": "睡眠",
+                    "sterilizing": "消毒中",
+                    "deodorizing": "除臭中",
+                    "occupied": "佔用",
+                    "normal": "正常",
+                    "low": "低",
+                    "high": "高",
+                    "unwashed": "未清洗",
+                    "pre_washing": "預洗中",
+                    "washing": "洗滌中",
+                    "rinsing": "漂洗中",
+                    "drying": "烘乾中",
+                    "air_purging": "空氣淨化中",
+                    "anti_freeze": "防凍中",
+                    "close": "關閉",
+                    "monitor": "監控",
+                    "working": "運行中",
+                    "warning": "警告"
+                }
+            },
             "time_remaining": {
                 "name": "剩餘時間"
             },
@@ -531,6 +663,37 @@
                     "done": "烹飪完成",
                     "pause": "烹飪暫停"
                 }
+            },
+            "water_level": {
+                "name": "水量",
+                "state": {
+                    "empty": "空",
+                    "low": "低",
+                    "medium": "中",
+                    "high": "高",
+                    "full": "滿"
+                }
+            },
+            "energy_produced": {
+                "name": "能量產生"
+            },
+            "energy_consumed": {
+                "name": "能量消耗"
+            },
+            "energy_produced_x": {
+                "name": "能量產生{x}"
+            },
+            "energy_consumed_x": {
+                "name": "能量消耗{x}"
+            },
+            "current_x": {
+                "name": "電流{x}"
+            },
+            "voltage_x": {
+                "name": "電壓{x}"
+            },
+            "power_x": {
+                "name": "功率{x}"
             }
         },
         "switch": {
@@ -546,11 +709,25 @@
             "keytone": {
                 "name": "按鍵音"
             },
+            "outlet_x": {
+                "name": "插座{x}"
+            },
             "sleep": {
                 "name": "睡眠模式"
             },
+            "switch_x": {
+                "name": "開關{x}"
+            },
             "uv_sterilization": {
                 "name": "紫外線消毒"
+            },
+            "electrolytic_sterilization": {
+                "name": "電解消毒"
+            }
+        },
+        "text": {
+            "scene": {
+                "name": "場景"
             }
         }
     }

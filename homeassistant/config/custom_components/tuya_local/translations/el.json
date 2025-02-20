@@ -37,11 +37,11 @@
                 "description": "[Ακολουθήστε αυτές τις οδηγίες για να βρείτε το device id και το local key.](https://github.com/make-all/tuya-local#finding-your-device-id-and-local-key)",
                 "data": {
                     "host": "Διεύθυνση IP ή όνομα",
-                    "device_id": "Device ID",
+                    "device_id": "Device ID (ή device_id της gateway για συσκευές συνδεδεμένες μέσω gateway)",
                     "local_key": "Local key",
                     "protocol_version": "Έκδοση Πρωτοκόλλου (δοκιμάστε αυτόματο (auto) αν δεν το γνωρίζετε)",
                     "poll_only": "Ανίχνευση μόνο (δοκιμάστε αυτό αν η συσκευή δε λειτουργεί πλήρως)",
-                    "device_cid": "Sub device ID (για συσκευές συνδεμένες μέσω gateway)"
+                    "device_cid": "Sub device node_id ή uuid (για συσκευές συνδεμένες μέσω gateway)"
                 }
             },
             "select_type": {
@@ -87,8 +87,7 @@
                     "host": "Διεύθυνση IP ή όνομα",
                     "local_key": "Local key",
                     "protocol_version": "Έκδοση Πρωτοκόλλου (δοκιμάστε αυτόματο (auto) αν δεν το γνωρίζετε)",
-                    "poll_only": "Ανίχνευση μόνο (δοκιμάστε αυτό αν η συσκευή δε λειτουργεί πλήρως)",
-                    "device_cid": "Sub device ID (για συσκευές συνδεμένες μέσω gateway)"
+                    "poll_only": "Ανίχνευση μόνο (δοκιμάστε αυτό αν η συσκευή δε λειτουργεί πλήρως)"
                 }
             }
         },
@@ -101,6 +100,13 @@
     },
     "entity": {
         "binary_sensor": {
+            "direction": {
+                "name": "Κατεύθυνση",
+                "state": {
+                    "off": "Εισερχόμενο",
+                    "on": "Εξερχόμενο"
+                }
+            },
             "defrost": {
                 "name": "Απόψυξη",
                 "state": {
@@ -122,9 +128,16 @@
                     "on": "Γεμάτο"
                 }
             },
+            "wake": {
+                "name": "Ξύπνημα",
+                "state": {
+                    "off": "Αναμονή",
+                    "on": "Ξύπνημα"
+                }
+            },
             "casdon_oven_fault": {
                 "state_attributes": {
-                    "fault_message": {
+                    "description": {
                         "state": {
                             "e1": "E1: Προστασία υπερθέρμανσης θαλάμου (υπερβαίνει τους 290°C)",
                             "e2": "E2: Προστασία υπερθέρμανσης δίσκου εξάτμισης (υπερβαίνει τους 200°C)",
@@ -137,6 +150,14 @@
                         }
                     }
                 }
+            }
+        },
+        "button": {
+            "factory_reset": {
+                "name": "Επαναφορά εργοστασιακών ρυθμίσεων"
+            },
+            "filter_reset": {
+                "name": "Επαναφορά φίλτρου"
             }
         },
         "climate": {
@@ -165,6 +186,7 @@
                 }
             },
             "thermostat": {
+                "name": "Θερμοστάτης",
                 "state_attributes": {
                     "fan_mode": {
                         "state": {
@@ -289,7 +311,8 @@
                             "medium": "Μεσαία",
                             "high": "Υψηλή",
                             "continuous": "Συνεχής",
-                            "intermittent": "Διακεκομμένη"
+                            "intermittent": "Διακεκομμένη",
+                            "timer": "Χρονοδιακόπτης"
                         }
                     }
                 }
@@ -324,7 +347,9 @@
                             "sleep": "Αναμονή",
                             "auto": "Αυτόματο",
                             "eco": "Οικονομικό",
-                            "anti-condensation": "Αποφυγή υγρασίας"
+                            "anti-condensation": "Αποφυγή υγρασίας",
+                            "extractor": "Εξαγωγή",
+                            "heat_recovery": "Ανάκτηση θερμότητας"
                         }
                     }
                 }
@@ -364,6 +389,9 @@
         "number": {
             "timer": {
                 "name": "Χρονοδιακόπτης"
+            },
+            "timer_x": {
+                "name": "Χρονοδιακόπτης {x}"
             }
         },
         "select": {
@@ -422,6 +450,8 @@
                     "cake": "Κέικ",
                     "bread": "Ψωμί",
                     "toast": "Ψωμί",
+                    "sausage": "Λουκάνικο",
+                    "dry_fruit": "Ξηροί καρποί",
                     "custom": "Προσαρμοσμένο",
                     "cloud_recipe": "Συνταγή από το cloud",
                     "default": "Προεπιλογή",
@@ -429,11 +459,34 @@
                     "preheat": "Προθέρμανση"
                 }
             },
+            "scene": {
+                "name": "Σκηνή",
+                "state": {
+                    "relax": "Χαλάρωση",
+                    "movie": "Ταινία",
+                    "party": "Πάρτι",
+                    "romantic": "Ρομαντικό",
+                    "night": "Νύχτα",
+                    "morning": "Πρωί",
+                    "working": "Εργασία",
+                    "leisure": "Αναψυχή",
+                    "vacation": "Διακοπές",
+                    "reading": "Ανάγνωση",
+                    "twinkle": "Λάμψη",
+                    "gaming": "Παιχνίδι",
+                    "none": "Καμία"
+                }
+            },
             "timer": {
                 "name": "Χρονοδιακόπτης",
                 "state": {
                     "cancel": "Ακύρωση",
+                    "continuous": "Συνεχής",
+                    "5m": "5 λεπτά",
+                    "10m": "10 λεπτά",
+                    "20m": "20 λεπτά",
                     "30m": "30 λεπτά",
+                    "40m": "40 λεπτά",
                     "1h": "1 ώρα",
                     "1h30m": "1 ώρα 30 λεπτά",
                     "2h": "2 ώρες",
@@ -517,6 +570,85 @@
             }
         },
         "sensor": {
+            "air_quality": {
+                "name": "Ποιότητα αέρα",
+                "state": {
+                    "excellent": "Εξαιρετική",
+                    "good": "Καλή",
+                    "moderate": "Μέτρια",
+                    "poor": "Κακή",
+                    "severe": "Σοβαρή"
+                }
+            },
+            "status": {
+                "name": "Κατάσταση",
+                "state": {
+                    "available": "Διαθέσιμο",
+                    "plugged_in": "Συνδεδεμένο",
+                    "fault_unplugged": "Σφάλμα (αποσυνδεδεμένο)",
+                    "charging": "Φόρτιση",
+                    "waiting": "Αναμονή",
+                    "charged": "Φορτισμένο",
+                    "fault": "Σφάλμα",
+                    "paused": "Παύση",
+                    "waiting_for_authorization": "Αναμονή για έγκριση",
+                    "standby": "Αναμονή",
+                    "heating": "Θέρμανση",
+                    "cooling": "Ψύξη",
+                    "keeping_warm": "Διατήρηση θερμοκρασίας",
+                    "no_water": "Χωρίς νερό",
+                    "boiling": "Βράσιμο",
+                    "reserve_only": "Μόνο κράτηση",
+                    "unknown": "Άγνωστο",
+                    "idle": "Αδράνεια",
+                    "auto": "Αυτόματο",
+                    "manual": "Χειροκίνητο",
+                    "rain_delay": "Καθυστέρηση λόγω βροχής",
+                    "off": "Απενεργοποίηση",
+                    "cooking": "Μαγείρεμα",
+                    "done": "Ολοκληρώθηκε",
+                    "door_open": "Ανοιχτή πόρτα",
+                    "setting": "Ρύθμιση",
+                    "pre_heating": "Προθέρμανση",
+                    "scheduled": "Προγραμματισμένο",
+                    "at_temperature": "Στη θερμοκρασία",
+                    "done_stage_1": "Ολοκληρώθηκε στάδιο 1",
+                    "done_stage_2": "Ολοκληρώθηκε στάδιο 2",
+                    "done_stage_3": "Ολοκληρώθηκε στάδιο 3",
+                    "done_stage_4": "Ολοκληρώθηκε στάδιο 4",
+                    "done_stage_5": "Ολοκληρώθηκε στάδιο 5",
+                    "done_stage_6": "Ολοκληρώθηκε στάδιο 6",
+                    "done_stage_7": "Ολοκληρώθηκε στάδιο 7",
+                    "done_stage_8": "Ολοκληρώθηκε στάδιο 8",
+                    "done_stage_9": "Ολοκληρώθηκε στάδιο 9",
+                    "done_stage_10": "Ολοκληρώθηκε στάδιο 10",
+                    "no_food": "Χωρίς φαγητό",
+                    "jammed": "Κολλημένο",
+                    "blocked": "Αποκλεισμένο",
+                    "feeding": "Τροφοδοσία",
+                    "feeding_complete": "Τροφοδοσία ολοκληρώθηκε",
+                    "caking": "Πήξιμο",
+                    "cleaning": "Καθαρισμός",
+                    "sleep": "Αναμονή",
+                    "sterilizing": "Αποστείρωση",
+                    "deodorizing": "Αποσμητικό",
+                    "occupied": "Κατειλημμένο",
+                    "normal": "Κανονικό",
+                    "low": "Χαμηλό",
+                    "high": "Υψηλό",
+                    "unwashed": "Ανεπεξέργαστο",
+                    "pre_washing": "Προπλύση",
+                    "washing": "Πλύση",
+                    "rinsing": "Ξέβγαλμα",
+                    "drying": "Στέγνωμα",
+                    "air_purging": "Αερισμός",
+                    "anti_freeze": "Αντιπαγωτικό",
+                    "close": "Κλείσιμο",
+                    "monitor": "Παρακολούθηση",
+                    "working": "Λειτουργία",
+                    "warning": "Προειδοποίηση"
+                }
+            },
             "time_remaining": {
                 "name": "Χρόνος που απομένει"
             },
@@ -530,6 +662,37 @@
                     "done": "Ολοκληρώθηκε",
                     "pause": "Παύση μαγειρέματος"
                 }
+            },
+            "water_level": {
+                "name": "Επίπεδο νερού",
+                "state": {
+                    "full": "Πλήρες",
+                    "high": "Υψηλό",
+                    "medium": "Μεσαίο",
+                    "low": "Χαμηλό",
+                    "empty": "Άδειο"
+                }
+            },
+            "energy_produced": {
+                "name": "Ενέργεια που παράχθηκε"
+            },
+            "energy_consumed": {
+                "name": "Ενέργεια που καταναλώθηκε"
+            },
+            "energy_produced_x": {
+                "name": "Ενέργεια που παράχθηκε {x}"
+            },
+            "energy_consumed_x": {
+                "name": "Ενέργεια που καταναλώθηκε {x}"
+            },
+            "current_x": {
+                "name": "Ρεύμα {x}"
+            },
+            "voltage_x": {
+                "name": "Τάση {x}"
+            },
+            "power_x": {
+                "name": "Ισχύς {x}"
             }
         },
         "switch": {
@@ -545,11 +708,25 @@
             "keytone": {
                 "name": "Ήχος κουμπιών"
             },
+            "outlet_x": {
+                "name": "Πρίζα {x}"
+            },
             "sleep": {
                 "name": "Αναμονή"
             },
+            "switch_x": {
+                "name": "Διακόπτης {x}"
+            },
+            "electrolytic_sterilization": {
+                "name": "Ηλεκτρολυτική αποστείρωση"
+            },
             "uv_sterilization": {
                 "name": "Αποστείρωση UV"
+            }
+        },
+        "text": {
+            "scene": {
+                "name": "Σκηνή"
             }
         }
     }

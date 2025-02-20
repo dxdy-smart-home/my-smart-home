@@ -15,11 +15,12 @@ from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import network
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
-    async_track_template_result,
     TrackTemplate,
     TrackTemplateResult,
+    async_track_template_result,
 )
 from homeassistant.helpers.template import Template
 from yarl import URL
@@ -430,10 +431,22 @@ def track_template(hass: HomeAssistant, template: str, update: Callable) -> Call
     return track.async_remove
 
 
+def get_entity(hass: HomeAssistant, entity_id: str) -> Entity | None:
+    try:
+        ec: EntityComponent = hass.data["entity_components"]["media_player"]
+        return next(e for e in ec.entities if e.entity_id == entity_id)
+    except:
+        pass
+    return None
+
+
+MIME_TYPES = {"aac": "audio/aac", "flac": "audio/x-flac", "mp3": "audio/mpeg"}
+
+
 class StreamingView(HomeAssistantView):
     requires_auth = False
 
-    url = "/api/yandex_station/{sid}/{uid}.mp3"
+    url = "/api/yandex_station/{sid}/{uid}.{ext}"
     name = "api:yandex_station"
 
     links: dict = {}
@@ -442,39 +455,40 @@ class StreamingView(HomeAssistantView):
         self.session = async_get_clientsession(hass)
 
     @staticmethod
-    def get_url(hass: HomeAssistant, sid: str, url: str):
+    def get_url(hass: HomeAssistant, sid: str, url: str, ext: str):
+        assert ext in MIME_TYPES
         sid = sid.lower()
         uid = hashlib.md5(url.encode()).hexdigest()
         StreamingView.links[sid] = url
-        return f"{network.get_url(hass)}/api/yandex_station/{sid}/{uid}.mp3"
+        local_url = f"{network.get_url(hass)}/api/yandex_station/{sid}/{uid}.{ext}"
+        _LOGGER.debug(f"Streaming URL: {local_url}")
+        return local_url
 
-    async def head(self, request: web.Request, sid: str, uid: str):
+    async def head(self, request: web.Request, sid: str, uid: str, ext: str):
         url: str = self.links.get(sid)
         if not url or hashlib.md5(url.encode()).hexdigest() != uid:
             return web.HTTPNotFound()
 
-        async with self.session.head(url) as r:
-            return web.Response(
-                headers={
-                    "Accept-Ranges": "bytes",
-                    # important for DLNA players
-                    "Content-Type": "audio/mpeg",
-                    # inportant for SamsungTV
-                    "Content-Length": r.headers["Content-Length"],
-                }
-            )
+        headers = {"Range": r} if (r := request.headers.get("Range")) else None
+        async with self.session.head(url, headers=headers) as r:
+            response = web.Response(status=r.status)
+            response.headers.update(r.headers)
+            # important for DLNA players
+            response.headers["Content-Type"] = MIME_TYPES[ext]
+            return response
 
-    async def get(self, request: web.Request, sid: str, uid: str):
+    async def get(self, request: web.Request, sid: str, uid: str, ext: str):
         url: str = self.links.get(sid)
         if not url or hashlib.md5(url.encode()).hexdigest() != uid:
             return web.HTTPNotFound()
 
         try:
-            rng = request.headers.get("Range")
-            headers = {"Range": rng} if rng else None
+            headers = {"Range": r} if (r := request.headers.get("Range")) else None
             async with self.session.get(url, headers=headers) as r:
-                response = web.StreamResponse()
+                response = web.StreamResponse(status=r.status)
                 response.headers.update(r.headers)
+                response.headers["Content-Type"] = MIME_TYPES[ext]
+
                 await response.prepare(request)
 
                 # same chunks as default web.FileResponse

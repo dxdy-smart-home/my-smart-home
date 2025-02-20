@@ -1,5 +1,6 @@
 import logging
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
@@ -36,8 +37,10 @@ class YandexEntity(Entity):
         self._attr_should_poll = False
         self._attr_unique_id = device["id"].replace("-", "")
 
+        device_id = i["device_id"] if (i := device.get("quasar_info")) else device["id"]
+
         self._attr_device_info: DeviceInfo = DeviceInfo(
-            identifiers={(DOMAIN, device["id"])},
+            identifiers={(DOMAIN, device_id)},
             name=self.device["name"],
             suggested_area=self.device.get("room_name"),
         )
@@ -85,6 +88,18 @@ class YandexEntity(Entity):
     async def async_update(self):
         device = await self.quasar.get_device(self.device)
         self.quasar.dispatch_update(device["id"], device)
+
+    async def device_action(self, instance: str, value):
+        try:
+            await self.quasar.device_action(self.device, instance, value)
+        except Exception as e:
+            raise HomeAssistantError(f"Device action failed: {repr(e)}")
+
+    async def device_actions(self, **kwargs):
+        try:
+            await self.quasar.device_actions(self.device, **kwargs)
+        except Exception as e:
+            raise HomeAssistantError(f"Device action failed: {repr(e)}")
 
 
 class YandexCustomEntity(YandexEntity):

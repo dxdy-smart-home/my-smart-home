@@ -37,11 +37,11 @@
                 "description": "[Siga estas instrucciones para encontrar la identificación de su dispositivo y la clave local.](https://github.com/make-all/tuya-local#finding-your-device-id-and-local-key)",
                 "data": {
                     "host": "Dirección IP o nombre de host",
-                    "device_id": "Identificación del dispositivo (device_id)",
+                    "device_id": "Identificación del dispositivo (device_id, o device_id de la puerta de enlace para dispositivos conectados a través de una puerta de enlace)",
                     "local_key": "Clave local (Local key)",
                     "protocol_version": "Versión del protocolo (pruebe automático si no lo sabe)",
                     "poll_only": "Solo encuesta (pruebe esto si su dispositivo no funciona completamente)",
-                    "device_cid": "Sub device ID (para dispositivos conectados a través de una puerta de enlace)"
+                    "device_cid": "Sub device node_id o uuid (para dispositivos conectados a través de una puerta de enlace)"
                 }
             },
             "select_type": {
@@ -87,8 +87,7 @@
                     "host": "Dirección IP o nombre de host",
                     "local_key": "Clave local (Local key)",
                     "protocol_version": "Versión del protocolo (pruebe automático si no lo sabe)",
-                    "poll_only": "Solo encuesta (pruebe esto si su dispositivo no funciona completamente)",
-                    "device_cid": "Sub device ID (para dispositivos conectados a través de una puerta de enlace)"
+                    "poll_only": "Solo encuesta (pruebe esto si su dispositivo no funciona completamente)"
                 }
             }
         },
@@ -101,6 +100,13 @@
     },
     "entity": {
         "binary_sensor": {
+            "direction": {
+                "name": "Dirección",
+                "state": {
+                    "off": "Entrante",
+                    "on": "Saliente"
+                }
+            },
             "defrost": {
                 "name": "Descongelar",
                 "state": {
@@ -122,9 +128,16 @@
                     "on": "Lleno"
                 }
             },
+            "wake": {
+                "name": "Despertar",
+                "state": {
+                    "off": "Dormido",
+                    "on": "Despierto"
+                }
+            },
             "casdon_oven_fault": {
                 "state_attributes": {
-                    "fault_message": {
+                    "description": {
                         "state": {
                             "e1": "E1: Protección contra sobrecalentamiento de la cámara (supera los 290°C)",
                             "e2": "E2: Protección contra sobrecalentamiento de la bandeja de evaporación (supera los 200°C)",
@@ -137,6 +150,14 @@
                         }
                     }
                 }
+            }
+        },
+        "button": {
+            "factory_reset": {
+                "name": "Restablecimiento de fábrica"
+            },
+            "filter_reset": {
+                "name": "Restablecimiento del filtro"
             }
         },
         "climate": {
@@ -165,6 +186,7 @@
                 }
             },
             "thermostat": {
+                "name": "Termostato",
                 "state_attributes": {
                     "fan_mode": {
                         "state": {
@@ -289,7 +311,8 @@
                             "medium": "Medio",
                             "high": "Alto",
                             "continuous": "Continuo",
-                            "intermittent": "Intermitente"
+                            "intermittent": "Intermitente",
+                            "timer": "Temporizador"
                         }
                     }
                 }
@@ -324,7 +347,9 @@
                             "sleep": "Dormir",
                             "auto": "Auto",
                             "eco": "Ecológico",
-                            "anti-condensation": "Anticondensación"
+                            "anti-condensation": "Anticondensación",
+                            "extractor": "Extractor",
+                            "heat_recovery": "Recuperación de calor"
                         }
                     }
                 }
@@ -363,47 +388,10 @@
         },
         "number": {
             "timer": {
-                "name": "Temporizador",
-                "state": {
-                    "cancel": "Cancelar",
-                    "30m": "30 minutos",
-                    "1h": "1 hora",
-                    "1h30m": "1 hora 30 minutos",
-                    "2h": "2 horas",
-                    "2h30m": "2 horas 30 minutos",
-                    "3h": "3 horas",
-                    "3h30m": "3 horas 30 minutos",
-                    "4h": "4 horas",
-                    "4h30m": "4 horas 30 minutos",
-                    "5h": "5 horas",
-                    "5h30m": "5 horas 30 minutos",
-                    "6h": "6 horas",
-                    "6h30m": "6 horas 30 minutos",
-                    "7h": "7 horas",
-                    "7h30m": "7 horas 30 minutos",
-                    "8h": "8 horas",
-                    "8h30m": "8 horas 30 minutos",
-                    "9h": "9 horas",
-                    "9h30m": "9 horas 30 minutos",
-                    "10h": "10 horas",
-                    "11h": "11 horas",
-                    "12h": "12 horas",
-                    "13h": "13 horas",
-                    "14h": "14 horas",
-                    "15h": "15 horas",
-                    "16h": "16 horas",
-                    "17h": "17 horas",
-                    "18h": "18 horas",
-                    "19h": "19 horas",
-                    "20h": "20 horas",
-                    "21h": "21 horas",
-                    "22h": "22 horas",
-                    "23h": "23 horas",
-                    "24h": "24 horas",
-                    "36h": "36 horas",
-                    "48h": "48 horas",
-                    "72h": "72 horas"
-                }
+                "name": "Temporizador"
+            },
+            "timer_x": {
+                "name": "Temporizador {x}"
             }
         },
         "select": {
@@ -462,6 +450,8 @@
                     "cake": "Pastel",
                     "bread": "Pan",
                     "toast": "Tostada",
+                    "sausage": "Salchicha",
+                    "dry_fruit": "Fruta seca",
                     "custom": "Personalizado",
                     "cloud_recipe": "Receta de la nube",
                     "default": "Predeterminado",
@@ -469,11 +459,34 @@
                     "preheat": "Precalentar"
                 }
             },
+            "scene": {
+                "name": "Escena",
+                "state": {
+                    "relax": "Relajarse",
+                    "movie": "Película",
+                    "party": "Fiesta",
+                    "romantic": "Romántico",
+                    "night": "Noche",
+                    "morning": "Mañana",
+                    "working": "Trabajando",
+                    "leisure": "Ocio",
+                    "vacation": "Vacaciones",
+                    "reading": "Leyendo",
+                    "twinkle": "Destello",
+                    "gaming": "Juegos",
+                    "none": "Ninguno"
+                }
+            },
             "timer": {
                 "name": "Temporizador",
                 "state": {
                     "cancel": "Cancelar",
+                    "continuous": "Continuo",
+                    "5m": "5 minutos",
+                    "10m": "10 minutos",
+                    "20m": "20 minutos",
                     "30m": "30 minutos",
+                    "40m": "40 minutos",
                     "1h": "1 hora",
                     "1h30m": "1 hora 30 minutos",
                     "2h": "2 horas",
@@ -557,6 +570,85 @@
             }
         },
         "sensor": {
+            "air_quality": {
+                "name": "Calidad del aire",
+                "state": {
+                    "excellent": "Excelente",
+                    "good": "Bueno",
+                    "moderate": "Moderado",
+                    "poor": "Malo",
+                    "severe": "Severo"
+                }
+            },
+            "status": {
+                "name": "Estado",
+                "state": {
+                    "available": "Disponible",
+                    "plugged_in": "Conectado",
+                    "fault_unplugged": "Error (desconectado)",
+                    "charging": "Cargando",
+                    "waiting": "Esperando",
+                    "charged": "Cargado",
+                    "fault": "Error",
+                    "paused": "Pausado",
+                    "waiting_for_authorization": "Esperando autorización",
+                    "standby": "En espera",
+                    "heating": "Calentando",
+                    "cooling": "Enfriando",
+                    "keeping_warm": "Manteniendo caliente",
+                    "no_water": "Sin agua",
+                    "boiling": "Hirviendo",
+                    "reserve_only": "Reserva solament",
+                    "unknown": "Desconocido",
+                    "idle": "Inactivo",
+                    "auto": "Automático",
+                    "manual": "Manual",
+                    "rain_delay": "Retraso por lluvia",
+                    "off": "Apagado",
+                    "cooking": "Cocinando",
+                    "done": "Hecho",
+                    "door_open": "Puerta abierta",
+                    "setting": "Ajustando",
+                    "pre_heating": "Precalentando",
+                    "scheduled": "Programado",
+                    "at_temperature": "A la temperatura",
+                    "done_stage_1": "Hecho etapa 1",
+                    "done_stage_2": "Hecho etapa 2",
+                    "done_stage_3": "Hecho etapa 3",
+                    "done_stage_4": "Hecho etapa 4",
+                    "done_stage_5": "Hecho etapa 5",
+                    "done_stage_6": "Hecho etapa 6",
+                    "done_stage_7": "Hecho etapa 7",
+                    "done_stage_8": "Hecho etapa 8",
+                    "done_stage_9": "Hecho etapa 9",
+                    "done_stage_10": "Hecho etapa 10",
+                    "no_food": "Sin comida",
+                    "jammed": "Atascado",
+                    "blocked": "Bloqueado",
+                    "feeding": "Alimentando",
+                    "feeding_complete": "Alimentación completa",
+                    "caking": "Formando una capa",
+                    "cleaning": "Limpiando",
+                    "sleep": "Durmiendo",
+                    "sterilizing": "Esterilizando",
+                    "deodorizing": "Desodorizando",
+                    "occupied": "Ocupado",
+                    "normal": "Normal",
+                    "low": "Bajo",
+                    "high": "Alto",
+                    "unwashed": "Sin lavar",
+                    "pre_washing": "Pre-lavado",
+                    "washing": "Lavando",
+                    "rinsing": "Enjuagando",
+                    "drying": "Secando",
+                    "air_purging": "Purificación de aire",
+                    "anti_freeze": "Anticongelante",
+                    "close": "Cerrado",
+                    "monitor": "Monitor",
+                    "working": "Trabajando",
+                    "warning": "Advertencia"
+                }
+            },
             "time_remaining": {
                 "name": "Tiempo restante"
             },
@@ -570,6 +662,37 @@
                     "done": "Cocción completada",
                     "pause": "Pausa en la cocción"
                 }
+            },
+            "water_level": {
+                "name": "Nivel de agua",
+                "state": {
+                    "full": "Lleno",
+                    "high": "Alto",
+                    "medium": "Medio",
+                    "low": "Bajo",
+                    "empty": "Vacío"
+                }
+            },
+            "energy_produced": {
+                "name": "Energía producida"
+            },
+            "energy_consumed": {
+                "name": "Energía consumida"
+            },
+            "energy_produced_x": {
+                "name": "Energía producida {x}"
+            },
+            "energy_consumed_x": {
+                "name": "Energía consumida {x}"
+            },
+            "current_x": {
+                "name": "Corriente {x}"
+            },
+            "voltage_x": {
+                "name": "Voltaje {x}"
+            },
+            "power_x": {
+                "name": "Potencia {x}"
             }
         },
         "switch": {
@@ -585,11 +708,25 @@
             "keytone": {
                 "name": "Tono del teclado"
             },
+            "outlet_x": {
+                "name": "Salida {x}"
+            },
             "sleep": {
                 "name": "Modo de suspensión"
             },
+            "switch_x": {
+                "name": "Interruptor {x}"
+            },
+            "electrolytic_sterilization": {
+                "name": "Esterilización electrolítica"
+            },
             "uv_sterilization": {
                 "name": "Esterilización UV"
+            }
+        },
+        "text": {
+            "scene": {
+                "name": "Escena"
             }
         }
     }

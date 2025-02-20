@@ -37,11 +37,13 @@
                 "description": "[اپنی ڈیوائس آئی ڈی اور لوکل کلید تلاش کرنے کے لیے ان ہدایات پر عمل کریں۔](https://github.com/make-all/tuya-local#finding-your-device-id-and-local-key)",
                 "data": {
                     "host": "IP ایڈریس یا میزبان نام",
-                    "device_id": "ڈیوائس کی شناخت",
+                    "or device_id of gateway for devices connected through gateway": "",
+                    
+                    "device_id": "ڈیوائس کی شناخت(یا گیٹ وے کے ذریعے منسلک آلات کے لیے ڈیوائس آئی ڈی)",
                     "local_key": "مقامی کلید",
                     "protocol_version": "پروٹوکول ورژن (اگر معلوم نہ ہو تو خود کار طریقے سے آزمائیں)",
                     "poll_only": "صرف پول کریں (اگر آپ کا آلہ مکمل طور پر کام نہیں کرتا ہے تو اسے آزمائیں)",
-                    "device_cid": "سب ڈیوائس آئی ڈی (گیٹ وے کے ذریعے منسلک آلات کے لیے)"
+                    "device_cid": "ذیلی آلہ کا node_id یا uuid (گیٹ وے کے ذریعے منسلک آلات کے لیے)"
                 }
             },
             "select_type": {
@@ -87,8 +89,8 @@
                     "host": "IP پتہ یا میزبان نام",
                     "local_key": "مقامی کلید",
                     "protocol_version": "پروٹوکول ورژن (اگر معلوم نہ ہو تو خود کار طریقے سے آزمائیں)",
-                    "poll_only": "صرف پول (اگر آپ کا آلہ پوری طرح کام نہیں کرتا ہے تو اسے آزمائیں)",
-                    "device_cid": "سب ڈیوائس آئی ڈی (گیٹ وے کے ذریعے منسلک آلات کے لیے)"
+                    "poll_only": "صرف پول (اگر آپ کا آلہ پوری طرح کام نہیں کرتا ہے تو اسے آزمائیں)"
+
                 }
             }
         },
@@ -101,6 +103,13 @@
     },
     "entity": {
         "binary_sensor": {
+            "direction": {
+                "name": "سمت",
+                "state": {
+                    "off": "آنے والی",
+                    "on": "جانب"
+                }
+            },
             "defrost": {
                 "name": "ڈیفروسٹ",
                 "state": {
@@ -122,9 +131,16 @@
                     "on": "مکمل"
                 }
             },
+            "wake": {
+                "name": "جاگنا",
+                "state": {
+                    "off": "سو رہا ہے",
+                    "on": "جاگ رہا ہے"
+                }
+            },
             "casdon_oven_fault": {
                 "state_attributes": {
-                    "fault_message": {
+                    "description": {
                         "state": {
                             "e1": "E1: Chamber overheat protection (exceeds 290°C)",
                             "e2": "E2: Evaporation tray overheat protection (exceeds 200°C)",
@@ -137,6 +153,14 @@
                         }
                     }
                 }
+            }
+        },
+        "button": {
+            "factory_reset": {
+                "name": "فیکٹری ری سیٹ"
+            },
+            "filter_reset": {
+                "name": "فلٹر ری سیٹ"
             }
         },
         "climate": {
@@ -165,6 +189,7 @@
                 }
             },
             "thermostat": {
+                "name": "تھرموسٹیٹ",
                 "state_attributes": {
                     "fan_mode": {
                         "state": {
@@ -289,7 +314,8 @@
                             "medium": "درمیانہ",
                             "high": "زیادہ",
                             "continuous": "مسلسل",
-                            "intermittent": "منقطع"
+                            "intermittent": "منقطع",
+                            "timer": "ٹائمر"
                         }
                     }
                 }
@@ -324,7 +350,9 @@
                             "sleep": "سونا",
                             "auto": "خود مختار",
                             "eco": "ایکو",
-                            "anti-condensation": "اینٹی کنڈینسیشن"
+                            "anti-condensation": "اینٹی کنڈینسیشن",
+                            "extractor": "نکالنے والا",
+                            "heat_recovery": "حرارتی بازیابی"
                         }
                     }
                 }
@@ -364,6 +392,9 @@
         "number": {
             "timer": {
                 "name": "ٹائمر"
+            },
+            "timer_x": {
+                "name": "ٹائمر {x}"
             }
         },
         "select": {
@@ -422,6 +453,8 @@
                     "cake": "کیک",
                     "bread": "روٹی",
                     "toast": "ٹوسٹ",
+                    "sausage": "سوسیج",
+                    "dry_fruit": "خشک پھل",
                     "custom": "اپنی مرضی",
                     "cloud_recipe": "کلاؤڈ ریسیپی",
                     "default": "پہلے سے طے شدہ",
@@ -429,11 +462,34 @@
                     "preheat": "پری ہیٹ"
                 }
             },
+            "scene": {
+                "name": "منظر",
+                "state": {
+                    "relax": "آرام",
+                    "movie": "فلم",
+                    "party": "پارٹی",
+                    "romantic": "رومانٹک",
+                    "night": "رات",
+                    "morning": "صبح",
+                    "working": "کام",
+                    "leisure": "فراغت",
+                    "vacation": "چھٹی",
+                    "reading": "پڑھائی",
+                    "twinkle": "چمک",
+                    "gaming": "گیمنگ",
+                    "none": "کوئی نہیں"
+                }
+            },
             "timer": {
                 "name": "ٹائمر",
                 "state": {
                     "cancel": "منسوخ کریں",
+                    "continuous": "مسلسل",
+                    "5m": "5 منٹ",
+                    "10m": "10 منٹ",
+                    "20m": "20 منٹ",
                     "30m": "30 منٹ",
+                    "40m": "40 منٹ",
                     "1h": "1 گھنٹہ",
                     "1h30m": "1 گھنٹہ 30 منٹ",
                     "2h": "2 گھنٹے",
@@ -517,6 +573,85 @@
             }
         },
         "sensor": {
+            "air_quality": {
+                "name": "ہوا کی معیار",
+                "state": {
+                    "excellent": "شاندار",
+                    "good": "اچھا",
+                    "moderate": "معتدل",
+                    "poor": "خراب",
+                    "severe": "شدید"
+                }
+            },
+            "status": {
+                "name": "حالت",
+                "state": {
+                    "available": "دستیاب",
+                    "plugged_in": "پلگ ان",
+                    "fault_unplugged": "خراب ہے، پلگ ان نہیں ہے",
+                    "charging": "چارجنگ",
+                    "waiting": "انتظار",
+                    "charged": "چارج ہوگیا",
+                    "fault": "خراب",
+                    "paused": "رکا ہوا",
+                    "waiting_for_authorization": "اجازت کے منتظر",
+                    "standby": "انتظار",
+                    "heating": "گرم ہو رہا ہے",
+                    "cooling": "ٹھنڈا ہو رہا ہے",
+                    "keeping_warm": "گرم رکھنا",
+                    "no_water": "پانی نہیں",
+                    "boiling": "ابال رہا ہے",
+                    "reserve_only": "صرف ریزرو",
+                    "unknown": "نامعلوم",
+                    "idle": "آرام",
+                    "auto": "خود کار",
+                    "manual": "دستی",
+                    "rain_delay": "بارش میں تاخیر",
+                    "off": "آف",
+                    "cooking": "پکانا",
+                    "done": "ہوگیا",
+                    "door_open": "دروازہ کھولا",
+                    "setting": "ترتیب",
+                    "pre_heating": "پری ہیٹنگ",
+                    "scheduled": "شیڈول",
+                    "at_temperature": "درجہ حرارت پر",
+                    "done_stage_1": "مرحلہ 1 مکمل",
+                    "done_stage_2": "مرحلہ 2 مکمل",
+                    "done_stage_3": "مرحلہ 3 مکمل",
+                    "done_stage_4": "مرحلہ 4 مکمل",
+                    "done_stage_5": "مرحلہ 5 مکمل",
+                    "done_stage_6": "مرحلہ 6 مکمل",
+                    "done_stage_7": "مرحلہ 7 مکمل",
+                    "done_stage_8": "مرحلہ 8 مکمل",
+                    "done_stage_9": "مرحلہ 9 مکمل",
+                    "done_stage_10": "مرحلہ 10 مکمل",
+                    "no_food": "کوئی کھانا نہیں",
+                    "jammed": "جیم ہوگیا",
+                    "blocked": "بلاک ہوگیا",
+                    "feeding": "خوراک دینا",
+                    "feeding_complete": "خوراک مکمل",
+                    "caking": "کیکنگ",
+                    "cleaning": "صفائی",
+                    "sleep": "سونا",
+                    "sterilizing": "نس بندی",
+                    "deodorizing": "بدبو دور کرنا",
+                    "occupied": "مصروف",
+                    "normal": "عام",
+                    "low": "کم",
+                    "high": "زیادہ",
+                    "unwashed": "نہ دھویا",
+                    "pre_washing": "پری واشنگ",
+                    "washing": "دھونا",
+                    "rinsing": "رنسنگ",
+                    "drying": "خشک کرنا",
+                    "air_purging": "ہوا کی صفائی",
+                    "anti_freeze": "اینٹی فریز",
+                    "close": "بند",
+                    "monitor": "مانیٹر",
+                    "working": "کام کر رہا ہے",
+                    "warning": "انتباہ"
+                }
+            },
             "time_remaining": {
                 "name": "بقیہ وقت"
             },
@@ -530,6 +665,37 @@
                     "done": "پکانا مکمل ہوگیا",
                     "pause": "پکانا معطل ہوگیا"
                 }
+            },
+            "water_level": {
+                "name": "پانی کی سطح",
+                "state": {
+                    "full": "مکمل",
+                    "high": "زیادہ",
+                    "medium": "درمیانہ",
+                    "low": "کم",
+                    "empty": "خالی"
+                }
+            },
+            "energy_produced": {
+                "name": "پیدا کردہ بجلی"
+            },
+            "energy_consumed": {
+                "name": "استعمال کردہ بجلی"
+            },
+            "energy_produced_x": {
+                "name": "پیدا کردہ بجلی {x}"
+            },
+            "energy_consumed_x": {
+                "name": "استعمال کردہ بجلی {x}"
+            },
+            "current_x": {
+                "name": "موجودہ {x}"
+            },
+            "voltage_x": {
+                "name": "وولٹیج {x}"
+            },
+            "power_x": {
+                "name": "پاور {x}"
             }
         },
         "switch": {
@@ -545,11 +711,25 @@
             "keytone": {
                 "name": "کی پیڈ ٹون"
             },
+            "outlet_x": {
+                "name": "آؤٹ لیٹ {x}"
+            },
             "sleep": {
                 "name": "سونا"
             },
+            "switch_x": {
+                "name": "سوئچ {x}"
+            },
+            "electrolytic_sterilization": {
+                "name": "الیکٹرولائٹک نس بندی"
+            },
             "uv_sterilization": {
                 "name": "UV نس بندی"
+            }
+        },
+        "text": {
+            "scene": {
+                "name": "منظر"
             }
         }
     }
