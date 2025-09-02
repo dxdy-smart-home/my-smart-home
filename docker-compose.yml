@@ -31,7 +31,7 @@ services:
       - ./nginx/auth:/etc/nginx/auth
   homeassistant:
     container_name: homeassistant
-    image: homeassistant/home-assistant:2025.5.3
+    image: homeassistant/home-assistant:2025.8.3
     restart: always
     privileged: true
     depends_on:
@@ -63,16 +63,16 @@ services:
     network_mode: host
     environment:
       - TZ=Europe/Moscow
-  esphome:
-    container_name: esphome
-    image: esphome/esphome:2023.4.2
-    volumes:
-      - ./esphome/config:/config
-    restart: always
-    privileged: true
-    network_mode: host
-    environment:
-      - TZ=Europe/Moscow
+#  esphome:
+#    container_name: esphome
+#    image: esphome/esphome:2025.6.3
+#    volumes:
+#      - ./esphome/config:/config
+#    restart: always
+#    privileged: true
+#    network_mode: host
+#    environment:
+#      - TZ=Europe/Moscow
   syncthing:
     image: syncthing/syncthing:1.29.2
     container_name: syncthing
