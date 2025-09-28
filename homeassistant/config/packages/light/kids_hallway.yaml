@@ -1,0 +1,65 @@
+kids_hallway_light_package:
+  template:
+    - binary_sensor:
+        - name: 0xa4c13826f3331a96_light
+          state: > 
+            {{ is_state('binary_sensor.0x00158d000465f6aa_occupancy', 'off') 
+              and is_state('switch.0xa4c13826f3331a96', 'on') 
+            }}
+          delay_on: 00:03:00
+
+  input_datetime:
+    kids_night_light_starts_at:
+      has_date: false
+      has_time: true
+      initial: '01:00'
+    kids_night_light_ends_at:
+      has_date: false
+      has_time: true
+      initial: '06:00'
+
+  automation:
+    - alias: 'Перевести ночник в коридоре детской на движение'
+      trigger:
+        platform: time
+        at: '01:00:00'
+      action:
+        - service: switch.turn_off
+          entity_id: switch.0xa4c13826f3331a96
+
+    - alias: 'Выключить ночник, если дети почистили утром зубы и забыли выключить свет'
+      trigger:
+        platform: time
+        at: '07:00:00'
+      action:
+        - service: switch.turn_off
+          entity_id: switch.0xa4c13826f3331a96
+
+    - alias: 'Включить/выключить ночник в коридоре перед детской через датчик движения'
+      trigger:
+        - platform: state
+          entity_id: binary_sensor.0x00158d000465f6aa_occupancy
+        - platform: state
+          entity_id: binary_sensor.0xa4c13826f3331a96_light
+      action:
+        - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.0x00158d000465f6aa_occupancy
+                state: 'on'
+              - condition: state
+                entity_id: switch.0xa4c13826f3331a96
+                state: 'off'
+              - condition: time
+                after: input_datetime.kids_night_light_starts_at
+                before: input_datetime.kids_night_light_ends_at
+            sequence:
+              - service: switch.turn_on
+                entity_id: switch.0xa4c13826f3331a96
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.0xa4c13826f3331a96_light
+                state: 'on'
+            sequence:
+                - service: switch.turn_off
+                  entity_id: switch.0xa4c13826f3331a96 
