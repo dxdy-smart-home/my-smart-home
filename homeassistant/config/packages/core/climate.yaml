@@ -21,11 +21,11 @@ climate_package:
         action:
           - service: climate.turn_on
             entity_id: climate.lytko_083a8d42f578_thermostat
-          - service: cover.set_cover_position
-            target:
-              entity_id: cover.drivent_875
-            data:
-              position: 10
+          # - service: cover.set_cover_position
+          #   target:
+          #     entity_id: cover.drivent_875
+          #   data:
+          #     position: 10
 
       - alias: Выключить утром теплый пол
         trigger:
