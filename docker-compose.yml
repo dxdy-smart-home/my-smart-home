@@ -52,13 +52,14 @@ services:
       - ./mqtt/ssl:/mosquitto/ssl
   zigbee2mqtt:
     container_name: zigbee2mqtt
-    image: koenkk/zigbee2mqtt:2.6.1
+    image: koenkk/zigbee2mqtt:2.6.2
     volumes:
       - ./zigbee2mqtt/data:/app/data
       - /run/udev:/run/udev:ro
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0
     restart: always
+    user: root
     privileged: true
     network_mode: host
     environment:

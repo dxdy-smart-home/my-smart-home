@@ -30,3 +30,6 @@ restore:
 
 ble_restart:
 	sudo hciconfig hci0 up
+
+usbId:
+	ls -l /dev/serial/by-id
