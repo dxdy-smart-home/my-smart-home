@@ -75,7 +75,7 @@ services:
 #    environment:
 #      - TZ=Europe/Moscow
   syncthing:
-    image: syncthing/syncthing:1.29.2
+    image: syncthing/syncthing:2.0.13
     container_name: syncthing
     environment:
       - PUID=1000
