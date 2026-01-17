@@ -13,7 +13,7 @@ climate_package:
       - alias: Включить утром теплый пол
         trigger:
             platform: time
-            at: "06:20:00"
+            at: "06:00:00"
         condition:
           condition: state
           entity_id: input_boolean.alarm_system
@@ -30,7 +30,7 @@ climate_package:
       - alias: Выключить утром теплый пол
         trigger:
             platform: time
-            at: "08:00:00"
+            at: "07:00:00"
         action:
           service: climate.turn_off
           entity_id: climate.lytko_083a8d42f578_thermostat
