@@ -9,20 +9,31 @@ from .yandex_quasar import YandexQuasar
 _LOGGER = logging.getLogger(__name__)
 
 
+def extract_instance(item: dict) -> str | None:
+    if item["type"] == "devices.capabilities.on_off":
+        return "on"
+    if item["type"] == "devices.capabilities.lock":
+        return "lock"
+    if item["type"] == "devices.capabilities.zigbee_node":
+        return "zigbee"
+    return item["parameters"].get("instance")
+
+
 def extract_parameters(items: list[dict]) -> dict:
     result = {}
     for item in items:
-        instance = item["parameters"].get("instance", "on")
-        result[instance] = {"retrievable": item["retrievable"], **item["parameters"]}
+        # skip none (unknown) instances
+        if instance := extract_instance(item):
+            result[instance] = {"retrievable": item["retrievable"], **item["parameters"]}
     return result
 
 
 def extract_state(items: list[dict]) -> dict:
     result = {}
     for item in items:
-        instance = item["parameters"].get("instance", "on")
-        value = item["state"]["value"] if item["state"] else None
-        result[instance] = value
+        if instance := extract_instance(item):
+            value = item["state"]["value"] if item["state"] else None
+            result[instance] = value
     return result
 
 
@@ -32,7 +43,8 @@ class YandexEntity(Entity):
         self.device = device
         self.config = config
 
-        self._attr_available = device["state"] == "online"
+        # "online", "unknown" or key not exist
+        self._attr_available = device.get("state") != "offline"
         self._attr_name = device["name"]
         self._attr_should_poll = False
         self._attr_unique_id = device["id"].replace("-", "")
@@ -50,18 +62,22 @@ class YandexEntity(Entity):
                 if value := device_info.get(key):
                     self._attr_device_info[key] = value
 
-        self.internal_init(
-            extract_parameters(device["capabilities"]),
-            extract_parameters(device["properties"]),
-        )
-        self.internal_update(
-            extract_state(device["capabilities"]), extract_state(device["properties"])
-        )
+        try:
+            self.internal_init(
+                extract_parameters(device["capabilities"]),
+                extract_parameters(device["properties"]),
+            )
+            self.internal_update(
+                extract_state(device["capabilities"]),
+                extract_state(device["properties"]),
+            )
+        except Exception as e:
+            _LOGGER.error("Device init failed: %s", repr(e))
 
         self.quasar.subscribe_update(device["id"], self.on_update)
 
     def on_update(self, device: dict):
-        self._attr_available = device["state"] == "online"
+        self._attr_available = device["state"] in ("online", "unknown")
 
         self.internal_update(
             extract_state(device["capabilities"]) if "capabilities" in device else {},
@@ -89,9 +105,9 @@ class YandexEntity(Entity):
         device = await self.quasar.get_device(self.device)
         self.quasar.dispatch_update(device["id"], device)
 
-    async def device_action(self, instance: str, value):
+    async def device_action(self, instance: str, value, relative=False):
         try:
-            await self.quasar.device_action(self.device, instance, value)
+            await self.quasar.device_action(self.device, instance, value, relative)
         except Exception as e:
             raise HomeAssistantError(f"Device action failed: {repr(e)}")
 
@@ -101,10 +117,17 @@ class YandexEntity(Entity):
         except Exception as e:
             raise HomeAssistantError(f"Device action failed: {repr(e)}")
 
+    async def device_color(self, **kwargs):
+        try:
+            await self.quasar.device_color(self.device, **kwargs)
+        except Exception as e:
+            raise HomeAssistantError(f"Device action failed: {repr(e)}")
+
 
 class YandexCustomEntity(YandexEntity):
     def __init__(self, quasar: YandexQuasar, device: dict, config: dict):
-        self.instance = config["parameters"]["instance"]
-        super().__init__(quasar, device)
-        self._attr_name += " " + config["parameters"]["name"]
+        self.instance = extract_instance(config)
+        super().__init__(quasar, device, config)
+        if name := config["parameters"].get("name"):
+            self._attr_name += " " + name
         self._attr_unique_id += " " + self.instance

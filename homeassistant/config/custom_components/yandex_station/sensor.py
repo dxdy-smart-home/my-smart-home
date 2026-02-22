@@ -12,9 +12,12 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfLength,
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfVolume,
 )
 
 from .core.entity import YandexCustomEntity
@@ -40,8 +43,11 @@ INCLUDE_TYPES = (
     "devices.types.smart_meter.gas",
     "devices.types.smart_meter.heat",
     "devices.types.smart_meter.hot_water",
-    "devices.types.smart_speaker.yandex.station.plum",
     "devices.types.socket",
+    "devices.types.remote_car",  # fuel_level, petrol_mileage
+    "devices.types.remote.ir",  # temperature, humidity
+    "devices.types.smart_speaker.yandex.station.pickle",  # co2_level, temp., hum.
+    "devices.types.smart_speaker.yandex.station.plum",  # battery
 )
 INCLUDE_PROPERTIES = ("devices.properties.float", "devices.properties.event")
 
@@ -74,6 +80,12 @@ ENTITY_DESCRIPTIONS: dict[str, dict] = {
     "food_level": {"class": SENSOR.ENUM},
     "water_level": {"class": SENSOR.ENUM},
     "water_leak": {"class": SENSOR.ENUM},
+    "electricity_meter": {"class": SENSOR.ENERGY, "units": UnitOfEnergy.KILO_WATT_HOUR},
+    "gas_meter": {"class": SENSOR.GAS, "units": UnitOfVolume.CUBIC_METERS},
+    "water_meter": {"class": SENSOR.WATER, "units": UnitOfVolume.CUBIC_METERS},
+    # there is no better option than a battery for fuel_level
+    "fuel_level": {"class": SENSOR.BATTERY, "units": PERCENTAGE},
+    "petrol_mileage": {"class": SENSOR.DISTANCE, "units": UnitOfLength.KILOMETERS},
 }
 
 
@@ -105,6 +117,11 @@ class YandexCustomSensor(SensorEntity, YandexCustomEntity):
             if "units" in desc:
                 self._attr_native_unit_of_measurement = desc["units"]
                 self._attr_state_class = SensorStateClass.MEASUREMENT
+        try:
+            if self.config["parameters"]["range"]["precision"] == 1:
+                self._attr_suggested_display_precision = 0
+        except KeyError:
+            pass
 
     def internal_update(self, capabilities: dict, properties: dict):
         if self.instance in properties:

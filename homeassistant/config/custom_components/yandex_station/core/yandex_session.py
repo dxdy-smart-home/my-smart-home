@@ -116,6 +116,10 @@ class BasicSession:
     def closed(self):
         return self._session.closed
 
+    @property
+    def client_session(self):
+        return self._session
+
 
 # noinspection PyPep8
 class YandexSession(BasicSession):
@@ -139,6 +143,9 @@ class YandexSession(BasicSession):
         :param cookie: optional base64 cookie from last session
         """
         self._session = session
+
+        # fix bug with wrong CSRF token response
+        setattr(session.cookie_jar, "_quote_cookie", False)
 
         self.x_token = x_token
         self.music_token = music_token

@@ -2,13 +2,14 @@ import logging
 
 from homeassistant.components.switch import SwitchEntity
 
-from .core.entity import YandexEntity
+from .core.entity import YandexCustomEntity, YandexEntity, extract_instance
 from .core.yandex_quasar import YandexQuasar
 from .hass import hass_utils
 
 _LOGGER = logging.getLogger(__name__)
 
 INCLUDE_TYPES = (
+    "devices.types.remote_car",
     "devices.types.switch",
     "devices.types.socket",
     "devices.types.ventilation",
@@ -28,7 +29,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             for instance in device["capabilities"]:
                 if instance["type"] not in INCLUDE_CAPABILITIES:
                     continue
-                if instance["parameters"].get("instance", "on") in instances:
+                if extract_instance(instance) in instances:
                     entities.append(YandexCustomSwitch(quasar, device, instance))
 
     async_add_entities(entities)
@@ -49,10 +50,6 @@ class YandexSwitch(SwitchEntity, YandexEntity):
         await self.device_action(self.instance, False)
 
 
-class YandexCustomSwitch(YandexSwitch):
+class YandexCustomSwitch(YandexSwitch, YandexCustomEntity):
     def __init__(self, quasar: YandexQuasar, device: dict, config: dict):
-        self.instance = config["parameters"].get("instance", "on")
-        super().__init__(quasar, device)
-        if name := config["parameters"].get("name"):
-            self._attr_name += " " + name
-        self._attr_unique_id += " " + self.instance
+        YandexCustomEntity.__init__(self, quasar, device, config)

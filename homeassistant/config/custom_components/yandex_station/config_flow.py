@@ -70,7 +70,10 @@ class YandexStationFlowHandler(ConfigFlow, domain=DOMAIN):
         if method == "qr":
             return self.async_show_form(
                 step_id="qr",
-                description_placeholders={"qr_url": await self.yandex.get_qr()},
+                description_placeholders={
+                    "qr_url": await self.yandex.get_qr(),
+                    "ya_url": "https://passport.yandex.ru/profile",
+                },
             )
 
         if method == "auth":
@@ -87,21 +90,24 @@ class YandexStationFlowHandler(ConfigFlow, domain=DOMAIN):
         if method == "email":
             return self.async_show_form(
                 step_id=method,
-                data_schema=vol.Schema(
-                    {
-                        vol.Required("username"): str,
-                    }
-                ),
+                data_schema=vol.Schema({vol.Required("username"): str}),
+            )
+
+        if method == "cookies":
+            return self.async_show_form(
+                step_id=method,
+                data_schema=vol.Schema({vol.Required(method): str}),
+                description_placeholders={
+                    # hassfest prohibits the use of links in translation files
+                    "ex_url": "https://chrome.google.com/webstore/detail/copy-cookies/jcbpglbplpblnagieibnemmkiamekcdg",
+                    "ya_url": "https://passport.yandex.ru/profile",
+                },
             )
 
         # cookies, token
         return self.async_show_form(
             step_id=method,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(method): str,
-                }
-            ),
+            data_schema=vol.Schema({vol.Required(method): str}),
         )
 
     async def async_step_qr(self, user_input):
@@ -225,10 +231,7 @@ class OptionsFlowHandler(OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         quasar: YandexQuasar = self.hass.data[DOMAIN][self.config_entry.unique_id]
-        devices = {
-            p["id"]: f"{p['room_name']}: {p['name']}" if "room_name" in p else p["name"]
-            for p in quasar.devices
-        }
+        devices = {i["id"]: device_name(i) for i in quasar.devices}
 
         # sort by names
         devices = dict(sorted(devices.items(), key=lambda x: x[1]))
@@ -248,3 +251,9 @@ def vol_schema(schema: dict, defaults: dict | None) -> vol.Schema:
             if (value := defaults.get(key.schema)) is not None:
                 key.default = vol.default_factory(value)
     return vol.Schema(schema)
+
+
+def device_name(device: dict) -> str:
+    if room := device.get("room_name"):
+        return f"{device['house_name']} - {room} - {device['name']}"
+    return f"{device['house_name']} - {device['name']}"
