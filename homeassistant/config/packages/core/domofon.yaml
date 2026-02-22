@@ -1,13 +1,13 @@
 domofon_package:
-    lock:
-      - platform: template
-        name: domofon_door
-        unique_id: domofon_door
-        value_template: "{{ states('select.0x00124b00180597b4_mode') == 'never' or states('select.0x00124b00180597b4_mode') == 'drop' }}"
-        lock:
-          - service: script.reject_domofon
-        unlock:
-          - service: script.accept_domofon
+    template:
+      - lock:
+        - name: domofon_door
+          unique_id: domofon_door
+          state: "{{ states('select.0x00124b00180597b4_mode') == 'never' or states('select.0x00124b00180597b4_mode') == 'drop' }}"
+          lock:
+            - service: script.reject_domofon
+          unlock:
+            - service: script.accept_domofon
 
     script:
       accept_domofon:
