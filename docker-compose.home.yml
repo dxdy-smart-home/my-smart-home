@@ -7,16 +7,16 @@ services:
       - TZ=Europe/Moscow
     volumes:
       - ./torrserver/db:/TS/db
-  nginx_certbot:
-    container_name: nginx_certbot
-    image: mrdxdy/nginx-certbot:0.1.2
+  caddy:
+    container_name: caddy
+    image: caddy:2.11.1-alpine
     restart: always
     network_mode: host
     volumes:
-      - ./certbot/letsencrypt:/etc/letsencrypt
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./homeassistant/config:/homeassistant
-      - ./nginx/auth:/etc/nginx/auth
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/data:/data
+      - ./caddy/config:/config
+      - ./caddy/auth:/etc/caddy/auth
   homeassistant:
     container_name: homeassistant
     image: homeassistant/home-assistant:2026.2.3

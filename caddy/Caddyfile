@@ -1,0 +1,31 @@
+esphome.mr-dxdy.ru {
+    import /etc/caddy/auth/users.caddy
+
+    reverse_proxy 127.0.0.1:6052
+}
+
+ha.mr-dxdy.ru {
+    reverse_proxy 127.0.0.1:8123
+}
+
+sync.mr-dxdy.ru {
+    reverse_proxy localhost:8384 {
+        header_up Host localhost
+        transport http {
+            read_timeout 10m
+            write_timeout 10m
+        }
+    }
+}
+
+torr.mr-dxdy.ru {
+    import /etc/caddy/auth/users.caddy
+    
+    reverse_proxy 127.0.0.1:8090
+}
+
+z2m.mr-dxdy.ru {
+    import /etc/caddy/auth/users.caddy
+
+    reverse_proxy 127.0.0.1:8080
+}
