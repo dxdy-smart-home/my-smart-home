@@ -10,7 +10,7 @@ system_alarm_package:
             entity_id: binary_sensor.0x000d6f0010dce129_gas
             to: 'on'
         action:
-          - service: notify.telegram_family
+          - service: notify.mobile_app_family
             data:
               message: На кухне утечка газа!
 
@@ -23,7 +23,7 @@ system_alarm_package:
             minutes: 5
         - data:
             message: Умный дом запущен
-          service: notify.telegram_dxdy
+          service: notify.mobile_app_dxdy
           
       - alias: Кто-то проник в дом
         trigger:
@@ -37,7 +37,7 @@ system_alarm_package:
         action:
         - data:
             message: Кто-то проник в дом
-          service: notify.telegram_family
+          service: notify.mobile_app_family
 
       - alias: Протечка на кухне
         trigger: 
@@ -47,7 +47,7 @@ system_alarm_package:
         action:
         - data:
             message: На кухне протечка
-          service: notify.telegram_family
+          service: notify.mobile_app_family
 
       - id: '1576001180625'
         alias: Протечка в ванной
@@ -62,7 +62,7 @@ system_alarm_package:
         action:
         - data:
             message: В ванной протечка
-          service: notify.telegram_family
+          service: notify.mobile_app_family
 
       - alias: Протечка в душевой
         description: ''
@@ -74,4 +74,4 @@ system_alarm_package:
         action:
         - data:
             message: В душевой комнате протечка
-          service: notify.telegram_family
+          service: notify.mobile_app_family

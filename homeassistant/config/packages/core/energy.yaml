@@ -117,15 +117,10 @@ energy_package:
       month: "{{ states('sensor.locale_month') }}"
       year: "{{ now().year }}"
     action:
-      - service: notify.telegram_dxdy
+      - service: notify.smtp_dxdy
         data:
+          title: "{{ energy_report_title }}"
           message: |
-            *Заголовок письма*
-            `
-            {{ energy_report_title }}
-            `
-            *Тело письма*
-            `
             {{ energy_report_header }}
             Дата сдачи показаний: {{ day }} {{ month }} {{ year }}
 
@@ -136,4 +131,3 @@ energy_package:
             Счетчик ХВС кухня: {{  states('sensor.bath_cold_water') | int }}
             Счетчик газа: {{ states('sensor.gas') | int }}
             Электроснабжение: {{ states('sensor.power') | int }}
-            `

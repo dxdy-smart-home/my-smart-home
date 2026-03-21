@@ -6,7 +6,7 @@ calendar_package:
             event: start
             entity_id: calendar.holidays
         action:
-          - service: notify.telegram_family
+          - service: notify.mobile_app_family
             data:
               message: |
                 Не забудь, что сегодня:
@@ -36,7 +36,7 @@ calendar_package:
             offset: "-23:59:59"
             entity_id: calendar.holidays
         action:
-          - service: notify.telegram_family
+          - service: notify.mobile_app_family
             data:
               message: |
                 Не забудь, что завтра:

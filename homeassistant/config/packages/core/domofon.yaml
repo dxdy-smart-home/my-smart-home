@@ -38,7 +38,7 @@ domofon_package:
 
     # Idea from https://github.com/Anonym-tsk/smart-domofon/blob/master/ge1mer/homeassistant/domofon.yaml
     automation:
-      - alias: Domofon incoming call notification
+      - alias: Управление домофоном через mobile app
         initial_state: true
         trigger:
           # Обнаружен звонок
@@ -59,7 +59,7 @@ domofon_package:
                         state: 'always'
                 sequence:
                   # Отправить уведомление
-                  - service: notify.telegram_family
+                  - service: notify.mobile_app_family
                     data:
                       message: "Звонок в домофон (откроется автоматически)"
               # Включён режим авто-отклонить
@@ -69,26 +69,29 @@ domofon_package:
                     state: 'drop'
                 sequence:
                   # Отправить уведомление
-                  - service: notify.telegram_family
+                  - service: notify.mobile_app_family
                     data:
                       message: "Звонок в домофон (отклонится автоматически)"
             default:
               # Отправить уведомление с кнопками Открыть/Отклонить
-              - service: notify.telegram_family
+              - service: notify.mobile_app_family
                 data:
                   message: "Звонок в домофон"
                   data:
-                    inline_keyboard:
-                      - "{{ 'Открыть:/domofon_open, Отклонить:/domofon_reject' }}"
+                    actions:
+                      - action: DOMOFON_OPEN
+                        title: "Открыть"
+                      - action: DOMOFON_REJECT
+                        title: "Отклонить"
 
-      - alias: Telegram /domofon_open callback
+      - alias: Mobile app /domofon_open callback
         initial_state: true
         trigger:
-          # Из телеграмма пришла команда Открыть
+          # Из телефона пришла команда Открыть
           - platform: event
-            event_type: telegram_callback
+            event_type: mobile_app_notification_action
             event_data:
-              data: '/domofon_open'
+              action: DOMOFON_OPEN
         action:
           - choose:
               # Идет звонок
@@ -98,25 +101,25 @@ domofon_package:
                     state: 'ring'
                 sequence:
                   # Отправить подтверждение о намерении открыть
-                  - service: notify.telegram_family
+                  - service: notify.mobile_app_family
                     data:
                       message: "Открываю..."
                   # Открыть
                   - service: script.accept_domofon
             default:
               # Отправить ответ, что нету звонка
-              - service: notify.telegram_family
+              - service: notify.mobile_app_family
                 data:
                   message: "Нет входящего звонка"
 
-      - alias: Telegram /domofon_reject callback
+      - alias: Mobile app /domofon_reject callback
         initial_state: true
         trigger:
-          # Из телеграмма пришла команда Отклонить
+          # Из телефона пришла команда Отклонить
           - platform: event
-            event_type: telegram_callback
+            event_type: mobile_app_notification_action
             event_data:
-              data: '/domofon_reject'
+              action: DOMOFON_REJECT
         action:
           - choose:
               # Идет звонок
@@ -126,32 +129,115 @@ domofon_package:
                     state: 'ring'
                 sequence:
                   # Отправить подтверждение о намерении отклонить
-                  - service: notify.telegram_family
+                  - service: notify.mobile_app_family
                     data:
                       message: "Отклоняю..."
                   # Отклонить
                   - service: script.reject_domofon
             default:
               # Отправить ответ, что нету звонка
-              - service: notify.telegram_family
+              - service: notify.mobile_app_family
                 data:
                   message: "Нет входящего звонка"
 
-      - alias: 'Выключить звук домофона в обеденный сон'
-        trigger:
-          - platform: time
-            at: '12:30'
-        action:
-          - service: switch.turn_off
-            entity_id: switch.0x00124b00180597b4_sound
+      # - alias: Управление домофном через telegram
+      #   initial_state: true
+      #   trigger:
+      #     # Обнаружен звонок
+      #     - platform: state
+      #       entity_id: sensor.0x00124b00180597b4_state
+      #       to: 'ring'
+      #   action:
+      #     - choose:
+      #         # Включён режим авто-открыть или авто-открыть-один-раз
+      #         - conditions:
+      #             - condition: or
+      #               conditions:
+      #                 - condition: state
+      #                   entity_id: select.0x00124b00180597b4_mode
+      #                   state: 'once'
+      #                 - condition: state
+      #                   entity_id: select.0x00124b00180597b4_mode
+      #                   state: 'always'
+      #           sequence:
+      #             # Отправить уведомление
+      #             - service: notify.telegram_family
+      #               data:
+      #                 message: "Звонок в домофон (откроется автоматически)"
+      #         # Включён режим авто-отклонить
+      #         - conditions:
+      #             - condition: state
+      #               entity_id: select.0x00124b00180597b4_mode
+      #               state: 'drop'
+      #           sequence:
+      #             # Отправить уведомление
+      #             - service: notify.telegram_family
+      #               data:
+      #                 message: "Звонок в домофон (отклонится автоматически)"
+      #       default:
+      #         # Отправить уведомление с кнопками Открыть/Отклонить
+      #         - service: notify.telegram_family
+      #           data:
+      #             message: "Звонок в домофон"
+      #             data:
+      #               inline_keyboard:
+      #                 - "{{ 'Открыть:/domofon_open, Отклонить:/domofon_reject' }}"
 
-      - alias: 'Включить звук домофона после обеденного сона'
-        trigger:
-          - platform: time
-            at: '16:30'
-        action:
-          - service: switch.turn_on
-            entity_id: switch.0x00124b00180597b4_sound
+      # - alias: Telegram /domofon_open callback
+      #   initial_state: true
+      #   trigger:
+      #     # Из телеграмма пришла команда Открыть
+      #     - platform: event
+      #       event_type: telegram_callback
+      #       event_data:
+      #         data: '/domofon_open'
+      #   action:
+      #     - choose:
+      #         # Идет звонок
+      #         - conditions:
+      #             - condition: state
+      #               entity_id: sensor.0x00124b00180597b4_state
+      #               state: 'ring'
+      #           sequence:
+      #             # Отправить подтверждение о намерении открыть
+      #             - service: notify.telegram_family
+      #               data:
+      #                 message: "Открываю..."
+      #             # Открыть
+      #             - service: script.accept_domofon
+      #       default:
+      #         # Отправить ответ, что нету звонка
+      #         - service: notify.telegram_family
+      #           data:
+      #             message: "Нет входящего звонка"
+
+      # - alias: Telegram /domofon_reject callback
+      #   initial_state: true
+      #   trigger:
+      #     # Из телеграмма пришла команда Отклонить
+      #     - platform: event
+      #       event_type: telegram_callback
+      #       event_data:
+      #         data: '/domofon_reject'
+      #   action:
+      #     - choose:
+      #         # Идет звонок
+      #         - conditions:
+      #             - condition: state
+      #               entity_id: sensor.0x00124b00180597b4_state
+      #               state: 'ring'
+      #           sequence:
+      #             # Отправить подтверждение о намерении отклонить
+      #             - service: notify.telegram_family
+      #               data:
+      #                 message: "Отклоняю..."
+      #             # Отклонить
+      #             - service: script.reject_domofon
+      #       default:
+      #         # Отправить ответ, что нету звонка
+      #         - service: notify.telegram_family
+      #           data:
+      #             message: "Нет входящего звонка"
 
       - alias: 'Выключить звук домофона на ночь'
         trigger:

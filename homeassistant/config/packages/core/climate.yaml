@@ -6,7 +6,7 @@ climate_package:
             entity_id: switch.0x00124b0024c33795
             to: 'on'
         action:
-          - service: notify.telegram_family
+          - service: notify.mobile_app_family
             data:
               message: Обогреватель в душевой включен 
 
