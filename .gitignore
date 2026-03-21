@@ -27,6 +27,7 @@
 /homeassistant/config/www/community/*
 /homeassistant/config/.ha_run.lock b/*
 /homeassistant/config/.ha_run.lock
+/homeassistant/config/.cache/
 
 /zigbee2mqtt/data/*
 !/zigbee2mqtt/data/configuration.yaml.sample
