@@ -1,44 +1,5 @@
 bedroom_light_package:
-  yeelight:
-    devices:
-      192.168.1.6:
-        name: Свет в спальне
-        save_on_change: true
-
-  script:
-    set_comfortable_light:
-      sequence:
-        - service: light.turn_on
-          data_template:
-            entity_id: light.svet_v_spalne
-            color_temp_kelvin: > 
-              {% if states.sun.sun.state == "above_horizon" %} 
-                {{ 6500 }} 
-              {% else  %} 
-                {{ 2000 }} 
-              {% endif %}
-            brightness: >
-              {% if states.sun.sun.state == "above_horizon" %}
-                {{ 255 }}
-              {% else %}
-                {{ 1 }}
-              {% endif %}
-
   automation:
-    - alias: 'Если свет в спальне включили через FLEX выключатель'
-      mode: single
-      trigger:
-        - platform: state
-          entity_id: light.svet_v_spalne
-          to: 'on'
-      condition:
-        - condition: template
-          value_template: '{{ trigger.to_state.context.user_id is none }}'
-        - condition: template
-          value_template: '{{ trigger.to_state.context.parent_id is none }}'
-      action:
-        - service: script.set_comfortable_light
-
     - alias: 'Включить ночник'
       mode: queued
       max: 5
@@ -54,10 +15,9 @@ bedroom_light_package:
           - condition: template
             value_template: "{{trigger.to_state.attributes.event_type == 'single'}}"
       action:
-        - service: yeelight.set_mode
+        - service: switch.turn_on
           data:
-            entity_id: light.svet_v_spalne
-            mode: moonlight
+            entity_id: switch.0xa4c138a8528e6d04_right
 
     - alias: 'Включить свет в спальне'
       mode: queued
@@ -74,7 +34,9 @@ bedroom_light_package:
           - condition: template
             value_template: "{{trigger.to_state.attributes.event_type == 'double'}}"
       action:
-        - service: script.set_comfortable_light
+        - service: switch.turn_on
+          data:
+            entity_id: switch.0xa4c138a8528e6d04_left
 
     - alias: 'Выключить свет в спальне'
       mode: queued
@@ -91,5 +53,7 @@ bedroom_light_package:
           - condition: template
             value_template: "{{trigger.to_state.attributes.event_type == 'hold'}}"
       action:
-        - service: light.turn_off
-          entity_id: light.svet_v_spalne    
+        - service: switch.turn_off
+          entity_id:
+            - switch.0xa4c138a8528e6d04_left
+            - switch.0xa4c138a8528e6d04_right 
