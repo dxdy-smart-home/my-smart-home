@@ -149,7 +149,7 @@ def parse_govee(self, data: str, service_class_uuid16: int, local_name: str, mac
                 data.hex()
             )
     elif msg_length == 13 and (
-        service_class_uuid16 == 0x5178
+        service_class_uuid16 == 0x5179
         or device_id == 0x8801
     ):
         device_type = "H5179"
@@ -210,6 +210,18 @@ def parse_govee(self, data: str, service_class_uuid16: int, local_name: str, mac
             "temperature alarm probe 1": decode_temps_probes(high_temp_alarm_1),
             "temperature probe 2": decode_temps_probes(temp_probe_2),
             "temperature alarm probe 2": decode_temps_probes(high_temp_alarm_2),
+        })
+    elif msg_length == 24 and (
+            service_class_uuid16 == 0x5191
+            or device_id == 0xAC63
+    ):
+        device_type = "H5191"
+        (temp_probe_1, high_temp_alarm_1, _, temp, _, _) = unpack(
+            ">hhhhhh", data[12:24])
+        result.update({
+            "temperature probe 1": decode_temps_probes(temp_probe_1),
+            "temperature alarm probe 1": decode_temps_probes(high_temp_alarm_1),
+            "temperature": decode_temps_probes(temp),
         })
     elif msg_length == 24 and service_class_uuid16 == 0x5198:
         device_type = "H5198"

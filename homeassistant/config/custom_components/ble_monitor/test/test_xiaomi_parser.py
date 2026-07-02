@@ -2,10 +2,29 @@
 import datetime
 
 from ble_monitor.ble_parser import BleParser
+from ble_monitor.ble_parser.xiaomi import obj4851, obj4852
 
 
 class TestXiaomi:
     """Tests for the Xiaomi parser"""
+
+    def test_obj4851_valid_duration(self):
+        """Test obj4851 parser with a valid 4-byte payload."""
+        assert obj4851(bytes.fromhex("05000000")) == {"duration occupancy detected": 5}
+
+    def test_obj4851_invalid_duration_length(self):
+        """Test obj4851 parser with malformed payload lengths."""
+        assert obj4851(bytes.fromhex("050000")) == {}
+        assert obj4851(bytes.fromhex("0500000001")) == {}
+
+    def test_obj4852_valid_duration(self):
+        """Test obj4852 parser with a valid 4-byte payload."""
+        assert obj4852(bytes.fromhex("0a000000")) == {"duration no occupancy detected": 10}
+
+    def test_obj4852_invalid_duration_length(self):
+        """Test obj4852 parser with malformed payload lengths."""
+        assert obj4852(bytes.fromhex("0a0000")) == {}
+        assert obj4852(bytes.fromhex("0a00000001")) == {}
 
     def test_Xiaomi_LYWSDCGQ(self):
         """Test Xiaomi parser for LYWSDCGQ."""
@@ -957,7 +976,7 @@ class TestXiaomi:
         assert sensor_msg["illuminance"] == 173.0
         assert sensor_msg["rssi"] == -58
 
-    def test_linptech_ES3_motion(self):
+    def test_linptech_ES3_occupancy(self):
         """Test Xiaomi parser for linptech ES3."""
         self.aeskeys = {}
         data_string = "043E290201000176c3c738c1a41D020106191695fe5859fb50da76c3c738c1a4aabc4c16000000c60c1646C6"
@@ -980,8 +999,34 @@ class TestXiaomi:
         assert sensor_msg["mac"] == "A4C138C7C376"
         assert sensor_msg["packet"] == 218
         assert sensor_msg["data"]
-        assert sensor_msg["motion"] == 1
-        assert sensor_msg["motion timer"] == 1
+        assert sensor_msg["occupancy"] == 1
+        assert sensor_msg["rssi"] == -58
+
+    def test_linptech_ES3_data_only_motion_clear(self):
+        """Test Xiaomi parser for linptech ES3 data-only frame."""
+        self.aeskeys = {}
+        # This is a real data-only frame for ES3 with MAC A4:C1:38:A4:88:8A
+        data_string = "043e29020100018a88a438c1a41d020106191695fe5859fb50328a88a438c1a4458a85b796000048fe13bac6"
+        data = bytes(bytearray.fromhex(data_string))
+
+        aeskey = "fb352ea2139ab095877a9e2ae600c912"
+
+        is_ext_packet = True if data[3] == 0x0D else False
+        mac = (data[8 if is_ext_packet else 7:14 if is_ext_packet else 13])[::-1]
+        mac_address = mac.hex()
+        p_mac = bytes.fromhex(mac_address.replace(":", "").lower())
+        p_key = bytes.fromhex(aeskey.lower())
+        self.aeskeys[p_mac] = p_key
+        # pylint: disable=unused-variable
+        ble_parser = BleParser(aeskeys=self.aeskeys)
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
+
+        assert sensor_msg["firmware"] == "Xiaomi (MiBeacon V5 encrypted)"
+        assert sensor_msg["type"] == "ES3"
+        assert sensor_msg["mac"] == "A4C138A4888A"
+        assert sensor_msg["packet"] == 50
+        assert sensor_msg["data"]
+        assert sensor_msg["occupancy"] == 0  # Should be implicitly set to 0 for data-only frames
         assert sensor_msg["rssi"] == -58
 
     def test_MJZNZ018H_bed_occupancy(self):
@@ -1169,6 +1214,90 @@ class TestXiaomi:
         assert sensor_msg["one btn switch"] == "toggle"
         assert sensor_msg["button switch"] == "single press"
         assert sensor_msg["rssi"] == -52
+
+    def test_Xiaomi_PTX_F1_Display_single_press(self):
+        """Test Xiaomi parser for PTX-F1-Display single press on switch 4."""
+        self.aeskeys = {}
+        data_string = "043E3E0201000066554433221132020106191695FE5859C5642D6655443322112D9475BB270100AB9CBFA914093039303631352E72656D6F74652E7831737764C6".replace(" ", "")
+        data = bytes(bytearray.fromhex(data_string))
+
+        aeskey = "00112233445566778899aabbccddeeff"
+
+        is_ext_packet = True if data[3] == 0x0D else False
+        mac = (data[8 if is_ext_packet else 7:14 if is_ext_packet else 13])[::-1]
+        mac_address = mac.hex()
+        p_mac = bytes.fromhex(mac_address.replace(":", "").lower())
+        p_key = bytes.fromhex(aeskey.lower())
+        self.aeskeys[p_mac] = p_key
+        # pylint: disable=unused-variable
+        ble_parser = BleParser(aeskeys=self.aeskeys)
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
+
+        assert sensor_msg["firmware"] == "Xiaomi (MiBeacon V5 encrypted)"
+        assert sensor_msg["type"] == "PTX-F1-Display"
+        assert sensor_msg["mac"] == "112233445566"
+        assert sensor_msg["packet"] == 45
+        assert sensor_msg["data"]
+        assert sensor_msg["four btn switch 4"] == "toggle"
+        assert sensor_msg["button switch"] == "single press"
+        assert sensor_msg["rssi"] == -58
+        assert sensor_msg["local_name"] == "090615.remote.x1swd"
+
+    def test_Xiaomi_PTX_F1_Display_temperature(self):
+        """Test Xiaomi parser for PTX-F1-Display temperature."""
+        self.aeskeys = {}
+        data_string = (
+            "043E29020100006655443322111D020106191695FE5859C56433665544332211997B546B0C01009089C35AC4"
+        ).replace(" ", "")
+        data = bytes(bytearray.fromhex(data_string))
+
+        aeskey = "00112233445566778899aabbccddeeff"
+
+        is_ext_packet = True if data[3] == 0x0D else False
+        mac = (data[8 if is_ext_packet else 7:14 if is_ext_packet else 13])[::-1]
+        mac_address = mac.hex()
+        p_mac = bytes.fromhex(mac_address.replace(":", "").lower())
+        p_key = bytes.fromhex(aeskey.lower())
+        self.aeskeys[p_mac] = p_key
+        # pylint: disable=unused-variable
+        ble_parser = BleParser(aeskeys=self.aeskeys)
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
+
+        assert sensor_msg["firmware"] == "Xiaomi (MiBeacon V5 encrypted)"
+        assert sensor_msg["type"] == "PTX-F1-Display"
+        assert sensor_msg["mac"] == "112233445566"
+        assert sensor_msg["packet"] == 51
+        assert sensor_msg["data"]
+        assert sensor_msg["temperature"] == 25
+        assert sensor_msg["rssi"] == -60
+        assert sensor_msg["local_name"] == ""
+
+    def test_Xiaomi_PTX_F1_Display_humidity(self):
+        """Test Xiaomi parser for PTX-F1-Display humidity."""
+        self.aeskeys = {}
+        data_string = "043E29020100006655443322111D020106191695FE5859C56433665544332211D67B54550C01001D8F98BBC4".replace(" ", "")
+        data = bytes(bytearray.fromhex(data_string))
+
+        aeskey = "00112233445566778899aabbccddeeff"
+
+        is_ext_packet = True if data[3] == 0x0D else False
+        mac = (data[8 if is_ext_packet else 7:14 if is_ext_packet else 13])[::-1]
+        mac_address = mac.hex()
+        p_mac = bytes.fromhex(mac_address.replace(":", "").lower())
+        p_key = bytes.fromhex(aeskey.lower())
+        self.aeskeys[p_mac] = p_key
+        # pylint: disable=unused-variable
+        ble_parser = BleParser(aeskeys=self.aeskeys)
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
+
+        assert sensor_msg["firmware"] == "Xiaomi (MiBeacon V5 encrypted)"
+        assert sensor_msg["type"] == "PTX-F1-Display"
+        assert sensor_msg["mac"] == "112233445566"
+        assert sensor_msg["packet"] == 51
+        assert sensor_msg["data"]
+        assert sensor_msg["humidity"] == 39
+        assert sensor_msg["rssi"] == -60
+        assert sensor_msg["local_name"] == ""
 
     def test_Xiaomi_XMPIRO2SXS(self):
         """Test Xiaomi parser for XMPIRO2SXS."""
