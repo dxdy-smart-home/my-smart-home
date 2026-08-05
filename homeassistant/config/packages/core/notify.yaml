@@ -19,15 +19,3 @@ notify_package:
         services:
           - service: mobile_app_dxdy
           - service: mobile_app_oav
-      
-      - platform: smtp
-        name: smtp_dxdy
-        sender: !secret admin_email
-        recipient: !secret admin_email
-        server: smtp.mail.ru
-        port: 465
-        encryption: tls
-        timeout: 15
-        username: !secret admin_email
-        password: !secret email_admin_password
-
