@@ -12,7 +12,14 @@ calendar_package:
                 Не забудь, что сегодня:
                 {{ trigger.calendar_event.summary }}
                 {{ trigger.calendar_event.description  }}
-      
+          - service: notify.smtp_family
+            data:
+              title: "Напоминание о событии на сегодня"
+              message: |
+                Не забудь, что сегодня:
+                {{ trigger.calendar_event.summary }}
+                {{ trigger.calendar_event.description }}
+
       - alias: Сообщить в телегу за сутки о событии в календаре
         mode: queued
         trigger:
@@ -42,3 +49,10 @@ calendar_package:
                 Не забудь, что завтра:
                 {{ trigger.calendar_event.summary }}
                 {{ trigger.calendar_event.description  }}        
+          - service: notify.smtp_family
+            data:
+              title: "Напоминание о событии на завтра"
+              message: |
+                Не забудь, что завтра:
+                {{ trigger.calendar_event.summary }}
+                {{ trigger.calendar_event.description }}
