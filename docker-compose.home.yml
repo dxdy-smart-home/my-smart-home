@@ -19,7 +19,7 @@ services:
       - ./caddy/auth:/etc/caddy/auth
   homeassistant:
     container_name: homeassistant
-    image: homeassistant/home-assistant:2026.7.4
+    image: homeassistant/home-assistant:2026.8.3
     restart: always
     privileged: true
     depends_on:
