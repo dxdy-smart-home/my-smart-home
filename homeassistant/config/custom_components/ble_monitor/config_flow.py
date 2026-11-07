@@ -16,27 +16,48 @@ from homeassistant.helpers import device_registry
 from . import BT_MULTI_SELECT, DEFAULT_BT_INTERFACE
 from .const import (CONF_ACTIVE_SCAN, CONF_BT_AUTO_RESTART, CONF_BT_INTERFACE,
                     CONF_DEVICE_DELETE_DEVICE, CONF_DEVICE_ENCRYPTION_KEY,
-                    CONF_DEVICE_REPORT_UNKNOWN, CONF_DEVICE_RESET_TIMER,
-                    CONF_DEVICE_RESTORE_STATE, CONF_DEVICE_TRACK,
-                    CONF_DEVICE_TRACKER_CONSIDER_HOME,
+                    CONF_DEVICE_MEASUREMENT_UPDATE, CONF_DEVICE_REPORT_UNKNOWN,
+                    CONF_DEVICE_RESET_TIMER, CONF_DEVICE_RESTORE_STATE,
+                    CONF_DEVICE_TRACK, CONF_DEVICE_TRACKER_CONSIDER_HOME,
                     CONF_DEVICE_TRACKER_SCAN_INTERVAL, CONF_DEVICE_USE_MEDIAN,
-                    CONF_LOG_SPIKES, CONF_PERIOD, CONF_REPORT_UNKNOWN,
+                    CONF_HCI_INACTIVITY_TIMEOUT, CONF_LOG_SPIKES,
+                    CONF_MEASUREMENT_UPDATE, CONF_PERIOD, CONF_REPORT_UNKNOWN,
                     CONF_RESTORE_STATE, CONF_USE_MEDIAN, CONF_UUID,
                     CONFIG_IS_FLOW, DEFAULT_ACTIVE_SCAN,
                     DEFAULT_BT_AUTO_RESTART, DEFAULT_DEVICE_DELETE_DEVICE,
                     DEFAULT_DEVICE_ENCRYPTION_KEY, DEFAULT_DEVICE_MAC,
+                    DEFAULT_DEVICE_MEASUREMENT_UPDATE,
                     DEFAULT_DEVICE_REPORT_UNKNOWN, DEFAULT_DEVICE_RESET_TIMER,
                     DEFAULT_DEVICE_RESTORE_STATE, DEFAULT_DEVICE_TRACK,
                     DEFAULT_DEVICE_TRACKER_CONSIDER_HOME,
                     DEFAULT_DEVICE_TRACKER_SCAN_INTERVAL,
                     DEFAULT_DEVICE_USE_MEDIAN, DEFAULT_DEVICE_UUID,
-                    DEFAULT_DISCOVERY, DEFAULT_LOG_SPIKES, DEFAULT_PERIOD,
-                    DEFAULT_REPORT_UNKNOWN, DEFAULT_RESTORE_STATE,
-                    DEFAULT_USE_MEDIAN, DOMAIN, REPORT_UNKNOWN_LIST)
+                    DEFAULT_DISCOVERY, DEFAULT_HCI_INACTIVITY_TIMEOUT,
+                    DEFAULT_LOG_SPIKES, DEFAULT_MEASUREMENT_UPDATE,
+                    DEFAULT_PERIOD, DEFAULT_REPORT_UNKNOWN,
+                    DEFAULT_RESTORE_STATE, DEFAULT_USE_MEDIAN, DOMAIN,
+                    MEASUREMENT_UPDATE_LIST, REPORT_UNKNOWN_LIST)
 from .helper import (detect_conf_type, dict_get_key_or, dict_get_or,
                      validate_key, validate_mac, validate_uuid)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _redact_for_log(data):
+    """Return a shallow copy of data with any encryption key masked, for logging only."""
+    if not isinstance(data, dict):
+        return data
+    redacted = dict(data)
+    if CONF_DEVICE_ENCRYPTION_KEY in redacted:
+        redacted[CONF_DEVICE_ENCRYPTION_KEY] = "***"
+    if isinstance(redacted.get(CONF_DEVICES), list):
+        redacted[CONF_DEVICES] = [
+            {**dev, CONF_DEVICE_ENCRYPTION_KEY: "***"}
+            if isinstance(dev, dict) and CONF_DEVICE_ENCRYPTION_KEY in dev
+            else dev
+            for dev in redacted[CONF_DEVICES]
+        ]
+    return redacted
 
 
 OPTION_LIST_DEVICE = "--Devices--"
@@ -54,6 +75,10 @@ DEVICE_SCHEMA = vol.Schema(
         vol.Optional(CONF_DEVICE_USE_MEDIAN, default=DEFAULT_DEVICE_USE_MEDIAN): vol.In(
             [DEFAULT_DEVICE_USE_MEDIAN, True, False]
         ),
+        vol.Optional(
+            CONF_DEVICE_MEASUREMENT_UPDATE,
+            default=DEFAULT_DEVICE_MEASUREMENT_UPDATE,
+        ): vol.In([DEFAULT_DEVICE_MEASUREMENT_UPDATE] + MEASUREMENT_UPDATE_LIST),
         vol.Optional(
             CONF_DEVICE_RESTORE_STATE, default=DEFAULT_DEVICE_RESTORE_STATE
         ): vol.In([DEFAULT_DEVICE_RESTORE_STATE, True, False]),
@@ -85,9 +110,15 @@ DOMAIN_SCHEMA = vol.Schema(
             CONF_BT_INTERFACE, default=[DEFAULT_BT_INTERFACE]
         ): cv.multi_select(BT_MULTI_SELECT),
         vol.Optional(CONF_BT_AUTO_RESTART, default=DEFAULT_BT_AUTO_RESTART): cv.boolean,
+        vol.Optional(
+            CONF_HCI_INACTIVITY_TIMEOUT, default=DEFAULT_HCI_INACTIVITY_TIMEOUT
+        ): cv.positive_int,
         vol.Optional(CONF_ACTIVE_SCAN, default=DEFAULT_ACTIVE_SCAN): cv.boolean,
         vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
         vol.Optional(CONF_USE_MEDIAN, default=DEFAULT_USE_MEDIAN): cv.boolean,
+        vol.Optional(
+            CONF_MEASUREMENT_UPDATE, default=DEFAULT_MEASUREMENT_UPDATE
+        ): vol.In(MEASUREMENT_UPDATE_LIST),
         vol.Optional(CONF_PERIOD, default=DEFAULT_PERIOD): cv.positive_int,
         vol.Optional(CONF_LOG_SPIKES, default=DEFAULT_LOG_SPIKES): cv.boolean,
         vol.Optional(CONF_RESTORE_STATE, default=DEFAULT_RESTORE_STATE): cv.boolean,
@@ -160,7 +191,7 @@ class BLEMonitorFlow(FlowHandler):
         """Add/remove device step."""
         errors = {}
         if user_input is not None:
-            _LOGGER.debug("async_step_add_remove_device: %s", user_input)
+            _LOGGER.debug("async_step_add_remove_device: %s", _redact_for_log(user_input))
             if (user_input[CONF_MAC] or user_input[CONF_UUID]) and not user_input[CONF_DEVICE_DELETE_DEVICE]:
                 key = dict_get_key_or(user_input)
 
@@ -204,6 +235,13 @@ class BLEMonitorFlow(FlowHandler):
                             default=user_input[CONF_DEVICE_USE_MEDIAN],
                         ): vol.In([DEFAULT_DEVICE_USE_MEDIAN, True, False]),
                         vol.Optional(
+                            CONF_DEVICE_MEASUREMENT_UPDATE,
+                            default=user_input[CONF_DEVICE_MEASUREMENT_UPDATE],
+                        ): vol.In(
+                            [DEFAULT_DEVICE_MEASUREMENT_UPDATE]
+                            + MEASUREMENT_UPDATE_LIST
+                        ),
+                        vol.Optional(
                             CONF_DEVICE_RESTORE_STATE,
                             default=user_input[CONF_DEVICE_RESTORE_STATE],
                         ): vol.In([DEFAULT_DEVICE_RESTORE_STATE, True, False]),
@@ -244,7 +282,9 @@ class BLEMonitorFlow(FlowHandler):
 
                 conf_key = dict_get_key_or(self._sel_device)
                 key = dict_get_or(self._sel_device).upper()
-                device = devreg.async_get_device({(DOMAIN, key)}, set())
+                device = devreg.async_get_device_by_identifier(
+                    (DOMAIN, key), self.config_entry.entry_id
+                )
                 if device is None:
                     errors[conf_key] = "cannot_delete_device"
                 else:
@@ -285,6 +325,15 @@ class BLEMonitorFlow(FlowHandler):
                         CONF_DEVICE_USE_MEDIAN, DEFAULT_DEVICE_USE_MEDIAN
                     ),
                 ): vol.In([DEFAULT_DEVICE_USE_MEDIAN, True, False]),
+                vol.Optional(
+                    CONF_DEVICE_MEASUREMENT_UPDATE,
+                    default=self._sel_device.get(
+                        CONF_DEVICE_MEASUREMENT_UPDATE,
+                        DEFAULT_DEVICE_MEASUREMENT_UPDATE,
+                    ),
+                ): vol.In(
+                    [DEFAULT_DEVICE_MEASUREMENT_UPDATE] + MEASUREMENT_UPDATE_LIST
+                ),
                 vol.Optional(
                     CONF_DEVICE_RESTORE_STATE,
                     default=self._sel_device.get(
@@ -372,6 +421,8 @@ class BLEMonitorConfigFlow(BLEMonitorFlow, ConfigFlow, domain=DOMAIN):
                 and not len(user_input[CONF_BT_INTERFACE]) == 1
             ):
                 errors[CONF_BT_INTERFACE] = "cannot_disable_bt_interface"
+            if errors:
+                return self._show_main_form(errors)
             await self.async_set_unique_id(DOMAIN_TITLE)
             self._abort_if_unique_id_configured()
             return self._create_entry(user_input)
@@ -379,7 +430,7 @@ class BLEMonitorConfigFlow(BLEMonitorFlow, ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input=None):
         """Handle import."""
-        _LOGGER.debug("async_step_import: %s", user_input)
+        _LOGGER.debug("async_step_import: %s", _redact_for_log(user_input))
 
         user_input[CONF_DEVICES] = OPTION_LIST_DEVICE
         return await self.async_step_user(user_input)
@@ -412,6 +463,13 @@ class BLEMonitorOptionsFlow(BLEMonitorFlow, OptionsFlow):
                     ),
                 ): cv.boolean,
                 vol.Optional(
+                    CONF_HCI_INACTIVITY_TIMEOUT,
+                    default=self.config_entry.options.get(
+                        CONF_HCI_INACTIVITY_TIMEOUT,
+                        DEFAULT_HCI_INACTIVITY_TIMEOUT,
+                    ),
+                ): cv.positive_int,
+                vol.Optional(
                     CONF_ACTIVE_SCAN,
                     default=self.config_entry.options.get(
                         CONF_ACTIVE_SCAN, DEFAULT_ACTIVE_SCAN
@@ -435,6 +493,12 @@ class BLEMonitorOptionsFlow(BLEMonitorFlow, OptionsFlow):
                         CONF_USE_MEDIAN, DEFAULT_USE_MEDIAN
                     ),
                 ): cv.boolean,
+                vol.Optional(
+                    CONF_MEASUREMENT_UPDATE,
+                    default=self.config_entry.options.get(
+                        CONF_MEASUREMENT_UPDATE, DEFAULT_MEASUREMENT_UPDATE
+                    ),
+                ): vol.In(MEASUREMENT_UPDATE_LIST),
                 vol.Optional(
                     CONF_LOG_SPIKES,
                     default=self.config_entry.options.get(
@@ -479,8 +543,10 @@ class BLEMonitorOptionsFlow(BLEMonitorFlow, OptionsFlow):
                 return await self.async_step_add_remove_device()
             if "disable" in user_input[CONF_BT_INTERFACE] and not len(user_input[CONF_BT_INTERFACE]) == 1:
                 errors[CONF_BT_INTERFACE] = "cannot_disable_bt_interface"
+            if errors:
+                return self._show_main_form(errors)
             return self._create_entry(user_input)
-        _LOGGER.debug("async_step_init (before): %s", self.config_entry.options)
+        _LOGGER.debug("async_step_init (before): %s", _redact_for_log(self.config_entry.options))
 
         if (
             CONFIG_IS_FLOW in self.config_entry.options

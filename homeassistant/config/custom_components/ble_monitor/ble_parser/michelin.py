@@ -10,6 +10,8 @@ _LOGGER = logging.getLogger(__name__)
 def parse_michelin_tms(self, data: bytes, mac: bytes):
     """Parser for Michelin TMS."""
     msg_length = len(data)
+    if msg_length < 6:
+        return None
     device_type = "TMS"
     firmware = "TMS"
     result = {"firmware": firmware}
@@ -30,6 +32,25 @@ def parse_michelin_tms(self, data: bytes, mac: bytes):
             "count": frame_counter,
             "steps": steps,
             "text": tyre_id.decode('utf-8', errors='replace'),
+        })
+
+    elif frame_type == 0x0F:
+        if msg_length != 21:
+                _LOGGER.error("Found %s bytes from sensor: %s", msg_length, to_mac(mac))
+                return
+        (raw_temp, raw_volt, absolute_pressure_bar, frame_counter) = unpack(
+            "<HBHxxxxxxL", data[6:21]
+        )
+        step = 1
+        temperature_celcius = raw_temp / 10
+        battery_voltage = round((raw_volt / 100) + 1.0, 2)
+        result.update({
+            "temperature": temperature_celcius,
+            "voltage": battery_voltage,
+            "pressure": absolute_pressure_bar,
+            "count": frame_counter,
+            "steps": step,
+            "text": "",
         })
 
     else:

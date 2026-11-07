@@ -9,7 +9,9 @@ INCLUDE_TYPES = (
     "devices.types.light.dimmable",
     "devices.types.light.garland",
     "devices.types.light.lamp",
+    "devices.types.light.sconce",
     "devices.types.light.strip",
+    "devices.types.light.torchere",
     "devices.types.smart_speaker.yandex.station.orion",
 )
 
@@ -39,22 +41,24 @@ class YandexLight(LightEntity, YandexEntity):
     min_brightness: int
     effects: list
     on_instance: str = None
+    # devices with color_animation capability (Yandex Station 3 backlight)
+    # accept scenes and palette colors only via this capability
+    animation: dict = None
 
     def internal_init(self, capabilities: dict, properties: dict):
-        self._attr_color_mode = ColorMode.ONOFF
+        modes = set()
 
         # backlight for Yandex Station 3 and maybe some others
         for instance in ("on", "backlight"):
             if instance in capabilities:
                 self.on_instance = instance
+                modes.add(ColorMode.ONOFF)
                 break
 
         if bright := capabilities.get("brightness"):
             self.max_brightness = bright["range"]["max"]
             self.min_brightness = bright["range"]["min"]
-            self._attr_color_mode = ColorMode.BRIGHTNESS
-
-        modes = set()
+            modes.add(ColorMode.BRIGHTNESS)
 
         if color := capabilities.get("color"):
             self.effects = []
@@ -75,7 +79,16 @@ class YandexLight(LightEntity, YandexEntity):
                 self._attr_effect_list = [i["name"] for i in self.effects]
                 self._attr_supported_features = LightEntityFeature.EFFECT
 
-        self._attr_supported_color_modes = modes or {self._attr_color_mode}
+        if len(modes) > 1 and ColorMode.ONOFF in modes:
+            modes.remove(ColorMode.ONOFF)
+        if len(modes) > 1 and ColorMode.BRIGHTNESS in modes:
+            modes.remove(ColorMode.BRIGHTNESS)
+
+        self._attr_color_mode = next(iter(modes))
+        self._attr_supported_color_modes = modes
+
+    def effect_name(self, effect_id: str) -> str | None:
+        return next((i["name"] for i in self.effects if i["id"] == effect_id), None)
 
     def internal_update(self, capabilities: dict, properties: dict):
         if self.on_instance in capabilities:
@@ -93,25 +106,34 @@ class YandexLight(LightEntity, YandexEntity):
                 self._attr_is_on = bool(self.brightness)
 
         if animation := capabilities.get("color_animation"):
-            animation_type = animation["current_animation_type"]
+            self.animation = animation
+            animations = animation.get("animations") or {}
+            animation_type = animation.get("current_animation_type")
             if animation_type == "color":
-                color = animation["animations"]["color"]
-                state = color["internal_state"]
-                if state["instance"] == "hsv":
+                color = animations.get("color") or {}
+                state = color.get("internal_state") or {}
+                if state.get("instance") == "hsv":
                     value = state["value"]
                     self._attr_hs_color = (value["h"], value["s"])
                     self._attr_color_mode = ColorMode.HS
+                elif state.get("instance") == "temperature_k":
+                    self._attr_color_temp_kelvin = state["value"]
+                    self._attr_color_mode = ColorMode.COLOR_TEMP
+                # palette color variant is the palette id
+                self._attr_effect = self.effect_name(color.get("variant"))
             elif animation_type == "scene":
-                scene = animation["animations"]["scene"]
-                id = scene["variant"]
-                self._attr_effect = next(
-                    i["name"] for i in self.effects if i["id"] == id
-                )
+                scene = animations.get("scene") or {}
+                self._attr_effect = self.effect_name(scene.get("variant"))
+                self._attr_color_temp_kelvin = None
+                self._attr_hs_color = None
+                # scene is a color animation, HA requires a color mode when on
+                if ColorMode.HS in (self._attr_supported_color_modes or ()):
+                    self._attr_color_mode = ColorMode.HS
 
         elif color := capabilities.get("color"):
             value = color.get("value")
 
-            if isinstance(value, dict):
+            if isinstance(value, dict) and "h" in value:
                 self._attr_hs_color = (value["h"], value["s"])
                 self._attr_color_mode = ColorMode.HS
             elif isinstance(value, int):
@@ -122,13 +144,12 @@ class YandexLight(LightEntity, YandexEntity):
             else:
                 self._attr_color_temp_kelvin = None
                 self._attr_hs_color = None
+                self._attr_color_mode = ColorMode.UNKNOWN
 
             if name := color.get("name"):
                 self._attr_effect = name
             elif id := color.get("id"):
-                self._attr_effect = next(
-                    i["name"] for i in self.effects if i["id"] == id
-                )
+                self._attr_effect = self.effect_name(id)
             else:
                 self._attr_effect = None
 
@@ -151,6 +172,10 @@ class YandexLight(LightEntity, YandexEntity):
 
         payload = {}
 
+        # turn on together with the scene/color, else backlight stays off
+        if effect is not None and self.on_instance and not self.is_on:
+            payload[self.on_instance] = True
+
         if brightness is not None:
             payload["brightness"] = conv(
                 brightness, 1, 255, self.min_brightness, self.max_brightness
@@ -158,8 +183,33 @@ class YandexLight(LightEntity, YandexEntity):
 
         if effect is not None:
             color: dict = next(i for i in self.effects if i["name"] == effect)
-            key = "color" if "value" in color else "scene"
-            payload[key] = color["id"]
+            if self.animation:
+                # same payload as Yandex app sends for Station 3 backlight,
+                # color_setting scene/color returns INTERNAL_ERROR for it
+                if "value" in color:
+                    payload["color_animation"] = {
+                        "current_animation_type": "color",
+                        "animations": {"color": {"variant": color["id"]}},
+                    }
+                else:
+                    try:
+                        variant = next(
+                            i
+                            for i in self.animation["animations"]["scene"]["variants"]
+                            if i["id"] == color["id"]
+                        )
+                    except:
+                        variant = {"id": color["id"], "options": []}
+
+                    payload["color_animation"] = {
+                        "current_animation_type": "scene",
+                        "animations": {
+                            "scene": {"variant": color["id"], "variants": [variant]}
+                        },
+                    }
+            else:
+                key = "color" if "value" in color else "scene"
+                payload[key] = color["id"]
 
         if not payload and self.on_instance:
             payload[self.on_instance] = True

@@ -8,14 +8,12 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.sensor import (SensorDeviceClass,
                                              SensorEntityDescription,
                                              SensorStateClass)
-from homeassistant.const import (CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-                                 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-                                 CONCENTRATION_PARTS_PER_MILLION, LIGHT_LUX,
-                                 PERCENTAGE,
+from homeassistant.const import (LIGHT_LUX, PERCENTAGE,
                                  SIGNAL_STRENGTH_DECIBELS_MILLIWATT, Platform,
-                                 UnitOfConductivity, UnitOfElectricPotential,
-                                 UnitOfEnergy, UnitOfMass, UnitOfPower,
-                                 UnitOfPressure, UnitOfTemperature,
+                                 UnitOfConductivity, UnitOfDensity,
+                                 UnitOfElectricPotential, UnitOfEnergy,
+                                 UnitOfMass, UnitOfPower, UnitOfPressure,
+                                 UnitOfRatio, UnitOfTemperature, UnitOfTime,
                                  UnitOfVolume)
 from homeassistant.helpers.entity import EntityCategory
 
@@ -28,9 +26,11 @@ PLATFORMS = [
 
 # Configuration options
 CONF_BT_AUTO_RESTART = "bt_auto_restart"
+CONF_HCI_INACTIVITY_TIMEOUT = "hci_inactivity_timeout"
 CONF_PERIOD = "period"
 CONF_LOG_SPIKES = "log_spikes"
 CONF_USE_MEDIAN = "use_median"
+CONF_MEASUREMENT_UPDATE = "measurement_update"
 CONF_ACTIVE_SCAN = "active_scan"
 CONF_HCI_INTERFACE = "hci_interface"
 CONF_BT_INTERFACE = "bt_interface"
@@ -39,6 +39,7 @@ CONF_REPORT_UNKNOWN = "report_unknown"
 CONF_RESTORE_STATE = "restore_state"
 CONF_DEVICE_ENCRYPTION_KEY = "encryption_key"
 CONF_DEVICE_USE_MEDIAN = "use_median"
+CONF_DEVICE_MEASUREMENT_UPDATE = "measurement_update"
 CONF_DEVICE_REPORT_UNKNOWN = "report_unknown"
 CONF_DEVICE_RESTORE_STATE = "restore_state"
 CONF_DEVICE_RESET_TIMER = "reset_timer"
@@ -56,9 +57,13 @@ SERVICE_PARSE_DATA = "parse_data"
 
 # Default values for configuration options
 DEFAULT_BT_AUTO_RESTART = False
+DEFAULT_HCI_INACTIVITY_TIMEOUT = 60
 DEFAULT_PERIOD = 60
 DEFAULT_LOG_SPIKES = False
 DEFAULT_USE_MEDIAN = False
+DEFAULT_MEASUREMENT_UPDATE = "periodic"
+DEFAULT_DEVICE_MEASUREMENT_UPDATE = "default"
+MEASUREMENT_UPDATE_LIST = ["periodic", "instant"]
 DEFAULT_ACTIVE_SCAN = False
 DEFAULT_BATT_ENTITIES = True
 DEFAULT_REPORT_UNKNOWN = "Off"
@@ -93,7 +98,7 @@ CONF_TMAX_KETTLES = 120.0
 CONF_TMIN_PROBES = 0.0
 CONF_TMAX_PROBES = 300.0
 CONF_HMIN = 0.0
-CONF_HMAX = 99.9
+CONF_HMAX = 100.0
 
 
 # Sensors with deviating temperature range
@@ -395,6 +400,16 @@ BINARY_SENSOR_TYPES: tuple[BLEMonitorBinarySensorEntityDescription, ...] = (
         name="ble weight removed",
         icon="mdi:weight",
         unique_id="wr_",
+        device_class=None,
+        force_update=False,
+    ),
+    BLEMonitorBinarySensorEntityDescription(
+        key="stabilized",
+        sensor_class="BaseBinarySensor",
+        update_behavior="Instantly",
+        name="ble stabilized",
+        icon="mdi:scale-bathroom",
+        unique_id="stabilized_",
         device_class=None,
         force_update=False,
     ),
@@ -851,7 +866,7 @@ SENSOR_TYPES: tuple[BLEMonitorSensorEntityDescription, ...] = (
         name="ble moisture",
         unique_id="m_",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.HUMIDITY,
+        device_class=SensorDeviceClass.MOISTURE,
         suggested_display_precision=1,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -907,7 +922,7 @@ SENSOR_TYPES: tuple[BLEMonitorSensorEntityDescription, ...] = (
         name="ble formaldehyde",
         unique_id="f_",
         icon="mdi:chemical-weapon",
-        native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
         device_class=None,
         suggested_display_precision=3,
         state_class=SensorStateClass.MEASUREMENT,
@@ -979,7 +994,7 @@ SENSOR_TYPES: tuple[BLEMonitorSensorEntityDescription, ...] = (
         name="CO2",
         unique_id="co2_",
         icon="mdi:molecule-co2",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
         suggested_display_precision=0,
     ),
@@ -990,7 +1005,7 @@ SENSOR_TYPES: tuple[BLEMonitorSensorEntityDescription, ...] = (
         name="PM2.5",
         unique_id="pm25_",
         icon="mdi:molecule",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         suggested_display_precision=0,
     ),
@@ -1001,7 +1016,7 @@ SENSOR_TYPES: tuple[BLEMonitorSensorEntityDescription, ...] = (
         name="PM10",
         unique_id="pm10_",
         icon="mdi:molecule",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
         suggested_display_precision=0,
     ),
@@ -1024,7 +1039,7 @@ SENSOR_TYPES: tuple[BLEMonitorSensorEntityDescription, ...] = (
         name="TVOC",
         unique_id="ble_tvoc_",
         icon="mdi:molecule",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         suggested_display_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1354,6 +1369,18 @@ SENSOR_TYPES: tuple[BLEMonitorSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BLEMonitorSensorEntityDescription(
+        key="no motion time",
+        sensor_class="InstantUpdateSensor",
+        update_behavior="Instantly",
+        name="no motion time",
+        unique_id="no_motion_time_",
+        icon="mdi:motion-sensor-off",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    BLEMonitorSensorEntityDescription(
         key="pressure present duration",
         sensor_class="InstantUpdateSensor",
         update_behavior="Instantly",
@@ -1586,6 +1613,18 @@ SENSOR_TYPES: tuple[BLEMonitorSensorEntityDescription, ...] = (
         update_behavior="StateChange",
         name="ble count",
         unique_id="cnt_",
+        icon="mdi:counter",
+        native_unit_of_measurement=None,
+        device_class=None,
+        suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    BLEMonitorSensorEntityDescription(
+        key="counter",
+        sensor_class="StateChangedSensor",
+        update_behavior="StateChange",
+        name="ble counter",
+        unique_id="tb_cnt_",
         icon="mdi:counter",
         native_unit_of_measurement=None,
         device_class=None,
@@ -2075,11 +2114,11 @@ MEASUREMENT_DICT = {
     'YM-K1501'                : [["rssi"], ["temperature"], ["switch"]],
     'YM-K1501EU'              : [["rssi"], ["temperature"], ["switch"]],
     'V-SK152'                 : [["rssi"], ["temperature"], ["switch"]],
-    'MJYD02YL'                : [["battery", "rssi"], [], ["light", "motion"]],
+    'MJYD02YL'                : [["battery", "rssi"], ["no motion time"], ["light", "motion"]],
     'MUE4094RT'               : [["rssi"], [], ["motion"]],
     'RTCGQ02LM'               : [["battery", "rssi"], ["button"], ["light", "motion"]],
     'MMC-T201-1'              : [["temperature", "battery", "rssi"], [], []],
-    'M1S-T500'                : [["score", "battery", "rssi"], [], ["toothbrush"]],
+    'M1S-T500'                : [["consumable", "score", "battery", "rssi"], ["counter"], ["toothbrush"]],
     'T700'                    : [["consumable", "score", "battery", "rssi"], [], ["toothbrush"]],
     'T700i'                   : [["consumable", "score", "battery", "rssi"], [], ["toothbrush"]],
     'ZNMS16LM'                : [["battery", "rssi"], [], ["lock", "door", "fingerprint", "armed away"]],
@@ -2087,6 +2126,7 @@ MEASUREMENT_DICT = {
     'SV40'                    : [["battery", "rssi"], [], ["lock", "door", "fingerprint", "antilock", "childlock", "armed away"]],
     'MJZNMSQ01YD'             : [["battery", "rssi"], [], ["lock", "fingerprint"]],
     'MJWSD05MMC'              : [["temperature", "humidity", "battery", "rssi"], [], []],
+    'MJWSD07MMC'              : [["temperature", "humidity", "co2", "battery", "rssi"], [], []],
     'XMZNMST02YD'             : [["battery", "rssi"], [], ["lock", "door", "fingerprint"]],
     'XMZNMS04LM'              : [["battery", "rssi"], [], ["lock", "fingerprint"]],
     'XMZNMS08LM'              : [["battery", "rssi"], [], ["lock", "door"]],
@@ -2129,8 +2169,8 @@ MEASUREMENT_DICT = {
     'YLKG07YL/YLKG08YL'       : [["rssi"], ["dimmer"], []],
     'SU001-T'                 : [["battery", "rssi"], [], ["motion", "switch"]],
     'ATC'                     : [["temperature", "humidity", "battery", "voltage", "rssi"], [], ["switch", "opening"]],
-    'Mi Scale V1'             : [["rssi"], ["weight", "non-stabilized weight"], ["weight removed"]],
-    'Mi Scale V2'             : [["rssi"], ["weight", "stabilized weight", "non-stabilized weight", "impedance"], ["weight removed"]],
+    'Mi Scale V1'             : [["rssi"], ["weight", "non-stabilized weight"], ["weight removed", "stabilized"]],
+    'Mi Scale V2'             : [["rssi"], ["weight", "stabilized weight", "non-stabilized weight", "impedance"], ["weight removed", "stabilized"]],
     'Mi Band'                 : [["rssi", "heart rate", "steps"], [], []],
     'TZC4'                    : [["rssi"], ["weight", "non-stabilized weight", "impedance"], []],
     'QJ-J'                    : [["rssi"], ["weight", "non-stabilized weight", "impedance"], []],
@@ -2189,9 +2229,11 @@ MEASUREMENT_DICT = {
     'BEC07-5'                 : [["temperature", "humidity", "rssi"], [], []],
     'iBeacon'                 : [["rssi", "measured power", "cypress temperature", "cypress humidity"], ["uuid", "mac", "major", "minor"], []],  # mac can be dynamic
     'AltBeacon'               : [["rssi", "measured power"], ["uuid", "mac", "major", "minor"], []],  # mac can be dynamic
+    'Eddystone-TLM'           : [["temperature", "voltage", "battery", "rssi"], [], []],
     'Air Mentor Pro 2'        : [["temperature", "temperature calibrated", "humidity", "co2", "tvoc", "aqi", "air quality", "pm2.5", "pm10", "rssi"], [], []],
     'Air Mentor 2S'           : [["temperature", "temperature calibrated", "humidity", "co2", "tvoc", "aqi", "formaldehyde", "air quality", "pm2.5", "pm10", "rssi"], [], []],
     'bluSensor Mini'          : [["temperature", "humidity", "co2", "tvoc", "aqi", "rssi"], [], []],
+    'E9'                      : [["temperature", "battery", "rssi"], [], []],
     'Meter TH S1'             : [["temperature", "humidity", "battery", "rssi"], [], []],
     'Meter TH plus'           : [["temperature", "humidity", "battery", "rssi"], [], []],
     'Laica Smart Scale'       : [["weight", "impedance", "rssi"], [], []],
@@ -2203,11 +2245,13 @@ MEASUREMENT_DICT = {
     'SW2'                     : [["battery", "rssi"], [], ["water leak"]],
     'ST6'                     : [["temperature", "humidity", "battery", "rssi"], [], []],
     'ST7'                     : [["temperature", "battery", "rssi"], [], []],
+    'ST7-CL'                  : [["temperature", "rssi"], [], []],
     'ST8'                     : [["temperature", "battery", "rssi"], [], []],
     'ST9'                     : [["temperature", "humidity", "battery", "rssi"], [], []],
     'ST10'                    : [["temperature", "battery", "rssi"], [], []],
     'MS1'                     : [["temperature", "battery", "rssi"], [], []],
     'MS2'                     : [["temperature", "battery", "rssi"], [], []],
+    'SD1'                     : [["temperature", "temperature probe 2", "humidity", "battery", "rssi"], [], ["door"]],
     'MS3'                     : [["temperature", "battery", "rssi"], [], []],
 	'TMS'                     : [["temperature", "voltage", "pressure", "count", "steps", "text", "rssi"], [], []],
     'S-MATE'                  : [["rssi"], ["three btn switch left", "three btn switch middle", "three btn switch right"], []],
@@ -2242,6 +2286,7 @@ MANUFACTURER_DICT = {
     'ZNMS17LM'                : 'Xiaomi Aqara',
     'MJZNMSQ01YD'             : 'Xiaomi',
     'MJWSD05MMC'              : 'Xiaomi',
+    'MJWSD07MMC'              : 'Xiaomi',
     'MJTZC01YM'               : 'Xiaomi',
     'XMZNMST02YD'             : 'Xiaomi',
     'XMZNMS04LM'              : 'Xiaomi',
@@ -2346,9 +2391,11 @@ MANUFACTURER_DICT = {
     'BEC07-5'                 : 'Jinou',
     'iBeacon'                 : 'Apple',
     'AltBeacon'               : 'Radius Networks',
+    'Eddystone-TLM'           : 'Google',
     'Air Mentor Pro 2'        : 'Air Mentor',
     'Air Mentor 2S'           : 'Air Mentor',
     'bluSensor Mini'          : 'Almendo',
+    'E9'                      : 'Minew',
     'Meter TH S1'             : 'Switchbot',
     'Meter TH plus'           : 'Switchbot',
     'Laica Smart Scale'       : 'Laica',
@@ -2359,11 +2406,13 @@ MANUFACTURER_DICT = {
     'SW2'                     : 'MOCREO',
     'ST6'                     : 'MOCREO',
     'ST7'                     : 'MOCREO',
+    'ST7-CL'                  : 'MOCREO',
     'ST8'                     : 'MOCREO',
     'ST9'                     : 'MOCREO',
     'ST10'                    : 'MOCREO',
     'MS1'                     : 'MOCREO',
     'MS2'                     : 'MOCREO',
+    'SD1'                     : 'MOCREO',
     'MS3'                     : 'MOCREO',
 	'TMS'                     : 'Michelin',
     'S-MATE'                  : 'Sonoff',
@@ -2417,6 +2466,7 @@ AUTO_MANUFACTURER_DICT = {
     'BeckettLinkPro'          : 'Beckett',
     'GenisysGas'              : 'Beckett',
     'HHCCJCY10'               : 'HHCC',
+    'HolyIOT Beacon'          : 'HolyIOT',
     'HolyIOT BLE tracker'     : 'HolyIOT',
     'JTYJGD03MI'              : 'Honeywell',
     'Supramatic E4 BS'        : 'Hörmann',
@@ -2583,6 +2633,7 @@ REPORT_UNKNOWN_LIST = [
     "Blustream",
     "BTHome",
     'Chef iQ',
+    "Eddystone",
     "Garnet",
     "Govee",
     "Grundfos",
@@ -2599,6 +2650,7 @@ REPORT_UNKNOWN_LIST = [
     "Mi Band",
     "Mi Scale",
     "Mikrotik",
+    "Minew",
     "Moat",
     "MOCREO",
     "Oras",

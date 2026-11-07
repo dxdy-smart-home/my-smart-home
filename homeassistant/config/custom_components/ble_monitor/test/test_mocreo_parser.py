@@ -2,10 +2,37 @@
 import datetime
 
 from ble_monitor.ble_parser import BleParser
+from ble_monitor.ble_parser.mocreo import parse_mocreo
 
 
 class TestMOCREO:
     """Tests for the MOCREO parser"""
+
+    def test_MOCREO_ST7(self):
+        """Test the special MOCREO ST7 layout with a synthetic valid payload."""
+        data = bytes.fromhex("11ff4a000000000000001000006492090000")
+
+        sensor_msg = parse_mocreo(
+            None, data, "ST7", bytes.fromhex("30aea400aabb")
+        )
+
+        assert sensor_msg == {
+            "firmware": "MOCREO",
+            "temperature": 24.5,
+            "battery": 100,
+            "data": True,
+            "mac": "30AEA400AABB",
+            "type": "ST7",
+            "packet": "no packet id",
+        }
+
+    def test_MOCREO_ST7_rejects_cross_format_device_type(self):
+        """A short ST7-layout payload cannot be interpreted as an SD1 packet."""
+        data = bytes.fromhex("11ff4a000000000000009500000000000000")
+
+        assert parse_mocreo(
+            None, data, "ST7", bytes.fromhex("30aea400aabb")
+        ) is None
 
     def test_MOCREO_ST5(self):
         """Test MOCREO parser for ST5."""
@@ -126,6 +153,27 @@ class TestMOCREO:
         assert sensor_msg["mac"] == "30AEA400AABB"
         assert sensor_msg["packet"] == "no packet id"
         assert sensor_msg["temperature"] == 26.15
+        assert sensor_msg["battery"] == 100
+        assert sensor_msg["data"]
+        assert sensor_msg["rssi"] == -42
+
+    def test_MOCREO_SD1(self):
+        """Test MOCREO parser for SD1."""
+        data_string = "043e2b02010001bbaa00a4ae301f02010607094d4f4352454f13ff41950a00e4b09209b80b35e8000000000000d6"
+        data = bytes(bytearray.fromhex(data_string))
+
+        # pylint: disable=unused-variable
+        ble_parser = BleParser()
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
+        assert sensor_msg["firmware"] == "MOCREO"
+        assert sensor_msg["type"] == "SD1"
+        assert sensor_msg["mac"] == "30AEA400AABB"
+        assert sensor_msg["packet"] == "no packet id"
+        assert sensor_msg["temperature"] == 24.5
+        assert sensor_msg["temperature probe 2"] == 30.0
+        assert sensor_msg["humidity"] == 100.0
+        assert "water leak" not in sensor_msg
+        assert sensor_msg["door"] == 1
         assert sensor_msg["battery"] == 100
         assert sensor_msg["data"]
         assert sensor_msg["rssi"] == -42

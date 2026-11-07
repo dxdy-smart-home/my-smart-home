@@ -6,9 +6,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
+    MAJOR_VERSION,
+    MINOR_VERSION,
     PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -25,6 +25,15 @@ from .hass import hass_utils
 
 _LOGGER = logging.getLogger(__name__)
 
+if (MAJOR_VERSION, MINOR_VERSION) >= (2026, 7):
+    from homeassistant.const import UnitOfDensity, UnitOfRatio
+
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER = UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
+    CONCENTRATION_PARTS_PER_MILLION = UnitOfRatio.PARTS_PER_MILLION
+else:
+    from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    from homeassistant.const import CONCENTRATION_PARTS_PER_MILLION
+
 # https://yandex.ru/dev/dialogs/smart-home/doc/concepts/device-type-sensor.html
 INCLUDE_TYPES = (
     "devices.types.sensor",
@@ -38,6 +47,7 @@ INCLUDE_TYPES = (
     "devices.types.sensor.smoke",
     "devices.types.sensor.vibration",
     "devices.types.sensor.water_leak",
+    "devices.types.openable.valve",
     "devices.types.smart_meter",
     "devices.types.smart_meter.cold_water",
     "devices.types.smart_meter.electricity",

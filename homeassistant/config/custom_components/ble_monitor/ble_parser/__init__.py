@@ -15,6 +15,7 @@ from .bparasite import parse_bparasite
 from .bthome import parse_bthome
 from .chefiq import parse_chefiq
 from .const import JAALEE_TYPES, TILT_TYPES
+from .eddystone_tlm import parse_eddystone_tlm
 from .govee import parse_govee
 from .grundfos import parse_grundfos
 from .helpers import to_mac, to_unformatted_mac, to_uuid
@@ -31,6 +32,7 @@ from .kkm import parse_kkm
 from .laica import parse_laica
 from .michelin import parse_michelin_tms
 from .mikrotik import parse_mikrotik
+from .minew import parse_minew
 from .miscale import parse_miscale
 from .moat import parse_moat
 from .mocreo import parse_mocreo
@@ -94,6 +96,56 @@ class BleParser:
 
     def parse_raw_data(self, data):
         """Parse the raw data."""
+        reports = self.parse_raw_data_reports(data)
+        if not reports:
+            return None, None
+        return reports[0]
+
+    def parse_raw_data_reports(self, data):
+        """Parse every advertisement report in one HCI LE meta-event."""
+        reports = []
+        for report in self._split_hci_reports(data):
+            try:
+                sensor_data, tracker_data = self._parse_single_report(report)
+            except Exception as error:  # noqa: BLE001 - isolate one malformed report
+                _LOGGER.debug(
+                    "Failed to parse BLE advertisement report, skipping it: %s, report: %s",
+                    error,
+                    report.hex(),
+                )
+                continue
+            if sensor_data or tracker_data:
+                reports.append((sensor_data, tracker_data))
+        return reports
+
+    @staticmethod
+    def _split_hci_reports(data):
+        """Yield synthetic single-report events from legacy or extended events."""
+        if len(data) < 5 or data[3] not in (0x02, 0x0D):
+            return []
+        subevent = data[3]
+        fixed_size = 9 if subevent == 0x02 else 24
+        data_length_offset = 8 if subevent == 0x02 else 23
+        event_end = min(len(data), data[2] + 3)
+        offset = 5
+        split_reports = []
+        for _ in range(data[4]):
+            if offset + fixed_size > event_end:
+                break
+            payload_size = data[offset + data_length_offset]
+            report_size = fixed_size + payload_size + (1 if subevent == 0x02 else 0)
+            report_end = offset + report_size
+            if report_end > event_end:
+                break
+            report = data[offset:report_end]
+            split_reports.append(
+                bytes((data[0], data[1], len(report) + 2, subevent, 1)) + report
+            )
+            offset = report_end
+        return split_reports
+
+    def _parse_single_report(self, data):
+        """Parse one legacy or extended advertisement report."""
         # check if packet is Extended scan result
         is_ext_packet = True if data[3] == 0x0D else False
         # check for no BR/EDR + LE General discoverable mode flags
@@ -236,6 +288,10 @@ class BleParser:
                         # UUID16 = HolyIOT
                         sensor_data = parse_holyiot(self, service_data, mac)
                         break
+                    elif uuid16 == 0x180A and len(service_data) == 13:
+                        # UUID16 = Device Information service (used by HolyIOT B1)
+                        sensor_data = parse_holyiot(self, service_data, mac)
+                        break
                     elif uuid16 in [0xAA20, 0xAA21, 0xAA22] and local_name == "ECo":
                         # UUID16 = Relsib
                         sensor_data = parse_relsib(self, service_data, mac)
@@ -265,7 +321,11 @@ class BleParser:
                         sensor_data = parse_xiaomi(self, service_data, mac)
                         break
                     elif uuid16 == 0xFEAA:
-                        if len(service_data) == 19:
+                        if len(service_data) == 18 and service_data[4] == 0x20:
+                            # UUID16 = Google (Eddystone-TLM)
+                            sensor_data = parse_eddystone_tlm(self, service_data, mac)
+                            break
+                        elif len(service_data) == 19:
                             # UUID16 = Google (used by KKM)
                             sensor_data = parse_kkm(self, service_data, mac)
                             break
@@ -273,6 +333,10 @@ class BleParser:
                             # UUID16 = Google (used by Ruuvitag V2/V4)
                             sensor_data = parse_ruuvitag(self, service_data, mac)
                             break
+                    elif uuid16 == 0xFFE1:
+                        # UUID16 = Minew
+                        sensor_data = parse_minew(self, service_data, mac)
+                        break
                     elif uuid16 == 0xFEE0:
                         # UUID16 = Anhui Huami Information Technology Co., Ltd. (Amazfit)
                         if man_spec_data_list:
@@ -504,8 +568,8 @@ class BleParser:
                             # Inkbird
                             sensor_data = parse_inkbird(self, man_spec_data, local_name, mac)
                             break
-                        elif comp_id == 0x004A and local_name == "ST7" and data_len == 0x11:
-                            # Mocreo ST7, see below under local_name checks for the other Mocreo models
+                        elif comp_id == 0x004A and local_name in ["ST7", "ST7-CL"] and data_len == 0x11:
+                            # Mocreo ST7/ST7-CL, see below under local_name checks for the other Mocreo models
                             sensor_data = parse_mocreo(self, man_spec_data, local_name, mac)
                             break
                         else:
@@ -564,8 +628,9 @@ class BleParser:
                 )
             break
 
-        # Ignore sensor data for MAC addresses not in sensor whitelist, when discovery is disabled
-        if self.discovery is False and mac not in self.sensor_whitelist:
+        # A whitelisted beacon UUID is sufficient even if its MAC address changes.
+        if (self.discovery is False and mac not in self.sensor_whitelist
+                and not (uuid and uuid in self.sensor_whitelist)):
             _LOGGER.debug("Discovery is disabled. MAC: %s is not whitelisted!", to_mac(mac))
             sensor_data = None
         # Ignore sensor data for UUID not in sensor whitelist, when discovery is disabled

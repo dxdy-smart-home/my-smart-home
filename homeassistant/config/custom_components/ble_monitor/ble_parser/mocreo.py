@@ -8,6 +8,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MOCREO_TYPE_DICT = {
     0x10: "ST7",
+    0x85: "ST7-CL",
     0x81: "ST5",
     0x82: "SW2",
     0x83: "ST6",
@@ -16,6 +17,7 @@ MOCREO_TYPE_DICT = {
     0x87: "ST10",
     0x8B: "MS1",
     0x94: "MS2",
+    0x95: "SD1",
     0x96: "MS3",
 }
 
@@ -30,6 +32,9 @@ COMMON_DATA_PARSING_FORMAT = {
 MOCREO_TYPE_DATA_PARSING_FORMAT = {
     0x10: {
         "temperature": (5, 0, -16, True, lambda x: x / 100),
+    },
+    0x85: {
+        "temperature": (6, 0, -16, True, lambda x: x / 100),
     },
     0x81: {
         "temperature": (6, 0, -16, True, lambda x: x / 100),
@@ -56,6 +61,11 @@ MOCREO_TYPE_DATA_PARSING_FORMAT = {
     },
     0x94: {
         "temperature": (6, 0, -16, True, lambda x: x / 100),
+    },
+    0x95: {
+        "temperature": (6, 0, -16, True, lambda x: x / 100),
+        "temperature probe 2": (8, 0, -16, True, lambda x: x / 100),
+        "door": (10, 5, 1, False, None),
     },
     0x96: {
         "temperature": (6, 0, -16, True, lambda x: x / 100),
@@ -94,7 +104,8 @@ def _get_value(source, pos):
 
 def parse_mocreo(self, data: bytes, local_name: str, mac: bytes):
     """Parser for MOCREO sensors"""
-    if data[0] == 0x11 and data[1] == 0xff and data[2] == 0x4a:
+    st7_format = data[0] == 0x11 and data[1] == 0xff and data[2] == 0x4a
+    if st7_format:
         common_data = data[9:]  #Mocreo's oddball ST7 format
     else:
         common_data = data[2:] #Mocreo's "normal" format
@@ -102,6 +113,8 @@ def parse_mocreo(self, data: bytes, local_name: str, mac: bytes):
     result = {"firmware": firmware}
 
     device_type = _get_value(common_data, COMMON_DATA_PARSING_FORMAT["device_type"])
+    if st7_format and device_type != 0x10:
+        return None
     version = _get_value(common_data, COMMON_DATA_PARSING_FORMAT["version"])
     battery = _get_value(common_data, COMMON_DATA_PARSING_FORMAT["battery_percentage"])
 
@@ -110,6 +123,8 @@ def parse_mocreo(self, data: bytes, local_name: str, mac: bytes):
         data_parsing_format = MOCREO_TYPE_DATA_PARSING_FORMAT[device_type]
         for key, value in data_parsing_format.items():
             result[key] = _get_value(common_data, value)
+        if device_type == 0x95:
+            result["humidity"] = (((common_data[10] >> 4) << 8) | common_data[11]) / 10
         result.update({
             "battery": battery,
             "data": True

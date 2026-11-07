@@ -2,6 +2,7 @@
 import logging
 import math
 import struct
+from datetime import timezone
 
 from Cryptodome.Cipher import AES
 from homeassistant.util import datetime
@@ -44,6 +45,9 @@ XIAOMI_TYPE_DICT = {
     0x07F6: "MJYD02YL",
     0x04E9: "MJZNMSQ01YD",
     0x2832: "MJWSD05MMC",
+    0x5BEA: "MJWSD06MMC",
+    0x55B5: "MJWSD06MMC",
+    0x9AB9: "MJWSD07MMC",
     0x00DB: "MMC-T201-1",
     0x0391: "MMC-W505",
     0x03DD: "MUE4094RT",
@@ -75,7 +79,6 @@ XIAOMI_TYPE_DICT = {
     0x0380: "DSL-C08",
     0x0DE7: "SU001-T",
     0x20DB: "MJZNZ018H",
-    0x55B5: "MJWSD06MMC",
     0x18E3: "ZX1",
     0x11C2: "SV40",
     0x3F0F: "RS1BB",
@@ -263,11 +266,13 @@ def obj0010(xobj):
             return {'toothbrush': 1}
         else:
             return {'toothbrush': 1, 'counter': xobj[1]}
-    else:
+    elif xobj[0] == 1:
         if len(xobj) == 1:
             return {'toothbrush': 0}
         else:
             return {'toothbrush': 0, 'score': xobj[1]}
+    else:
+        return {}
 
 
 def obj000a(xobj):
@@ -512,11 +517,11 @@ def obj1001(xobj, device_type):
             if three_btn_switch_right:
                 result["three btn switch right"] = three_btn_switch_right
         else:
-            return None
+            return {}
         return result
 
     else:
-        return None
+        return {}
 
 
 def obj1004(xobj):
@@ -626,8 +631,7 @@ def obj1019(xobj):
         opening = 1
         status = "device reset"
     else:
-        opening = 0
-        status = None
+        return {}
     return {"opening": opening, "status": status}
 
 
@@ -689,18 +693,23 @@ def obj2000(xobj):
 def obj3003(xobj):
     """Brushing"""
     result = {}
-    print("brush %s", xobj.hex())
+    if len(xobj) < 5:
+        return result
     start_obj = xobj[0]
     if start_obj == 0:
         # Start of brushing
         result["toothbrush"] = 1
         start_time = struct.unpack('<L', xobj[1:5])[0]
-        result["start time"] = datetime.fromtimestamp(start_time)
+        result["start time"] = datetime.fromtimestamp(
+            start_time, tz=timezone.utc
+        ).replace(tzinfo=None)
     elif start_obj == 1:
         # End of brushing
         result["toothbrush"] = 0
         end_time = struct.unpack('<L', xobj[1:5])[0]
-        result["end time"] = datetime.fromtimestamp(end_time)
+        result["end time"] = datetime.fromtimestamp(
+            end_time, tz=timezone.utc
+        ).replace(tzinfo=None)
 
     if len(xobj) == 6:
         result["score"] = xobj[5]
@@ -773,7 +782,7 @@ def obj4810(xobj):
     elif sleep_state == 2:
         return {"button switch": "double press"}
     else:
-        return None
+        return {}
 
 
 def obj4811(xobj):
@@ -852,6 +861,9 @@ def obj484f(xobj):
 
 def obj4850(xobj):
     """Time in minutes with motion (not used, we use 484e)"""
+    if len(xobj) != 1:
+        return {}
+
     (motion_time,) = struct.unpack("<B", xobj)
     # minutes with motion (not used, we use motion timer in obj484e)
     return {"motion time": motion_time}
@@ -1009,6 +1021,8 @@ def obj4e01(xobj):
 def obj4e0c(xobj, device_type):
     """Click"""
     if device_type == "XMWXKG01YL":
+        if not xobj:
+            return {}
         click = xobj[0]
         if click == 1:
             result = {
@@ -1026,7 +1040,11 @@ def obj4e0c(xobj, device_type):
                 "two btn switch right": "toggle",
                 "button switch": "single press",
             }
+        else:
+            result = {}
     elif device_type == "K9BB-1BTN":
+        if not xobj:
+            return {}
         click = xobj[0]
         if click == 1:
             result = {
@@ -1043,12 +1061,16 @@ def obj4e0c(xobj, device_type):
                 "one btn switch": "toggle",
                 "button switch": "double press",
             }
+        else:
+            result = {}
     elif device_type == "XMWXKG01LM":
         result = {
             "one btn switch": "toggle",
             "button switch": "single press",
         }
     elif device_type == "PTX-F1-Display":
+        if not xobj:
+            return {}
         click = xobj[0]
         if click == 1:
             result = {
@@ -1071,7 +1093,7 @@ def obj4e0c(xobj, device_type):
                 "button switch": "single press",
             }
         else:
-            result = None
+            result = {}
     else:
         result = {}
     return result
@@ -1080,6 +1102,8 @@ def obj4e0c(xobj, device_type):
 def obj4e0d(xobj, device_type):
     """Double Click"""
     if device_type == "XMWXKG01YL":
+        if not xobj:
+            return {}
         click = xobj[0]
         if click == 1:
             result = {
@@ -1097,12 +1121,16 @@ def obj4e0d(xobj, device_type):
                 "two btn switch right": "toggle",
                 "button switch": "double press",
             }
+        else:
+            result = {}
     elif device_type == "XMWXKG01LM":
         result = {
             "one btn switch": "toggle",
             "button switch": "double press",
         }
     elif device_type == "PTX-F1-Display":
+        if not xobj:
+            return {}
         click = xobj[0]
         if click == 1:
             result = {
@@ -1125,7 +1153,7 @@ def obj4e0d(xobj, device_type):
                 "button switch": "double press",
             }
         else:
-            result = None
+            result = {}
     else:
         result = {}
     return result
@@ -1134,6 +1162,8 @@ def obj4e0d(xobj, device_type):
 def obj4e0e(xobj, device_type):
     """Long Press"""
     if device_type == "XMWXKG01YL":
+        if not xobj:
+            return {}
         click = xobj[0]
         if click == 1:
             result = {
@@ -1151,12 +1181,16 @@ def obj4e0e(xobj, device_type):
                 "two btn switch right": "toggle",
                 "button switch": "long press",
             }
+        else:
+            result = {}
     elif device_type == "XMWXKG01LM":
         result = {
             "one btn switch": "toggle",
             "button switch": "long press",
         }
     elif device_type == "PTX-F1-Display":
+        if not xobj:
+            return {}
         click = xobj[0]
         if click == 1:
             result = {
@@ -1179,7 +1213,7 @@ def obj4e0e(xobj, device_type):
                 "button switch": "long press",
             }
         else:
-            result = None
+            result = {}
     else:
         result = {}
     return result
@@ -1191,7 +1225,7 @@ def obj4e16(xobj):
     if event == 1:
         return {"bed occupancy": 1}
     else:
-        return None
+        return {}
 
 
 def obj4e17(xobj):
@@ -1200,7 +1234,7 @@ def obj4e17(xobj):
     if event == 1:
         return {"bed occupancy": 0}
     else:
-        return None
+        return {}
 
 
 def obj4e1c(xobj):
@@ -1224,7 +1258,7 @@ def obj5010(xobj):
     elif sleep_state == 2:
         return {"button": "double press"}
     else:
-        return None
+        return {}
 
 
 def obj5011(xobj):
@@ -1241,6 +1275,23 @@ def obj5414(xobj):
     """Mode"""
     mode = xobj[0]
     return {"mode": mode}
+
+
+def obj5c01(xobj):
+    """Temperature"""
+    if len(xobj) == 4:
+        temp = FLOAT_STRUCT.unpack(xobj)[0]
+        return {"temperature": temp}
+    else:
+        return {}
+
+
+def obj5c02(xobj):
+    """Humidity"""
+    if len(xobj) == 1:
+        return {"humidity": xobj[0]}
+    else:
+        return {}
 
 
 def obj5601(xobj):
@@ -1274,10 +1325,10 @@ def obj560c(xobj, device_type):
                 "button switch": "single press",
             }
         else:
-            result = None
+            result = {}
         return result
     else:
-        return None
+        return {}
 
 
 def obj560d(xobj, device_type):
@@ -1305,10 +1356,10 @@ def obj560d(xobj, device_type):
                 "button switch": "double press",
             }
         else:
-            result = None
+            result = {}
         return result
     else:
-        return None
+        return {}
 
 
 def obj560e(xobj, device_type):
@@ -1336,10 +1387,10 @@ def obj560e(xobj, device_type):
                 "button switch": "long press",
             }
         else:
-            result = None
+            result = {}
         return result
     else:
-        return None
+        return {}
 
 
 def obj5a16(xobj):
@@ -1352,7 +1403,16 @@ def obj5a16(xobj):
     elif event == 3:
         return {"button": "double press"}
     else:
-        return None
+        return {}
+
+
+def obj601d(xobj):
+    """CO2"""
+    if len(xobj) == 2:
+        (co2,) = H_STRUCT.unpack(xobj)
+        return {"co2": co2}
+    else:
+        return {}
 
 
 def obj6012(xobj):
@@ -1473,11 +1533,14 @@ xiaomi_dataobject_dict = {
     0x5011: obj5011,
     0x5403: obj5403,
     0x5414: obj5414,
+    0x5c01: obj5c01,
+    0x5c02: obj5c02,
     0x5601: obj5601,
     0x560c: obj560c,
     0x560d: obj560d,
     0x560e: obj560e,
     0x5a16: obj5a16,
+    0x601d: obj601d,
     0x6012: obj6012,
     0x605d: obj605d,
     0x6e16: obj6e16

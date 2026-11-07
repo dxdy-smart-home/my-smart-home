@@ -2,6 +2,7 @@ import logging
 from datetime import timedelta
 
 import voluptuous as vol
+from homeassistant.components import persistent_notification
 from homeassistant.components.binary_sensor import HomeAssistant  # important for tests
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
@@ -24,13 +25,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import (
-    aiohttp_client as ac,
-    config_validation as cv,
-    device_registry as dr,
-)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.ssl import SSLCipherList
 
 from .core import stream, utils
 from .core.const import CONF_MEDIA_PLAYERS, DATA_CONFIG, DATA_SPEAKERS, DOMAIN
@@ -57,8 +53,10 @@ PLATFORMS = [
     "camera",
     "climate",
     "cover",
+    "fan",
     "humidifier",
     "light",
+    "lock",
     "media_player",
     "number",
     "remote",
@@ -152,18 +150,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def update_cookie_and_token(**kwargs):
         hass.config_entries.async_update_entry(entry, data=kwargs)
 
-    # It's important to use a custom SSL context because Yandex blocks:
-    #     ssl_context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)
-    # Latest HA fine, because they add this by default:
-    #     ssl_context.set_alpn_protocols(["http/1.1"])
-    # You can get HTTP 400 and captcha on some Yandex URLs just because wrong SSL.
-    session = ac.async_create_clientsession(hass, ssl_cipher=SSLCipherList.INTERMEDIATE)
+    session = utils.async_create_clientsession(hass)
     yandex = YandexSession(session, **entry.data)
     yandex.add_update_listener(update_cookie_and_token)
 
     try:
         if not await yandex.refresh_cookies():
-            hass.components.persistent_notification.async_create(
+            persistent_notification.async_create(
+                hass,
                 "Необходимо заново авторизоваться в Яндексе. Для этого [добавьте "
                 "новую интеграцию](/config/integrations) с тем же логином.",
                 title="Yandex.Station",
@@ -228,8 +222,15 @@ async def _init_local_discovery(hass: HomeAssistant):
 
     async def found_local_speaker(info: dict):
         speaker = speakers.setdefault(info["device_id"], {})
-        speaker.update(info)
         entity: YandexStationBase = speaker.get("entity")
+
+        # If speaker has active local connection - we are skipping this update
+        # because of bug https://github.com/AlexxIT/YandexStation/issues/568
+        if entity and entity.local_state:
+            return
+
+        speaker.update(info)
+
         if entity and entity.hass:
             await entity.init_local_mode()
             entity.async_write_ha_state()
